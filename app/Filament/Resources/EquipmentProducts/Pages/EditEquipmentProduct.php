@@ -25,6 +25,10 @@ class EditEquipmentProduct extends EditRecord
     {
         $data['series'] = 'alat-kopi';
 
+        if (empty($data['max_price']) || (float) $data['max_price'] <= 0) {
+            $data['max_price'] = $data['min_price'] ?? 0;
+        }
+
         if (! empty($data['variants']) && is_array($data['variants'])) {
             $totalStock = 0;
             foreach ($data['variants'] as $v) {
@@ -40,8 +44,20 @@ class EditEquipmentProduct extends EditRecord
     {
         $record = $this->getRecord();
         if ($record instanceof Product) {
-            $record->syncPricesFromVariants();
-            $record->syncStockFromVariants();
+            if ($record->variants()->count() === 0) {
+                $stock = (int) ($record->stock ?? 0);
+                $price = (float) ($record->min_price ?? 0);
+                $record->variants()->create([
+                    'label' => 'Standard',
+                    'weight_grams' => 500,
+                    'price' => $price,
+                    'stock' => $stock,
+                    'stock_status' => $stock > 0 ? 'in_stock' : 'out_of_stock',
+                ]);
+            } else {
+                $record->syncPricesFromVariants();
+                $record->syncStockFromVariants();
+            }
             $record->ensurePrimaryImage();
         }
     }

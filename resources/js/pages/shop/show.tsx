@@ -108,20 +108,6 @@ export default function ProductShow({
 }: ProductShowProps) {
     const { addItem } = useCart();
 
-    const variants =
-        product.variants && product.variants.length > 0
-            ? product.variants
-            : [
-                  {
-                      id: product.id,
-                      product_id: product.id,
-                      label: '200 gr',
-                      weight_grams: 200,
-                      price: product.min_price || 45000,
-                      stock_status: 'in_stock' as const,
-                  },
-              ];
-
     const isEquipment =
         product.series === 'alat-kopi' ||
         Boolean(
@@ -129,6 +115,34 @@ export default function ProductShow({
                 (c) => c.slug === 'alat-kopi' || c.type === 'equipment',
             ),
         );
+
+    const hasRealVariants = Boolean(
+        product.variants && product.variants.length > 0,
+    );
+
+    const hasSelectableVariants = isEquipment
+        ? Boolean(
+              product.variants &&
+              product.variants.length > 0 &&
+              !(
+                  product.variants.length === 1 &&
+                  product.variants[0].label === 'Standard'
+              ),
+          )
+        : true;
+
+    const variants = hasRealVariants
+        ? product.variants!
+        : [
+              {
+                  id: product.id,
+                  product_id: product.id,
+                  label: isEquipment ? 'Standard' : '200 gr',
+                  weight_grams: isEquipment ? 500 : 200,
+                  price: product.min_price || 45000,
+                  stock_status: 'in_stock' as const,
+              },
+          ];
 
     const [selectedVariant, setSelectedVariant] = useState<ProductVariant>(
         variants[0],
@@ -578,69 +592,78 @@ export default function ProductShow({
                                 >
                                     {formatRupiah(selectedVariant.price)}
                                 </span>
-                                <span className="text-sm font-medium text-brand-600 sm:text-sm md:text-base">
-                                    / {selectedVariant.label}
-                                </span>
+                                {hasSelectableVariants && (
+                                    <span className="text-sm font-medium text-brand-600 sm:text-sm md:text-base">
+                                        / {selectedVariant.label}
+                                    </span>
+                                )}
                             </div>
                         </div>
 
-                        {/* Variant Selection */}
-                        <div className="space-y-2">
-                            <label className="block text-sm font-bold tracking-wider text-brand-800 uppercase sm:text-sm md:text-base">
-                                Pilih Ukuran Kemasan:
-                            </label>
-                            <div className="flex flex-wrap gap-2">
-                                {variants.map((v) => {
-                                    const active = selectedVariant.id === v.id;
-                                    const vOutOfStock =
-                                        isProductOutOfStock ||
-                                        v.stock_status === 'out_of_stock';
-                                    const vImage =
-                                        v.image_url ||
-                                        (v.image
-                                            ? resolveImageUrl(v.image)
-                                            : null);
-                                    return (
-                                        <button
-                                            key={v.id}
-                                            type="button"
-                                            onClick={() => {
-                                                setSelectedVariant(v);
-                                                const targetIdx =
-                                                    combinedImages.findIndex(
-                                                        (img) =>
-                                                            img.isVariant &&
-                                                            img.variantId ===
-                                                                v.id,
-                                                    );
-                                                if (targetIdx !== -1) {
-                                                    scrollToMobileImage(
-                                                        targetIdx,
-                                                    );
-                                                }
-                                            }}
-                                            className={`inline-flex cursor-pointer items-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-bold transition-all sm:text-sm md:text-base ${
-                                                active
-                                                    ? 'bg-brand-700 text-white shadow-sm ring-2 ring-brand-700'
-                                                    : 'border border-sand-200 bg-white text-brand-800 hover:bg-cream-100'
-                                            } ${vOutOfStock ? 'line-through decoration-neutral-500 opacity-60' : ''}`}
-                                        >
-                                            {vImage && (
-                                                <img
-                                                    src={vImage}
-                                                    alt={v.label}
-                                                    className="h-5 w-5 flex-shrink-0 rounded-md border border-sand-300 object-cover"
-                                                />
-                                            )}
-                                            <span>
-                                                {v.label}{' '}
-                                                {vOutOfStock ? '(Habis)' : ''}
-                                            </span>
-                                        </button>
-                                    );
-                                })}
+                        {/* Variant Selection (disembunyikan untuk alat kopi tanpa varian) */}
+                        {hasSelectableVariants && (
+                            <div className="space-y-2">
+                                <label className="block text-sm font-bold tracking-wider text-brand-800 uppercase sm:text-sm md:text-base">
+                                    {isEquipment
+                                        ? 'Pilih Varian:'
+                                        : 'Pilih Ukuran Kemasan:'}
+                                </label>
+                                <div className="flex flex-wrap gap-2">
+                                    {variants.map((v) => {
+                                        const active =
+                                            selectedVariant.id === v.id;
+                                        const vOutOfStock =
+                                            isProductOutOfStock ||
+                                            v.stock_status === 'out_of_stock';
+                                        const vImage =
+                                            v.image_url ||
+                                            (v.image
+                                                ? resolveImageUrl(v.image)
+                                                : null);
+                                        return (
+                                            <button
+                                                key={v.id}
+                                                type="button"
+                                                onClick={() => {
+                                                    setSelectedVariant(v);
+                                                    const targetIdx =
+                                                        combinedImages.findIndex(
+                                                            (img) =>
+                                                                img.isVariant &&
+                                                                img.variantId ===
+                                                                    v.id,
+                                                        );
+                                                    if (targetIdx !== -1) {
+                                                        scrollToMobileImage(
+                                                            targetIdx,
+                                                        );
+                                                    }
+                                                }}
+                                                className={`inline-flex cursor-pointer items-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-bold transition-all sm:text-sm md:text-base ${
+                                                    active
+                                                        ? 'bg-brand-700 text-white shadow-sm ring-2 ring-brand-700'
+                                                        : 'border border-sand-200 bg-white text-brand-800 hover:bg-cream-100'
+                                                } ${vOutOfStock ? 'line-through decoration-neutral-500 opacity-60' : ''}`}
+                                            >
+                                                {vImage && (
+                                                    <img
+                                                        src={vImage}
+                                                        alt={v.label}
+                                                        className="h-5 w-5 flex-shrink-0 rounded-md border border-sand-300 object-cover"
+                                                    />
+                                                )}
+                                                <span>
+                                                    {v.label}{' '}
+                                                    {vOutOfStock
+                                                        ? '(Habis)'
+                                                        : ''}
+                                                </span>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
                             </div>
-                        </div>
+                        )}
 
                         {/* Grind Size Selection (hanya untuk biji kopi, bukan alat kopi) */}
                         {!isEquipment && (

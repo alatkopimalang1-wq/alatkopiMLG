@@ -135,18 +135,16 @@ class EquipmentProductForm
                     ->schema([
                         Grid::make(2)->schema([
                             TextInput::make('min_price')
-                                ->label('Harga Minimum (Rp)')
-                                ->helperText('Otomatis disinkronkan dari harga varian termurah saat disimpan.')
+                                ->label('Harga Produk / Harga Minimum (Rp)')
+                                ->helperText('Isi harga langsung jika produk tidak memiliki varian. Jika ada varian, otomatis mengikuti harga varian termurah.')
                                 ->required()
                                 ->numeric()
                                 ->default(0)
                                 ->prefix('Rp'),
                             TextInput::make('max_price')
-                                ->label('Harga Maksimum (Rp)')
-                                ->helperText('Otomatis disinkronkan dari harga varian termahal saat disimpan.')
-                                ->required()
+                                ->label('Harga Maksimum (Rp, Opsional)')
+                                ->helperText('Boleh dikosongkan; otomatis mengikuti Harga Produk atau varian termahal.')
                                 ->numeric()
-                                ->default(0)
                                 ->prefix('Rp'),
                         ]),
                         Grid::make(2)->schema([
@@ -168,7 +166,7 @@ class EquipmentProductForm
                             ->live()
                             ->afterStateUpdated(function (callable $get, callable $set) {
                                 $variants = $get('variants') ?? [];
-                                if (is_array($variants)) {
+                                if (! empty($variants) && is_array($variants)) {
                                     $total = 0;
                                     foreach ($variants as $v) {
                                         $total += (int) ($v['stock'] ?? 0);
@@ -244,7 +242,7 @@ class EquipmentProductForm
                                         ->columnSpan(1),
                                 ]),
                             ])
-                            ->defaultItems(1)
+                            ->defaultItems(0)
                             ->columnSpanFull(),
                     ]),
 

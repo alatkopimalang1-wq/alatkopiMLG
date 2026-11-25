@@ -58,3 +58,30 @@ test('admin can access equipment product pages and create a new equipment produc
     expect(EquipmentProductResource::getEloquentQuery()->where('slug', 'fellow-stagg-ekg-electric-kettle')->exists())->toBeTrue();
     expect(ProductResource::getEloquentQuery()->where('slug', 'fellow-stagg-ekg-electric-kettle')->exists())->toBeFalse();
 });
+
+test('admin can create equipment product without variants using direct price and stock', function () {
+    $this->seed(EquipmentProductsSeeder::class);
+
+    $admin = User::factory()->create(['role' => 'admin']);
+    $this->actingAs($admin);
+
+    Livewire::test(CreateEquipmentProduct::class)
+        ->set('data.name', 'Hario Paper Filter V60 02 (100 Sheets)')
+        ->set('data.slug', 'hario-paper-filter-v60-02')
+        ->set('data.origin', 'Hario')
+        ->set('data.min_price', 75000)
+        ->set('data.stock', 50)
+        ->set('data.variants', [])
+        ->call('create')
+        ->assertHasNoErrors();
+
+    $created = Product::where('slug', 'hario-paper-filter-v60-02')->first();
+    expect($created)->not->toBeNull();
+    expect((int) $created->min_price)->toBe(75000);
+    expect((int) $created->max_price)->toBe(75000);
+    expect($created->stock)->toBe(50);
+    expect($created->variants()->count())->toBe(1);
+    expect($created->variants()->first()->label)->toBe('Standard');
+
+    $this->get('/shop/hario-paper-filter-v60-02')->assertSuccessful();
+});
