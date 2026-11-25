@@ -275,7 +275,7 @@ const defaultPrinterSettings: PrinterSettings = {
     store_name: 'Alat Kopi Malang',
     tagline: 'Menyentuh Hati, Merangkai Cerita',
     address: 'Jl. Candi Mendut No. 3, Lowokwaru, Kota Malang',
-    phone: '0851-2193-0454',
+    phone: '0821-3209-5241',
     instagram: '@sanubariroastery',
     receipt_footer:
         'Terima kasih atas kunjungan Anda!\nFreshly Roasted with Heart.',
@@ -3679,7 +3679,7 @@ function PosContent({
             address:
                 printerForm.address ||
                 'Ruko Tlogomas Square Kav 34, Jl. Raya Tlogomas, Lowokwaru, Malang',
-            phone: printerForm.phone || '+6285121930454',
+            phone: printerForm.phone || '+6282132095241',
             instagram: printerForm.instagram || '@sanubariroastery',
             order_number:
                 'TEST-' + (printerForm.paper_width === '80mm' ? '80' : '58'),

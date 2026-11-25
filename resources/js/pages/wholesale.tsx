@@ -144,7 +144,7 @@ export default function WholesalePage({ page }: WholesalePageProps) {
                   },
               ];
 
-    const waNumber = page?.whatsapp_number || '6285121930454';
+    const waNumber = page?.whatsapp_number || '6282132095241';
     const formImage = page?.form_image
         ? resolveImageUrl(page.form_image)
         : null;

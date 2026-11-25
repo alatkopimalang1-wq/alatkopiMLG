@@ -18,7 +18,7 @@ beforeEach(function () {
 
 test('order notification service sends email and whatsapp alert to admin', function () {
     Setting::set('admin_notification_wa_enabled', true);
-    Setting::set('admin_notification_whatsapp', '6285121930454');
+    Setting::set('admin_notification_whatsapp', '6282132095241');
     Setting::set('admin_notification_email_enabled', true);
     Setting::set('admin_notification_email', 'admin@sanubariroastery.id');
 

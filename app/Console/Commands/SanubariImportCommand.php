@@ -89,7 +89,7 @@ class SanubariImportCommand extends Command
                 'id' => 'Alat Kopi Malang menyajikan kopi artisan pilihan dari perkebunan terbaik, dengan spesialisasi biji kopi Gunung Kawi dan inovasi proses fermentasi modern.',
                 'en' => 'Alat Kopi Malang presents curated artisan coffees from the finest estates, specializing in Mount Kawi beans and modern fermentation innovations.',
             ],
-            'whatsapp' => $brand['whatsapp'] ?? '6285121930454',
+            'whatsapp' => $brand['whatsapp'] ?? '6282132095241',
             'maps_url' => $brand['mapsUrl'] ?? 'https://maps.app.goo.gl/PMuxaEtsbEvC4APy7',
             'address' => 'Jl. Terusan Kawi No. 12, Klojen, Kota Malang, Jawa Timur 65116',
             'opening_hours' => '09.00 – 23.00 WIB (Setiap Hari)',

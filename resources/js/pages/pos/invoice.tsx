@@ -156,7 +156,7 @@ export default function PosDigitalInvoicePage({
                                 {settings.address ||
                                     'Jl. Candi Mendut No. 3, Lowokwaru, Kota Malang, Jawa Timur 65141'}
                                 <br />
-                                WhatsApp: {settings.phone || '0851-2193-0454'} ·
+                                WhatsApp: {settings.phone || '0821-3209-5241'} ·
                                 Email:{' '}
                                 {settings.email || 'halo@sanubariroastery.id'}
                             </p>

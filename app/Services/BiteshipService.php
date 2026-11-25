@@ -386,7 +386,7 @@ class BiteshipService
         }
 
         $senderName = Setting::get('shipping_sender_name', 'ALAT KOPI MALANG TLOGOMAS');
-        $senderPhone = Setting::get('shipping_sender_phone', '085121930454');
+        $senderPhone = Setting::get('shipping_sender_phone', '082132095241');
         $senderAddress = Setting::get('shipping_sender_address', 'Ruko Tlogomas Square Kav. 34, Jl. Raya Tlogomas, Lowokwaru, Kota Malang');
         $originPostal = (int) Setting::get('shipping_origin_postal_code', 65144);
         $destPostal = (int) ($order->shipping_postal_code ?: 65144);

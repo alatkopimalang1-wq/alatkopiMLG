@@ -21,7 +21,7 @@
         </p>
         <p class="text-[10px] text-stone-500 leading-tight dark:text-stone-400">
             Ruko Tlogomas Square Kav 34, Jl. Raya Tlogomas, Lowokwaru, Malang<br>
-            WA: 0851-2193-0454
+            WA: 0821-3209-5241
         </p>
     </div>
 

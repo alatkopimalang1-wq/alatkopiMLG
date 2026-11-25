@@ -94,7 +94,7 @@ class PosController extends Controller
             'store_name' => $settings['store_name'] ?? 'Alat Kopi Malang',
             'tagline' => $settings['store_tagline'] ?? 'Menyentuh Hati, Merangkai Cerita',
             'address' => $settings['address'] ?? $settings['store_address'] ?? 'Jl. Candi Mendut No. 3, Lowokwaru, Kota Malang',
-            'phone' => $settings['whatsapp_number'] ?? $settings['phone'] ?? '0851-2193-0454',
+            'phone' => $settings['whatsapp_number'] ?? $settings['phone'] ?? '0821-3209-5241',
             'instagram' => $settings['instagram_handle'] ?? '@sanubariroastery',
             'receipt_footer' => "Terima kasih atas kunjungan Anda!\nFreshly Roasted with Heart.",
             'auto_print' => false,
@@ -1775,7 +1775,7 @@ class PosController extends Controller
                 'site_name' => Setting::get('site_name', 'Alat Kopi Malang'),
                 'tagline' => Setting::get('site_tagline', 'Menyentuh Hati, Merangkai Cerita'),
                 'address' => Setting::get('contact_address', 'Jl. Candi Mendut No. 3, Lowokwaru, Kota Malang, Jawa Timur 65141'),
-                'phone' => Setting::get('contact_phone', '0851-2193-0454'),
+                'phone' => Setting::get('contact_phone', '0821-3209-5241'),
                 'email' => Setting::get('contact_email', 'halo@sanubariroastery.id'),
             ];
 

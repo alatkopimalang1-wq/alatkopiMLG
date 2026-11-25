@@ -74,7 +74,7 @@ class ManageShippingSettings extends Page
             'shipping_default_weight_grams' => $config['default_weight_grams'],
 
             'shipping_sender_name' => Setting::get('shipping_sender_name', 'ALAT KOPI MALANG TLOGOMAS'),
-            'shipping_sender_phone' => Setting::get('shipping_sender_phone', '0851-2193-0454'),
+            'shipping_sender_phone' => Setting::get('shipping_sender_phone', '0821-3209-5241'),
             'shipping_sender_address' => Setting::get('shipping_sender_address', 'Ruko Tlogomas Square Kav. 34, Jl. Raya Tlogomas, Lowokwaru, Kota Malang 65144'),
 
             'biteship_enabled' => Setting::get('biteship_enabled', false),
@@ -388,7 +388,7 @@ class ManageShippingSettings extends Page
                                 ->required(),
                             TextInput::make('shipping_sender_phone')
                                 ->label('No. WhatsApp / HP Pengirim')
-                                ->default('0851-2193-0454')
+                                ->default('0821-3209-5241')
                                 ->required(),
                             TextInput::make('shipping_sender_address')
                                 ->label('Alamat Lengkap Pengirim')

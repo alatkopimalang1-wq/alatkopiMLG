@@ -206,7 +206,7 @@ export default function RoastingPage({ page }: RoastingPageProps) {
                   },
               ];
 
-    const waNumber = page?.whatsapp_number || '6285121930454';
+    const waNumber = page?.whatsapp_number || '6282132095241';
     const formTitle = page?.form_title || 'Formulir Konsultasi Jasa Roasting';
     const formSubtitle =
         page?.form_subtitle ||

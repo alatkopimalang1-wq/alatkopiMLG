@@ -214,7 +214,7 @@ export default function BaristaTrainingPage({
                   },
               ];
 
-    const waNumber = page?.whatsapp_number || '6285121930454';
+    const waNumber = page?.whatsapp_number || '6282132095241';
     const formTitle =
         page?.form_title || 'Formulir Pendaftaran & Konsultasi Kelas Barista';
     const formSubtitle =

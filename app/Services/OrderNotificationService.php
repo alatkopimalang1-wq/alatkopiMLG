@@ -27,7 +27,7 @@ class OrderNotificationService
             if ($isWaEnabled) {
                 $targetPhone = Setting::get('admin_notification_whatsapp');
                 if (empty($targetPhone)) {
-                    $targetPhone = Setting::get('whatsapp', '6285121930454');
+                    $targetPhone = Setting::get('whatsapp', '6282132095241');
                 }
 
                 if (! empty($targetPhone)) {

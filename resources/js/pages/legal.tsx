@@ -88,7 +88,7 @@ export default function LegalPage({ type = 'privacy', title }: LegalPageProps) {
                             <p>
                                 Komunikasi resmi transaksi dilakukan hanya
                                 melalui nomor WhatsApp resmi Alat Kopi Malang
-                                di <strong>+62 851-2193-0454</strong>. Pastikan
+                                di <strong>+62 821-3209-5241</strong>. Pastikan
                                 tidak melakukan transfer ke rekening selain
                                 rekening resmi yang diinstruksikan oleh admin
                                 kami.

@@ -57,7 +57,7 @@ class CheckoutController extends Controller
 
         $settings = Setting::all()->pluck('value', 'key')->toArray();
         $freeShippingMin = (int) ($settings['free_shipping_min'] ?? 250000);
-        $waNumber = $settings['whatsapp'] ?? '6285121930454';
+        $waNumber = $settings['whatsapp'] ?? '6282132095241';
         $storeName = $settings['pickup_store_name'] ?? 'Alat Kopi Malang (Tlogomas, Malang)';
         $storeAddress = $settings['pickup_store_address'] ?? ($settings['address'] ?? 'Ruko Tlogomas Square Kav. 34, Jl. Raya Tlogomas, Lowokwaru, Kota Malang, Jawa Timur 65144');
 
@@ -346,7 +346,7 @@ class CheckoutController extends Controller
             ? (str_starts_with($settings['payment_qris_image'], 'http') ? $settings['payment_qris_image'] : '/storage/'.ltrim($settings['payment_qris_image'], '/'))
             : '/brand/qris-sanubari.svg';
 
-        $waNumber = $settings['whatsapp'] ?? '6285121930454';
+        $waNumber = $settings['whatsapp'] ?? '6282132095241';
         $waConfirmText = "Halo Alat Kopi Malang! Saya sudah melakukan pembayaran untuk Pesanan #{$order->order_number} sebesar Rp ".number_format($order->total_amount, 0, ',', '.').'. Mohon dicek dan diproses ya. Terima kasih!';
         $waConfirmUrl = "https://wa.me/{$waNumber}?text=".rawurlencode($waConfirmText);
 
@@ -508,7 +508,7 @@ class CheckoutController extends Controller
             'settings' => [
                 'site_name' => $settings['site_name'] ?? 'Alat Kopi Malang',
                 'address' => $settings['address'] ?? 'Ruko Tlogomas Square Kav. 34, Jl. Raya Tlogomas, Lowokwaru, Kota Malang, Jawa Timur 65144',
-                'phone' => $settings['phone'] ?? $settings['whatsapp'] ?? '+6285121930454',
+                'phone' => $settings['phone'] ?? $settings['whatsapp'] ?? '+6282132095241',
                 'email' => $settings['email'] ?? 'halo@sanubariroastery.id',
                 'pickup_store_name' => $settings['pickup_store_name'] ?? 'Alat Kopi Malang (Tlogomas, Malang)',
                 'pickup_store_address' => $settings['pickup_store_address'] ?? ($settings['address'] ?? 'Ruko Tlogomas Square Kav. 34, Jl. Raya Tlogomas, Lowokwaru, Kota Malang, Jawa Timur 65144'),

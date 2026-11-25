@@ -51,14 +51,14 @@ class ManageGeneralSettings extends Page
             'site_logo' => $settings['site_logo'] ?? null,
             'site_favicon' => $settings['site_favicon'] ?? null,
 
-            'whatsapp' => $settings['whatsapp'] ?? '6285121930454',
+            'whatsapp' => $settings['whatsapp'] ?? '6282132095241',
             'whatsapp_gateway_provider' => $settings['whatsapp_gateway_provider'] ?? 'auto',
             'whatsapp_gateway_token' => $settings['whatsapp_gateway_token'] ?? null,
-            'phone' => $settings['phone'] ?? '+6285121930454',
+            'phone' => $settings['phone'] ?? '+6282132095241',
             'email' => $settings['email'] ?? 'halo@sanubariroastery.id',
 
             'admin_notification_wa_enabled' => (bool) ($settings['admin_notification_wa_enabled'] ?? true),
-            'admin_notification_whatsapp' => $settings['admin_notification_whatsapp'] ?? ($settings['whatsapp'] ?? '6285121930454'),
+            'admin_notification_whatsapp' => $settings['admin_notification_whatsapp'] ?? ($settings['whatsapp'] ?? '6282132095241'),
             'admin_notification_email_enabled' => (bool) ($settings['admin_notification_email_enabled'] ?? true),
             'admin_notification_email' => $settings['admin_notification_email'] ?? ($settings['email'] ?? 'halo@sanubariroastery.id'),
 
@@ -188,11 +188,11 @@ class ManageGeneralSettings extends Page
                         Grid::make(3)->schema([
                             TextInput::make('whatsapp')
                                 ->label('Nomor WhatsApp (Format: 628...)')
-                                ->helperText('Tanpa tanda +, contoh: 6285121930454')
+                                ->helperText('Tanpa tanda +, contoh: 6282132095241')
                                 ->required(),
                             TextInput::make('phone')
                                 ->label('Nomor Telepon Tampilan')
-                                ->placeholder('+6285121930454'),
+                                ->placeholder('+6282132095241'),
                             TextInput::make('email')
                                 ->label('Email Resmi')
                                 ->email()
@@ -230,8 +230,8 @@ class ManageGeneralSettings extends Page
                                 ->default(true),
                             TextInput::make('admin_notification_whatsapp')
                                 ->label('Nomor WhatsApp Penerima Notifikasi')
-                                ->helperText('Format: 628... (Contoh: 6285121930454). Jika kosong, menggunakan nomor WhatsApp resmi.')
-                                ->placeholder('6285121930454'),
+                                ->helperText('Format: 628... (Contoh: 6282132095241). Jika kosong, menggunakan nomor WhatsApp resmi.')
+                                ->placeholder('6282132095241'),
                         ]),
                         Grid::make(2)->schema([
                             Toggle::make('admin_notification_email_enabled')

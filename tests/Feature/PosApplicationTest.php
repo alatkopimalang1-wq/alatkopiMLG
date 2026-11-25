@@ -214,7 +214,7 @@ test('pos settings can be saved and retrieved', function () {
         'store_name' => 'Alat Kopi Malang',
         'tagline' => 'Specialty Coffee',
         'address' => 'Jl. Candi Mendut',
-        'phone' => '085121930454',
+        'phone' => '082132095241',
         'instagram' => '@sanubariroastery',
         'receipt_footer' => 'Terima kasih!',
         'auto_print' => true,

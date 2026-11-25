@@ -17,7 +17,7 @@ class PosInvoicePdfGenerator
         $storeName = strtoupper(trim((string) ($data['store_name'] ?? 'ALAT KOPI MALANG')));
         $tagline = trim((string) ($data['tagline'] ?? 'Close to Your Every Brew'));
         $address = trim((string) ($data['address'] ?? 'Ruko Tlogomas Square Kav. 34, Jl. Raya Tlogomas, Lowokwaru, Kota Malang'));
-        $phone = trim((string) ($data['phone'] ?? '+6285121930454'));
+        $phone = trim((string) ($data['phone'] ?? '+6282132095241'));
         $date = trim((string) ($data['date'] ?? now()->format('d M Y, H.i')));
         $cashierName = trim((string) ($data['cashier_name'] ?? 'Kasir Sanubari'));
         $customerName = trim((string) ($data['customer_name'] ?? 'Pelanggan Sanubari')) ?: 'Pelanggan Sanubari';

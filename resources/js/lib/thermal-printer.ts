@@ -2733,7 +2733,7 @@ export function buildA4InvoicePdfBytes(preBill: PreBillData): Uint8Array {
     const tagline = preBill.tagline || 'Close to Your Every Brew';
     const address =
         preBill.address || 'Ruko Tlogomas Square Kav. 34, Jl. Raya Tlogomas, Lowokwaru, Kota Malang';
-    const phone = preBill.phone || '+6285121930454';
+    const phone = preBill.phone || '+6282132095241';
     const date = preBill.date || '';
     const cashierName = preBill.cashier_name || 'Kasir Sanubari';
     const customerName = (preBill.customer_name || '').trim() || 'Pelanggan Sanubari';

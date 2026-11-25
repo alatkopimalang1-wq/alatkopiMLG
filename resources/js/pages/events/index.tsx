@@ -155,7 +155,7 @@ export default function EventsIndex({
         'Belum ada jadwal acara baru saat ini. Ikuti Instagram kami di @sanubari.roastery.mlg untuk kabar workshop terdekat!';
     const showPast = page?.show_past ?? true;
     const pastTitle = page?.past_title || 'Arsip & Riwayat Acara Sebelumnya';
-    const waNumber = page?.whatsapp_number || '6285121930454';
+    const waNumber = page?.whatsapp_number || '6282132095241';
     const ctaButtonText = page?.cta_button_text || 'Daftar via WhatsApp';
     const ctaNote = page?.cta_note || 'Slot terbatas • Konfirmasi instan';
 

@@ -386,7 +386,7 @@ export default function OrderTrackPage({ error }: TrackPageProps) {
                     <p className="leading-relaxed">
                         Jika Anda lupa nomor pesanan atau resi belum ter-update,
                         silakan hubungi Customer Service kami via WhatsApp resmi
-                        di <strong>+62 851-2193-0454</strong>.
+                        di <strong>+62 821-3209-5241</strong>.
                     </p>
                 </div>
             </div>

@@ -483,7 +483,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                                                         Reset Pencarian
                                                     </button>
                                                     <a
-                                                        href="https://wa.me/6285121930454?text=Halo%20Sanubari%20Roastery%2C%20saya%20mencari%20kopi%20spesifik"
+                                                        href="https://wa.me/6282132095241?text=Halo%20Sanubari%20Roastery%2C%20saya%20mencari%20kopi%20spesifik"
                                                         target="_blank"
                                                         rel="noreferrer"
                                                         className="rounded-full bg-brand-900 px-4 py-2 text-xs font-bold text-white transition-transform duration-100 hover:bg-brand-800 active:scale-95"

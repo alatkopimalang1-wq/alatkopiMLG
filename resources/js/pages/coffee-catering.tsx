@@ -163,7 +163,7 @@ export default function CoffeeCateringPage({ page }: CoffeeCateringPageProps) {
         ? resolveImageUrl(page.hero_image)
         : 'https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&w=1200&q=80';
 
-    const whatsappNumber = page?.whatsapp_number || '6285121930454';
+    const whatsappNumber = page?.whatsapp_number || '6282132095241';
     const cleanWhatsapp = whatsappNumber.replace(/[^0-9]/g, '');
 
     const address =

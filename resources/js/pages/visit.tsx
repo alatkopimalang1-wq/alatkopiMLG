@@ -120,7 +120,7 @@ export default function VisitPage({ page }: VisitPageProps) {
     const hours =
         page?.hours ||
         'Buka Setiap Hari: 09.00–23.00 WIB (Layanan Seduh di Tempat & Pembelian Beans)';
-    const phone = page?.phone || '+62 851-2193-0454';
+    const phone = page?.phone || '+62 821-3209-5241';
     const mapsUrl =
         page?.maps_url || 'https://maps.app.goo.gl/PMuxaEtsbEvC4APy7';
 
@@ -158,7 +158,7 @@ export default function VisitPage({ page }: VisitPageProps) {
     const cleanPhone = phone.replace(/[^0-9]/g, '');
     const waLink = cleanPhone
         ? `https://wa.me/${cleanPhone}`
-        : 'https://wa.me/6285121930454';
+        : 'https://wa.me/6282132095241';
 
     return (
         <PublicLayout title="Kunjungi Roastery & Showroom Malang">

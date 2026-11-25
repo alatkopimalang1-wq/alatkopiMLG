@@ -166,7 +166,7 @@ export default function BookingPage({ page }: BookingPageProps) {
         ? resolveImageUrl(page.hero_image)
         : 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=1200&q=80';
 
-    const whatsappNumber = page?.whatsapp_number || '6285121930454';
+    const whatsappNumber = page?.whatsapp_number || '6282132095241';
     const cleanWhatsapp = whatsappNumber.replace(/[^0-9]/g, '');
 
     const address =

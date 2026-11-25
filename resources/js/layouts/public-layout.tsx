@@ -250,7 +250,7 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({
         setMobileMenuOpen(false);
     }, [url]);
 
-    const waNumber = settings?.whatsapp || '6285121930454';
+    const waNumber = settings?.whatsapp || '6282132095241';
     const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent('Halo Alat Kopi Malang! Saya ingin bertanya tentang produk kopi.')}`;
 
     const instagramUrl =
@@ -1169,11 +1169,11 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({
                     settings?.hours ||
                     'Buka setiap hari: 09.00 – 23.00 WIB';
                 const col4Phone =
-                    footerSettings.phone || settings?.phone || '+6285121930454';
+                    footerSettings.phone || settings?.phone || '+6282132095241';
                 const col4Wa =
                     footerSettings.whatsapp ||
                     settings?.whatsapp ||
-                    '6285121930454';
+                    '6282132095241';
                 const col4City =
                     footerSettings.city || 'Kota Malang, Jawa Timur';
                 const col4WaCta =

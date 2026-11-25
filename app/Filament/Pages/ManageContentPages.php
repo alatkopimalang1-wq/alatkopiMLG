@@ -313,7 +313,7 @@ class ManageContentPages extends Page
                         'image_url' => null,
                     ];
                 }, $defaultWholesaleBenefits),
-            'wholesale_whatsapp_number' => $pageWholesale['whatsapp_number'] ?? ($settings['whatsapp'] ?? '6285121930454'),
+            'wholesale_whatsapp_number' => $pageWholesale['whatsapp_number'] ?? ($settings['whatsapp'] ?? '6282132095241'),
             'wholesale_form_image' => (! empty($pageWholesale['form_image']) && ! str_starts_with($pageWholesale['form_image'], 'http')) ? str_replace('/storage/', '', $pageWholesale['form_image']) : null,
             'wholesale_form_image_url' => (! empty($pageWholesale['form_image']) && str_starts_with($pageWholesale['form_image'], 'http')) ? $pageWholesale['form_image'] : null,
             'wholesale_form_badge' => $pageWholesale['form_badge'] ?? 'Partner Terpercaya 50+ Kedai Kopi',
@@ -355,7 +355,7 @@ class ManageContentPages extends Page
             'visit_welcome_title' => $pageVisit['welcome_title'] ?? 'Selamat Datang di Malang',
             'visit_address' => $pageVisit['address'] ?? ($settings['address'] ?? 'Jl. Terusan Kawi No. 12, Klojen, Kota Malang, Jawa Timur 65116 (Gedung Sanubari x Alat Kopi Malang)'),
             'visit_hours' => $pageVisit['hours'] ?? ($settings['hours'] ?? 'Buka Setiap Hari: 09.00–23.00 WIB (Layanan Seduh di Tempat & Pembelian Beans)'),
-            'visit_phone' => $pageVisit['phone'] ?? ($settings['phone'] ?? '+62 851-2193-0454'),
+            'visit_phone' => $pageVisit['phone'] ?? ($settings['phone'] ?? '+62 821-3209-5241'),
             'visit_maps_url' => $pageVisit['maps_url'] ?? ($settings['maps_url'] ?? 'https://maps.app.goo.gl/PMuxaEtsbEvC4APy7'),
             'visit_facilities' => ! empty($pageVisit['facilities']) ? $pageVisit['facilities'] : $defaultVisitFacilities,
             'visit_main_image' => (! empty($pageVisit['main_image']) && ! str_starts_with($pageVisit['main_image'], 'http')) ? str_replace('/storage/', '', $pageVisit['main_image']) : null,
@@ -433,7 +433,7 @@ class ManageContentPages extends Page
                         'caption' => $item['caption'] ?? '',
                     ];
                 }, $defaultRoastingGallery),
-            'roasting_whatsapp_number' => $pageRoasting['whatsapp_number'] ?? ($settings['whatsapp'] ?? '6285121930454'),
+            'roasting_whatsapp_number' => $pageRoasting['whatsapp_number'] ?? ($settings['whatsapp'] ?? '6282132095241'),
             'roasting_form_title' => $pageRoasting['form_title'] ?? 'Formulir Konsultasi Jasa Roasting',
             'roasting_form_subtitle' => $pageRoasting['form_subtitle'] ?? 'Isi detail biji kopi dan kebutuhan sangrai Anda untuk langsung terhubung dengan head roaster kami.',
 
@@ -485,7 +485,7 @@ class ManageContentPages extends Page
                         'caption' => $item['caption'] ?? '',
                     ];
                 }, $defaultBaristaGallery),
-            'barista_whatsapp_number' => $pageBarista['whatsapp_number'] ?? ($settings['whatsapp'] ?? '6285121930454'),
+            'barista_whatsapp_number' => $pageBarista['whatsapp_number'] ?? ($settings['whatsapp'] ?? '6282132095241'),
             'barista_form_title' => $pageBarista['form_title'] ?? 'Formulir Pendaftaran & Konsultasi Kelas Barista',
             'barista_form_subtitle' => $pageBarista['form_subtitle'] ?? 'Daftarkan diri Anda atau konsultasikan jadwal kelas privat langsung dengan tim trainer kami via WhatsApp.',
 
@@ -499,7 +499,7 @@ class ManageContentPages extends Page
             'events_empty_message' => $pageEvents['empty_message'] ?? 'Belum ada jadwal acara baru saat ini. Ikuti Instagram kami di @sanubari.roastery.mlg untuk kabar workshop terdekat!',
             'events_show_past' => (bool) ($pageEvents['show_past'] ?? true),
             'events_past_title' => $pageEvents['past_title'] ?? 'Arsip & Riwayat Acara Sebelumnya',
-            'events_whatsapp_number' => $pageEvents['whatsapp_number'] ?? ($settings['whatsapp'] ?? '6285121930454'),
+            'events_whatsapp_number' => $pageEvents['whatsapp_number'] ?? ($settings['whatsapp'] ?? '6282132095241'),
             'events_cta_button_text' => $pageEvents['cta_button_text'] ?? 'Daftar via WhatsApp',
             'events_cta_note' => $pageEvents['cta_note'] ?? 'Slot terbatas • Konfirmasi instan',
             'events_gallery_title' => $pageEvents['gallery_title'] ?? 'Dokumentasi Acara & Workshop Sanubari',
@@ -685,7 +685,7 @@ class ManageContentPages extends Page
                         'caption' => 'Kapasitas Nyaman untuk Lebih dari 50 Tamu Undangan',
                     ],
                 ],
-            'booking_whatsapp_number' => $pageBooking['whatsapp_number'] ?? ($settings['whatsapp'] ?? '6285121930454'),
+            'booking_whatsapp_number' => $pageBooking['whatsapp_number'] ?? ($settings['whatsapp'] ?? '6282132095241'),
             'booking_form_title' => $pageBooking['form_title'] ?? 'Konsultasi Jadwal & Reservasi Tempat',
             'booking_form_subtitle' => $pageBooking['form_subtitle'] ?? 'Isi detail rencana acara Anda di bawah ini untuk langsung terhubung ke WhatsApp reservasi Alat Kopi Malang.',
             'booking_minimum_spent_info' => $pageBooking['minimum_spent_info'] ?? 'Cukup dengan minimum order menu Alat Kopi Malang (makanan & minuman). Bebas biaya sewa ruang (Rp 0 venue fee).',
@@ -819,7 +819,7 @@ class ManageContentPages extends Page
                         'caption' => 'Peralatan Higienis, Rapi, dan Menunjang Estetika Dekorasi Acara',
                     ],
                 ],
-            'catering_whatsapp_number' => $pageCatering['whatsapp_number'] ?? ($settings['whatsapp'] ?? '6285121930454'),
+            'catering_whatsapp_number' => $pageCatering['whatsapp_number'] ?? ($settings['whatsapp'] ?? '6282132095241'),
             'catering_form_title' => $pageCatering['form_title'] ?? 'Konsultasi Jadwal & Pemesanan Coffee Catering',
             'catering_form_subtitle' => $pageCatering['form_subtitle'] ?? 'Isi formulir singkat di bawah ini untuk mendapatkan penawaran harga & paket coffee catering Sanubari via WhatsApp.',
             'catering_terms_note' => $pageCatering['terms_note'] ?? '*Minimum pemesanan 200 cup. Pemesanan disarankan minimal H-7 acara untuk persiapan jadwal tim barista dan ketersediaan mesin.',
@@ -1153,7 +1153,7 @@ class ManageContentPages extends Page
                                     ->schema([
                                         TextInput::make('wholesale_whatsapp_number')
                                             ->label('Nomor WhatsApp Konsultasi (Tanpa tanda +)')
-                                            ->placeholder('Contoh: 6285121930454')
+                                            ->placeholder('Contoh: 6282132095241')
                                             ->required(),
                                     ]),
                             ]),
@@ -1191,7 +1191,7 @@ class ManageContentPages extends Page
                                                 ->required(),
                                             TextInput::make('visit_phone')
                                                 ->label('Kontak WhatsApp')
-                                                ->placeholder('+62 851-2193-0454')
+                                                ->placeholder('+62 821-3209-5241')
                                                 ->required(),
                                         ]),
                                         Textarea::make('visit_address')
@@ -1493,7 +1493,7 @@ class ManageContentPages extends Page
                                     ->schema([
                                         TextInput::make('roasting_whatsapp_number')
                                             ->label('Nomor WhatsApp Roaster (Tanpa tanda +)')
-                                            ->placeholder('Contoh: 6285121930454')
+                                            ->placeholder('Contoh: 6282132095241')
                                             ->required(),
                                         Grid::make(2)->schema([
                                             TextInput::make('roasting_form_title')
@@ -1670,7 +1670,7 @@ class ManageContentPages extends Page
                                     ->schema([
                                         TextInput::make('barista_whatsapp_number')
                                             ->label('Nomor WhatsApp Trainer / Roastery (Tanpa tanda +)')
-                                            ->placeholder('Contoh: 6285121930454')
+                                            ->placeholder('Contoh: 6282132095241')
                                             ->required(),
                                         Grid::make(2)->schema([
                                             TextInput::make('barista_form_title')
@@ -1749,7 +1749,7 @@ class ManageContentPages extends Page
                                     ->schema([
                                         TextInput::make('events_whatsapp_number')
                                             ->label('Nomor WhatsApp Tujuan Pendaftaran (Tanpa tanda +)')
-                                            ->placeholder('Contoh: 6285121930454')
+                                            ->placeholder('Contoh: 6282132095241')
                                             ->required(),
                                         Grid::make(2)->schema([
                                             TextInput::make('events_cta_button_text')
@@ -2149,7 +2149,7 @@ class ManageContentPages extends Page
                                         Grid::make(2)->schema([
                                             TextInput::make('booking_whatsapp_number')
                                                 ->label('Nomor WhatsApp Reservasi')
-                                                ->placeholder('6285121930454')
+                                                ->placeholder('6282132095241')
                                                 ->required(),
                                             TextInput::make('booking_form_title')
                                                 ->label('Judul Formulir Reservasi')
@@ -2354,7 +2354,7 @@ class ManageContentPages extends Page
                                         Grid::make(3)->schema([
                                             TextInput::make('catering_whatsapp_number')
                                                 ->label('Nomor WhatsApp Reservasi')
-                                                ->placeholder('6285121930454')
+                                                ->placeholder('6282132095241')
                                                 ->required(),
                                             TextInput::make('catering_form_title')
                                                 ->label('Judul Formulir Pemesanan')
@@ -2921,7 +2921,7 @@ class ManageContentPages extends Page
             'grid_mobile' => (string) ($data['booking_grid_mobile'] ?? '1'),
             'image_aspect' => $data['booking_image_aspect'] ?? 'aspect-4/3',
             'gallery_images' => $bookingGalleryImages,
-            'whatsapp_number' => $data['booking_whatsapp_number'] ?? '6285121930454',
+            'whatsapp_number' => $data['booking_whatsapp_number'] ?? '6282132095241',
             'minimum_spent_info' => $data['booking_minimum_spent_info'] ?? '',
             'form_title' => $data['booking_form_title'] ?? 'Konsultasi Jadwal & Reservasi Tempat',
             'form_subtitle' => $data['booking_form_subtitle'] ?? '',
@@ -3014,7 +3014,7 @@ class ManageContentPages extends Page
             'grid_mobile' => (string) ($data['catering_grid_mobile'] ?? '1'),
             'image_aspect' => $data['catering_image_aspect'] ?? 'aspect-4/3',
             'gallery_images' => $cateringGalleryImages,
-            'whatsapp_number' => $data['catering_whatsapp_number'] ?? '6285121930454',
+            'whatsapp_number' => $data['catering_whatsapp_number'] ?? '6282132095241',
             'form_title' => $data['catering_form_title'] ?? 'Konsultasi Jadwal & Pemesanan Coffee Catering',
             'form_subtitle' => $data['catering_form_subtitle'] ?? '',
             'terms_note' => $data['catering_terms_note'] ?? '',
