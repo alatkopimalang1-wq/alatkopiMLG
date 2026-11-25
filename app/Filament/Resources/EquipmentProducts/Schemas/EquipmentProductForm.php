@@ -97,9 +97,16 @@ class EquipmentProductForm
                             DateTimePicker::make('released_at')
                                 ->label('Tanggal Rilis')
                                 ->default(now()),
-                            TextInput::make('warranty')
+                            Select::make('warranty')
                                 ->label('Garansi')
-                                ->placeholder('e.g. Garansi Resmi 1 Tahun, 6 Bulan, Tanpa Garansi'),
+                                ->options([
+                                    'Tidak ada' => 'Tidak ada',
+                                    '1 minggu' => '1 minggu',
+                                    '6 Bulan' => '6 Bulan',
+                                    '1 Tahun' => '1 Tahun',
+                                ])
+                                ->default('Tidak ada')
+                                ->native(false),
                         ]),
                         Grid::make(2)->schema([
                             Toggle::make('is_featured')

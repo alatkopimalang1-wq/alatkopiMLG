@@ -881,8 +881,7 @@ export default function ProductShow({
                                             Garansi
                                         </span>
                                         <span className="mt-1 block text-sm leading-snug font-bold text-brand-950 sm:text-base md:text-base">
-                                            {product.warranty ||
-                                                'Tanpa Garansi'}
+                                            {product.warranty || 'Tidak ada'}
                                         </span>
                                     </div>
                                 </div>
