@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\EquipmentProducts\Schemas;
 
+use App\Filament\Pages\ManageEquipmentBrands;
 use App\Models\Category;
 use App\Models\Product;
 use Filament\Forms\Components\DateTimePicker;
@@ -102,9 +103,12 @@ class EquipmentProductForm
                     ->columnSpanFull()
                     ->schema([
                         Grid::make(2)->schema([
-                            TextInput::make('origin')
+                            Select::make('origin')
                                 ->label('Merek / Brand')
-                                ->placeholder('e.g. Hario, Timemore, Fellow, One Two Cups'),
+                                ->options(fn (?Product $record): array => ManageEquipmentBrands::getBrandOptions($record?->origin))
+                                ->searchable()
+                                ->placeholder('Pilih merek alat kopi')
+                                ->helperText('Kelola daftar merek di menu Katalog & Toko > Merek / Brand Alat Kopi.'),
                             TextInput::make('process')
                                 ->label('Tipe / Jenis Alat')
                                 ->placeholder('e.g. Manual Grinder, Pour Over Dripper, Digital Scale'),

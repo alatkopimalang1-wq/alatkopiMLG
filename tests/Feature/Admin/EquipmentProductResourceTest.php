@@ -1,5 +1,6 @@
 <?php
 
+use App\Filament\Pages\ManageEquipmentBrands;
 use App\Filament\Resources\EquipmentProducts\EquipmentProductResource;
 use App\Filament\Resources\EquipmentProducts\Pages\CreateEquipmentProduct;
 use App\Filament\Resources\Products\ProductResource;
@@ -94,4 +95,36 @@ test('admin can create equipment product without variants using direct price and
     expect($variant->sku)->toBe('AKM-FILTER-V60-02');
 
     $this->get('/shop/hario-paper-filter-v60-02')->assertSuccessful();
+});
+
+test('admin can manage equipment brands and select them in equipment product form', function () {
+    $admin = User::factory()->create(['role' => 'admin']);
+    $this->actingAs($admin);
+
+    $this->get('/admin/manage-equipment-brands')->assertSuccessful();
+
+    Livewire::test(ManageEquipmentBrands::class)
+        ->set('data.brands_list', [
+            ['name' => 'Comandante', 'slug' => 'comandante', 'description' => 'Grinder Jerman', 'is_active' => true],
+            ['name' => 'Hario', 'slug' => 'hario', 'description' => 'Dripper Jepang', 'is_active' => true],
+        ])
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $options = ManageEquipmentBrands::getBrandOptions();
+    expect($options)->toHaveKey('Comandante');
+    expect($options)->toHaveKey('Hario');
+
+    Livewire::test(CreateEquipmentProduct::class)
+        ->set('data.name', 'Comandante C40 Nitro Blade')
+        ->set('data.slug', 'comandante-c40-nitro-blade')
+        ->set('data.origin', 'Comandante')
+        ->set('data.min_price', 4200000)
+        ->set('data.stock', 5)
+        ->call('create')
+        ->assertHasNoErrors();
+
+    $created = Product::where('slug', 'comandante-c40-nitro-blade')->first();
+    expect($created)->not->toBeNull();
+    expect($created->origin)->toBe('Comandante');
 });
