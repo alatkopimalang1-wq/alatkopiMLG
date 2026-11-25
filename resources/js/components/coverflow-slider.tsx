@@ -74,6 +74,7 @@ interface CoverflowSliderProps {
     slides?: PartnerSlide[];
     title?: string;
     subtitle?: string;
+    ctaLabel?: string;
     className?: string;
 }
 
@@ -81,6 +82,7 @@ export const CoverflowSlider: React.FC<CoverflowSliderProps> = ({
     slides = DEFAULT_PARTNER_SLIDES,
     title = 'Disajikan di Kedai Pilihan',
     subtitle = 'Temukan seduhan biji kopi sangrai Sanubari di berbagai kedai kopi dan coffee space terkurasi di Malang',
+    ctaLabel = 'Kunjungi',
     className = '',
 }) => {
     // Start centered on Lafayette (index 3 of 7)
@@ -334,7 +336,7 @@ export const CoverflowSlider: React.FC<CoverflowSliderProps> = ({
                                 {isCenter && slideUrl && (
                                     <div className="pointer-events-auto absolute top-3.5 right-3.5 z-20">
                                         <span className="inline-flex items-center gap-1 rounded-full border border-white/20 bg-black/60 px-2.5 py-1 text-[10px] font-bold text-white shadow-md backdrop-blur-md transition-all hover:scale-105 hover:bg-accent-copper">
-                                            <span>Kunjungi</span>
+                                            <span>{ctaLabel}</span>
                                             <ExternalLink className="h-3 w-3" />
                                         </span>
                                     </div>

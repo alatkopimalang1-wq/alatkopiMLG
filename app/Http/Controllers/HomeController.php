@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Filament\Pages\ManageEquipmentBrands;
 use App\Models\BrewGuide;
 use App\Models\Category;
 use App\Models\Post;
@@ -149,6 +150,7 @@ class HomeController extends Controller
             'upcomingEvents' => [],
             'spotlightProduct' => null,
             'videoReels' => VideoReel::active()->ordered()->get(),
+            'equipmentBrands' => ManageEquipmentBrands::getActiveBrands(),
         ]);
     }
 }

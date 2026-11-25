@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Models\Setting;
 use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -39,20 +40,63 @@ class ManageEquipmentBrands extends Page
     public ?array $data = [];
 
     /**
-     * @return array<int, array{name: string, slug: string, description?: string, is_active?: bool}>
+     * @return array<int, array{name: string, slug: string, description?: string, image?: string|null, image_url?: string|null, is_active?: bool}>
      */
     public static function defaultBrandsList(): array
     {
         return [
-            ['name' => 'Hario', 'slug' => 'hario', 'description' => 'Peralatan pour over dan kaca tahan panas asal Jepang.', 'is_active' => true],
-            ['name' => 'Timemore', 'slug' => 'timemore', 'description' => 'Grinder manual, timbangan digital, dan ketel seduh presisi.', 'is_active' => true],
-            ['name' => 'Fellow', 'slug' => 'fellow', 'description' => 'Ketel elektrik Stagg EKG, grinder, dan aksesori kopi modern.', 'is_active' => true],
-            ['name' => 'AeroPress', 'slug' => 'aeropress', 'description' => 'Alat seduh portabel berbasis tekanan udara.', 'is_active' => true],
-            ['name' => 'Kalita', 'slug' => 'kalita', 'description' => 'Dripper flat-bottom Wave dan perlengkapan filter.', 'is_active' => true],
-            ['name' => 'Bialetti', 'slug' => 'bialetti', 'description' => 'Moka pot klasik asal Italia.', 'is_active' => true],
-            ['name' => 'One Two Cups', 'slug' => 'one-two-cups', 'description' => 'Peralatan seduh ekonomis untuk home brewer.', 'is_active' => true],
-            ['name' => 'Alat Kopi Malang', 'slug' => 'alat-kopi-malang', 'description' => 'Produk kurasi & perlengkapan resmi Alat Kopi Malang.', 'is_active' => true],
+            ['name' => 'Hario', 'slug' => 'hario', 'description' => 'Peralatan pour over dan kaca tahan panas asal Jepang.', 'image_url' => 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=800&q=80', 'is_active' => true],
+            ['name' => 'Timemore', 'slug' => 'timemore', 'description' => 'Grinder manual, timbangan digital, dan ketel seduh presisi.', 'image_url' => 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=800&q=80', 'is_active' => true],
+            ['name' => 'Fellow', 'slug' => 'fellow', 'description' => 'Ketel elektrik Stagg EKG, grinder, dan aksesori kopi modern.', 'image_url' => 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=800&q=80', 'is_active' => true],
+            ['name' => 'AeroPress', 'slug' => 'aeropress', 'description' => 'Alat seduh portabel berbasis tekanan udara.', 'image_url' => 'https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&w=800&q=80', 'is_active' => true],
+            ['name' => 'Kalita', 'slug' => 'kalita', 'description' => 'Dripper flat-bottom Wave dan perlengkapan filter.', 'image_url' => 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80', 'is_active' => true],
+            ['name' => 'Bialetti', 'slug' => 'bialetti', 'description' => 'Moka pot klasik asal Italia.', 'image_url' => 'https://images.unsplash.com/photo-1517701604599-bb29b565090c?auto=format&fit=crop&w=800&q=80', 'is_active' => true],
+            ['name' => 'One Two Cups', 'slug' => 'one-two-cups', 'description' => 'Peralatan seduh ekonomis untuk home brewer.', 'image_url' => 'https://images.unsplash.com/photo-1510591509098-f4fdc6d0ff04?auto=format&fit=crop&w=800&q=80', 'is_active' => true],
+            ['name' => 'Alat Kopi Malang', 'slug' => 'alat-kopi-malang', 'description' => 'Produk kurasi & perlengkapan resmi Alat Kopi Malang.', 'image_url' => 'https://images.unsplash.com/photo-1442512595331-e89e73853f31?auto=format&fit=crop&w=800&q=80', 'is_active' => true],
         ];
+    }
+
+    /**
+     * @return array<int, array{name: string, slug: string, description: string, image: string}>
+     */
+    public static function getActiveBrands(): array
+    {
+        $list = Setting::get('equipment_brands', null);
+        if (! is_array($list) || empty($list)) {
+            $list = static::defaultBrandsList();
+        }
+
+        $defaultsBySlug = collect(static::defaultBrandsList())->keyBy('slug');
+        $fallbackImg = 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=800&q=80';
+
+        $brands = [];
+        foreach ($list as $item) {
+            if (($item['is_active'] ?? true) !== true) {
+                continue;
+            }
+            $name = trim((string) ($item['name'] ?? ''));
+            $slug = trim((string) ($item['slug'] ?? Str::slug($name)));
+            if ($name === '') {
+                continue;
+            }
+
+            $img = $item['image'] ?? null;
+            if (is_array($img)) {
+                $img = reset($img) ?: null;
+            }
+            if (empty($img)) {
+                $img = $item['image_url'] ?? ($defaultsBySlug[$slug]['image_url'] ?? $fallbackImg);
+            }
+
+            $brands[] = [
+                'name' => $name,
+                'slug' => $slug,
+                'description' => trim((string) ($item['description'] ?? '')),
+                'image' => (string) $img,
+            ];
+        }
+
+        return $brands;
     }
 
     /**
@@ -152,8 +196,21 @@ class ManageEquipmentBrands extends Page
                                 Grid::make(2)->schema([
                                     TextInput::make('description')
                                         ->label('Catatan / Deskripsi Singkat (Opsional)'),
+                                    TextInput::make('image_url')
+                                        ->label('URL Gambar Brand (Opsional)')
+                                        ->placeholder('https://...')
+                                        ->url(),
+                                ]),
+                                Grid::make(2)->schema([
+                                    FileUpload::make('image')
+                                        ->label('Upload Foto / Logo Brand (Opsional)')
+                                        ->disk('public')
+                                        ->directory('brands')
+                                        ->image()
+                                        ->imageEditor()
+                                        ->maxSize(3072),
                                     Toggle::make('is_active')
-                                        ->label('Aktif (Tampil di pilihan produk)')
+                                        ->label('Aktif (Tampil di pilihan produk & slider)')
                                         ->default(true),
                                 ]),
                             ])
@@ -194,10 +251,17 @@ class ManageEquipmentBrands extends Page
             }
             $seenSlugs[] = $slug;
 
+            $img = $item['image'] ?? null;
+            if (is_array($img)) {
+                $img = reset($img) ?: null;
+            }
+
             $cleaned[] = [
                 'name' => $name,
                 'slug' => $slug,
                 'description' => trim((string) ($item['description'] ?? '')),
+                'image' => $img ?: null,
+                'image_url' => trim((string) ($item['image_url'] ?? '')),
                 'is_active' => (bool) ($item['is_active'] ?? true),
             ];
         }

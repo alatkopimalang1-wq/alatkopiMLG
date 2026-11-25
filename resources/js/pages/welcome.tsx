@@ -156,6 +156,12 @@ interface WelcomeProps {
     upcomingEvents: Event[];
     spotlightProduct?: Product;
     videoReels?: any[];
+    equipmentBrands?: Array<{
+        name: string;
+        slug: string;
+        description?: string;
+        image?: string;
+    }>;
 }
 
 const resolveImageUrl = (img: unknown, fallback = ''): string => {
@@ -220,6 +226,7 @@ export default function Welcome({
     latestPosts = [],
     spotlightProduct,
     videoReels = [],
+    equipmentBrands = [],
 }: WelcomeProps) {
     const { props } = usePage<SanubariSharedProps>();
     const settings = props.settings;
@@ -1184,6 +1191,28 @@ export default function Welcome({
                         </Link>
                     </div>
                 </section>
+
+                {/* ============================================================== */}
+                {/* 3.2 BRAND PILIHAN (Coverflow Slider dari Merek Terdaftar)      */}
+                {/* ============================================================== */}
+                {equipmentBrands.length > 0 && (
+                    <LazyCoverflowSlider
+                        title="Brand Pilihan"
+                        subtitle="Kumpulan merek alat kopi terkurasi yang tersedia di Alat Kopi Malang"
+                        ctaLabel="Lihat Produk"
+                        slides={equipmentBrands.map((brand) => ({
+                            id: brand.slug,
+                            title: brand.name,
+                            city: 'BRAND PILIHAN',
+                            image:
+                                resolveCategoryImageUrl(brand.image) ||
+                                brand.image ||
+                                'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=800&q=80',
+                            href: `/shop?q=${encodeURIComponent(brand.name)}`,
+                            open_in_new_tab: false,
+                        }))}
+                    />
+                )}
 
                 {/* ============================================================== */}
                 {/* 3.5 JEJAK RASA & EDUKASI SEDUH (Articles & Brew Guides Slider)  */}
