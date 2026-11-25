@@ -77,6 +77,12 @@ class EquipmentProductForm
                                 ->default('all'),
                         ]),
                         Grid::make(2)->schema([
+                            Select::make('origin')
+                                ->label('Merek / Brand')
+                                ->options(fn (?Product $record): array => ManageEquipmentBrands::getBrandOptions($record?->origin))
+                                ->searchable()
+                                ->placeholder('Pilih merek alat kopi')
+                                ->helperText('Kelola daftar merek di menu Katalog & Toko > Merek / Brand Alat Kopi.'),
                             Select::make('categories')
                                 ->label('Kategori')
                                 ->relationship('categories', 'slug')
@@ -87,6 +93,8 @@ class EquipmentProductForm
 
                                     return $cat ? [$cat->id] : [];
                                 }),
+                        ]),
+                        Grid::make(2)->schema([
                             DateTimePicker::make('released_at')
                                 ->label('Tanggal Rilis')
                                 ->default(now()),
@@ -102,18 +110,10 @@ class EquipmentProductForm
                 Section::make('Spesifikasi Alat Kopi')
                     ->columnSpanFull()
                     ->schema([
-                        Grid::make(2)->schema([
-                            Select::make('origin')
-                                ->label('Merek / Brand')
-                                ->options(fn (?Product $record): array => ManageEquipmentBrands::getBrandOptions($record?->origin))
-                                ->searchable()
-                                ->placeholder('Pilih merek alat kopi')
-                                ->helperText('Kelola daftar merek di menu Katalog & Toko > Merek / Brand Alat Kopi.'),
+                        Grid::make(3)->schema([
                             TextInput::make('process')
                                 ->label('Tipe / Jenis Alat')
                                 ->placeholder('e.g. Manual Grinder, Pour Over Dripper, Digital Scale'),
-                        ]),
-                        Grid::make(2)->schema([
                             TextInput::make('varietal')
                                 ->label('Material / Bahan')
                                 ->placeholder('e.g. Stainless Steel 304, Keramik Porselen, Aluminium CNC'),
