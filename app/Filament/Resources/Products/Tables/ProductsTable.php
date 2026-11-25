@@ -26,7 +26,7 @@ class ProductsTable
     public static function configure(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn (Builder $query) => $query->where('slug', '!=', 'byob'))
+            ->modifyQueryUsing(fn (Builder $query) => $query->where('slug', '!=', 'byob')->where('series', '!=', 'alat-kopi'))
             ->columns([
                 ImageColumn::make('primaryImage.path')
                     ->label('Foto')

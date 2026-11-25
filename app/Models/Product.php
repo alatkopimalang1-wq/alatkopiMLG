@@ -466,6 +466,13 @@ class Product extends Model
                 'badge_color' => 'orange',
                 'is_active' => true,
             ],
+            [
+                'name' => 'Alat Kopi & Seduh',
+                'slug' => 'alat-kopi',
+                'description' => 'Peralatan seduh manual, grinder, timbangan digital, dan aksesori barista.',
+                'badge_color' => 'info',
+                'is_active' => true,
+            ],
         ];
     }
 
@@ -549,6 +556,7 @@ class Product extends Model
             'robusta' => 'Robusta',
             'houseblend' => 'Houseblend',
             'arabica' => 'Arabica',
+            'alat-kopi' => 'Alat Kopi & Seduh',
             'custom-blend' => 'Custom Blend (BYOB)',
             'byob' => 'Custom Blend (BYOB)',
         ];
@@ -578,6 +586,7 @@ class Product extends Model
             'robusta' => 'orange',
             'co-ferment' => 'purple',
             'kawi' => 'amber',
+            'alat-kopi' => 'info',
             default => 'gray',
         };
     }

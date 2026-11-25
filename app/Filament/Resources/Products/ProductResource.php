@@ -31,6 +31,7 @@ class ProductResource extends Resource
     {
         return parent::getEloquentQuery()
             ->where('slug', '!=', 'byob')
+            ->where('series', '!=', 'alat-kopi')
             ->with(['primaryImage', 'images', 'variants']);
     }
 
