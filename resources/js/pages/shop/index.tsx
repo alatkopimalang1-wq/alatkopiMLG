@@ -345,14 +345,6 @@ export default function ShopIndex({
                                 msOverflowStyle: 'none',
                             }}
                         >
-                            <Link
-                                href="/cybr"
-                                className="flex flex-shrink-0 items-center gap-1.5 rounded-full bg-accent-copper px-3.5 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-accent-copper/90"
-                            >
-                                <SlidersHorizontal className="h-3.5 w-3.5" />
-                                <span>Custom Blend (C.Y.B.R)</span>
-                            </Link>
-
                             {/* All Products */}
                             <button
                                 type="button"
@@ -367,7 +359,7 @@ export default function ShopIndex({
                                         : 'border border-sand-200/80 bg-cream-100/80 text-brand-700 hover:bg-cream-100'
                                 }`}
                             >
-                                Semua Kopi
+                                Semua Alat Kopi
                             </button>
 
                             {/* Dynamic Categories from Admin Dashboard */}

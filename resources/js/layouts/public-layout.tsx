@@ -725,18 +725,6 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({
                                         >
                                             Espresso Beans & Houseblend
                                         </Link>
-                                        <Link
-                                            href="/cybr"
-                                            onClick={() =>
-                                                setMobileMenuOpen(false)
-                                            }
-                                            className="flex items-center justify-between py-1.5 text-sm font-bold text-accent-copper"
-                                        >
-                                            <span>C.Y.B.R (Custom Blend)</span>
-                                            <span className="rounded-full bg-accent-copper px-1.5 py-0.5 text-[10px] font-extrabold text-white uppercase">
-                                                Baru
-                                            </span>
-                                        </Link>
                                     </div>
                                 </div>
 
@@ -1076,12 +1064,6 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({
                     {
                         label: 'Resep & Panduan Seduh',
                         url: isEn ? '/en/brew-guide' : '/panduan-seduh',
-                        is_external: false,
-                        is_active: true,
-                    },
-                    {
-                        label: 'C.Y.B.R Custom Blend',
-                        url: '/cybr',
                         is_external: false,
                         is_active: true,
                     },

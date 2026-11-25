@@ -35,10 +35,6 @@ Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
 Route::get('/kategori', [ShopController::class, 'categories'])->name('categories.index');
 Route::get('/categories', [ShopController::class, 'categories'])->name('categories.alias');
 Route::get('/api/search', [ShopController::class, 'liveSearch'])->name('api.search');
-Route::get('/cybr', [ShopController::class, 'byob'])->name('cybr');
-Route::get('/shop/cybr', [ShopController::class, 'byob'])->name('shop.cybr');
-Route::get('/shop/byob', [ShopController::class, 'byob'])->name('shop.byob');
-Route::get('/byob', [ShopController::class, 'byob'])->name('byob');
 Route::get('/shop/{slug}', [ShopController::class, 'show'])->name('shop.show');
 Route::get('/tentang', [ContentController::class, 'about'])->name('about');
 Route::get('/wholesale', [ContentController::class, 'wholesale'])->name('wholesale');
@@ -101,10 +97,6 @@ Route::prefix('en')->as('en.')->group(function () {
     Route::get('/kategori', [ShopController::class, 'categories'])->name('categories.index');
     Route::get('/categories', [ShopController::class, 'categories'])->name('categories.alias');
     Route::get('/api/search', [ShopController::class, 'liveSearch'])->name('api.search');
-    Route::get('/cybr', [ShopController::class, 'byob'])->name('cybr');
-    Route::get('/shop/cybr', [ShopController::class, 'byob'])->name('shop.cybr');
-    Route::get('/shop/byob', [ShopController::class, 'byob'])->name('shop.byob');
-    Route::get('/byob', [ShopController::class, 'byob'])->name('byob');
     Route::get('/shop/{slug}', [ShopController::class, 'show'])->name('shop.show');
     Route::get('/about', [ContentController::class, 'about'])->name('about');
     Route::get('/wholesale', [ContentController::class, 'wholesale'])->name('wholesale');
@@ -151,8 +143,8 @@ Route::get('/sitemap.xml', function () {
     $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
 
     $staticRoutes = [
-        '/', '/flash-sale', '/shop', '/cybr', '/shop/cybr', '/tentang', '/wholesale', '/jasa-roasting', '/roasting', '/training-barista', '/kunjungi', '/panduan-seduh', '/blog', '/acara', '/video', '/reels', '/keranjang',
-        '/en', '/en/flash-sale', '/en/shop', '/en/cybr', '/en/shop/cybr', '/en/about', '/en/wholesale', '/en/roasting', '/en/barista-training', '/en/visit', '/en/brew-guide', '/en/blog', '/en/events', '/en/videos', '/en/reels', '/en/cart',
+        '/', '/flash-sale', '/shop', '/tentang', '/wholesale', '/jasa-roasting', '/roasting', '/training-barista', '/kunjungi', '/panduan-seduh', '/blog', '/acara', '/video', '/reels', '/keranjang',
+        '/en', '/en/flash-sale', '/en/shop', '/en/about', '/en/wholesale', '/en/roasting', '/en/barista-training', '/en/visit', '/en/brew-guide', '/en/blog', '/en/events', '/en/videos', '/en/reels', '/en/cart',
     ];
 
     foreach ($staticRoutes as $r) {

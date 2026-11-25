@@ -325,32 +325,6 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                                         </div>
                                     )}
 
-                                    {/* Quick Shortcut to BYOB (Build Your Own Blend) */}
-                                    <div className="bg-sand-100 flex items-center justify-between gap-3 rounded-xl p-3.5">
-                                        <div className="flex items-center gap-2.5">
-                                            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-accent-copper text-white">
-                                                <SlidersHorizontal className="h-4 w-4" />
-                                            </div>
-                                            <div>
-                                                <p className="text-xs font-bold text-brand-950">
-                                                    Ingin custom blend kopi
-                                                    sendiri?
-                                                </p>
-                                                <p className="text-[11px] text-brand-700">
-                                                    C.Y.B.R Studio: Padukan 2
-                                                    biji kopi dengan slider
-                                                    persentase.
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <Link
-                                            href="/cybr"
-                                            onClick={onClose}
-                                            className="flex-shrink-0 rounded-full bg-brand-900 px-3 py-1.5 text-xs font-bold text-white transition-transform duration-100 hover:bg-brand-800 active:scale-95"
-                                        >
-                                            C.Y.B.R Studio
-                                        </Link>
-                                    </div>
                                 </>
                             )}
 

@@ -178,27 +178,6 @@ test('cart quote endpoint generates whatsapp redirect link', function () {
     expect($response->json('wa_url'))->toContain('wa.me');
 });
 
-test('public byob and cybr pages return successful response for both id and en routes', function () {
-    $this->seed();
-    $responseCybr = $this->get('/cybr');
-    $responseCybr->assertStatus(200);
-
-    $responseShopCybr = $this->get('/shop/cybr');
-    $responseShopCybr->assertStatus(200);
-
-    $responseId = $this->get('/shop/byob');
-    $responseId->assertStatus(200);
-
-    $responseByobAlias = $this->get('/byob');
-    $responseByobAlias->assertStatus(200);
-
-    $responseEnCybr = $this->get('/en/cybr');
-    $responseEnCybr->assertStatus(200);
-
-    $responseEn = $this->get('/en/shop/byob');
-    $responseEn->assertStatus(200);
-});
-
 test('cart quote endpoint processes custom blend notes in whatsapp message', function () {
     $this->seed();
     $variant = ProductVariant::first();
