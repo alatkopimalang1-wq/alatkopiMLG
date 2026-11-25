@@ -220,20 +220,20 @@ export default function ShopIndex({
     };
 
     return (
-        <PublicLayout title="Katalog Biji Kopi Specialty">
+        <PublicLayout title="Katalog Alat Kopi">
             {/* Header Banner */}
             <div className="border-b border-brand-900 bg-brand-950 px-4 py-12 text-white sm:px-6 lg:px-8">
                 <div className="mx-auto max-w-7xl space-y-3">
                     <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
-                        Katalog Biji Kopi{' '}
+                        Katalog{' '}
                         <span className="font-serif-italic font-normal text-accent-copper italic">
-                            sanubari
+                            Alat Kopi
                         </span>
                     </h1>
                     <p className="max-w-2xl text-xs text-brand-300 sm:text-sm">
-                        Eksplorasi seluruh lini biji kopi artisan Gunung Kawi,
-                        filter beans single origin, eksperimen co-fermentasi,
-                        hingga espresso house blend.
+                        Eksplorasi seluruh koleksi alat seduh manual, grinder,
+                        mesin espresso, kettle, timbangan digital, hingga
+                        aksesori barista pilihan.
                     </p>
                 </div>
             </div>
@@ -416,7 +416,7 @@ export default function ShopIndex({
                         </p>
                         <p className="mx-auto max-w-sm text-xs text-brand-500">
                             Coba ubah kata kunci pencarian atau reset filter
-                            untuk melihat seluruh koleksi biji kopi Sanubari.
+                            untuk melihat seluruh koleksi alat kopi kami.
                         </p>
                         <button
                             type="button"
