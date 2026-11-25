@@ -583,10 +583,10 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({
                                 placeholder={
                                     isMobile
                                         ? ''
-                                        : 'Cari biji kopi, varietas, tasting notes...'
+                                        : 'Cari alat kopi...'
                                 }
                                 className="h-10 w-full rounded-xl border border-brand-700/70 bg-brand-800/90 pr-8 pl-9 text-[16px] text-white placeholder-transparent shadow-inner transition-colors outline-none hover:bg-brand-800 focus:border-accent-copper focus:bg-brand-800 sm:h-10.5 sm:pl-10 sm:text-sm sm:placeholder-brand-300/80"
-                                aria-label="Cari produk kopi"
+                                aria-label="Cari alat kopi"
                             />
                             {headerSearch && (
                                 <button

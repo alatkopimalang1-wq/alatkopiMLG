@@ -182,7 +182,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                                 placeholder={
                                     isMobile
                                         ? ''
-                                        : 'Cari kopi, tasting notes, proses, atau metode seduh...'
+                                        : 'Cari alat kopi...'
                                 }
                                 className="flex-1 border-0 bg-transparent text-[16px] font-medium text-brand-950 placeholder-transparent focus:ring-0 focus:outline-none sm:text-base sm:placeholder-brand-500"
                             />
