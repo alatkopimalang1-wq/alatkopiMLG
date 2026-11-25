@@ -34,9 +34,6 @@ test('admin can access equipment product pages and create a new equipment produc
         ->set('data.name', 'Fellow Stagg EKG Electric Kettle')
         ->set('data.slug', 'fellow-stagg-ekg-electric-kettle')
         ->set('data.origin', 'Fellow')
-        ->set('data.process', 'Electric Kettle')
-        ->set('data.varietal', 'Stainless Steel 304')
-        ->set('data.altitude', '900ml')
         ->set('data.variants', [
             [
                 'label' => 'Matte Black 900ml',

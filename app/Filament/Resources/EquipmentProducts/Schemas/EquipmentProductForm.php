@@ -10,7 +10,6 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -105,25 +104,6 @@ class EquipmentProductForm
                             Toggle::make('is_new')
                                 ->label('Tandai Sebagai Baru (New Arrival)'),
                         ]),
-                    ]),
-
-                Section::make('Spesifikasi Alat Kopi')
-                    ->columnSpanFull()
-                    ->schema([
-                        Grid::make(3)->schema([
-                            TextInput::make('process')
-                                ->label('Tipe / Jenis Alat')
-                                ->placeholder('e.g. Manual Grinder, Pour Over Dripper, Digital Scale'),
-                            TextInput::make('varietal')
-                                ->label('Material / Bahan')
-                                ->placeholder('e.g. Stainless Steel 304, Keramik Porselen, Aluminium CNC'),
-                            TextInput::make('altitude')
-                                ->label('Kapasitas / Dimensi')
-                                ->placeholder('e.g. 600ml / Size 02 (1-4 Cup) / Maks 2000g'),
-                        ]),
-                        TagsInput::make('brew_methods')
-                            ->label('Cocok Untuk Metode Seduh')
-                            ->placeholder('Ketik metode lalu tekan enter (e.g. V60, Espresso, Pour Over)'),
                     ]),
 
                 Section::make('Harga, Stok & Varian Produk')
