@@ -8,7 +8,6 @@ use App\Filament\Pages\HalamanAwal\ManageHeroSlider;
 use App\Filament\Pages\HalamanAwal\ManagePartnerCafes;
 use App\Filament\Pages\HalamanAwal\ManageRecommendedProducts;
 use App\Filament\Pages\HalamanAwal\ManageSanubariPlaces;
-use App\Filament\Pages\HalamanAwal\ManageTasteRecommendations;
 use App\Filament\Pages\HalamanAwal\ManageVideoStats;
 use App\Models\Setting;
 use App\Models\User;
@@ -41,7 +40,6 @@ test('all 10 halaman awal livewire components mount properly', function () {
     Livewire::test(ManageSanubariPlaces::class)->assertSuccessful();
     Livewire::test(ManageFeaturedMenu::class)->assertSuccessful();
     Livewire::test(ManageEditorialSection::class)->assertSuccessful();
-    Livewire::test(ManageTasteRecommendations::class)->assertSuccessful();
     Livewire::test(ManagePartnerCafes::class)->assertSuccessful();
     Livewire::test(ManageFlashSale::class)->assertSuccessful();
 });

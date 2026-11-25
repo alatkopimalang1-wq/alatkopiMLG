@@ -1,7 +1,6 @@
 <?php
 
 use App\Filament\Pages\HalamanAwal\ManageHeroSlider;
-use App\Filament\Pages\HalamanAwal\ManageTasteRecommendations;
 use App\Filament\Pages\ManageContentPages;
 use App\Filament\Pages\ManageGeneralSettings;
 use App\Filament\Resources\Products\Pages\ListProducts;
@@ -235,26 +234,6 @@ test('product variant stores packaging image and computes image_url', function (
     expect($variant1->image_url)->toContain('products/variants/sample-200g.jpg');
     expect($variant2->image)->toBeNull();
     expect($variant2->image_url)->toBeNull();
-});
-
-test('manage taste recommendations saves uploaded flavor card images', function () {
-    Livewire::test(ManageTasteRecommendations::class)
-        ->set('data.home_flavor_title', 'Rekomendasi Rasa Kopi Sanubari')
-        ->set('data.home_flavor_subtitle', 'Pilihan terbaik untuk seduhan manual Anda')
-        ->set('data.home_flavor_items', [
-            [
-                'title' => 'Floral & Fruity',
-                'desc' => 'Lereng Kawi',
-                'href' => '/shop?series=kawi',
-                'bgImage' => ['taste-recommendations/taste-1.jpg'],
-            ],
-        ])
-        ->call('save')
-        ->assertHasNoErrors();
-
-    $saved = Setting::get('home_flavor_items');
-    expect($saved)->toBeArray()->toHaveCount(1);
-    expect($saved[0]['bgImage'])->toBe('taste-recommendations/taste-1.jpg');
 });
 
 test('manage content pages can be rendered and saved in filament admin', function () {

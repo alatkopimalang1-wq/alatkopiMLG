@@ -225,7 +225,6 @@ export default function Welcome({
     const settings = props.settings;
     const recScrollRef = useRef<HTMLDivElement>(null);
     const larisScrollRef = useRef<HTMLDivElement>(null);
-    const charScrollRef = useRef<HTMLDivElement>(null);
     const articleScrollRef = useRef<HTMLDivElement>(null);
     const placeScrollRef = useRef<HTMLDivElement>(null);
 
@@ -246,13 +245,6 @@ export default function Welcome({
         if (!placeScrollRef.current) return;
         const offset = direction === 'left' ? -340 : 340;
         placeScrollRef.current.scrollBy({ left: offset, behavior: 'smooth' });
-    };
-
-    const scrollChar = (direction: 'left' | 'right') => {
-        if (!charScrollRef.current) return;
-        const containerWidth = charScrollRef.current.clientWidth;
-        const offset = direction === 'left' ? -containerWidth : containerWidth;
-        charScrollRef.current.scrollBy({ left: offset, behavior: 'smooth' });
     };
 
     // Video controls state & ref
@@ -631,63 +623,6 @@ export default function Welcome({
         settings?.home_place_items && settings.home_place_items.length > 0
             ? settings.home_place_items
             : defaultPlaceItems;
-
-    // Character / Origin collections (Artatix 1:1 "Temukan Event Menarik di Kotamu!" pattern)
-    const defaultFlavorProfiles = [
-        {
-            id: 'manis-floral',
-            title: 'Manis & Floral',
-            desc: 'Single Origin Lereng Gunung Kawi',
-            href: '/shop?series=kawi',
-            bgImage:
-                'https://images.unsplash.com/photo-1518832553480-cd0e625ed3e6?auto=format&fit=crop&w=600&q=80',
-        },
-        {
-            id: 'fruity-juicy',
-            title: 'Fruity & Juicy',
-            desc: 'Inovasi CO-Ferment Buah Alami',
-            href: '/shop?series=co-ferment',
-            bgImage:
-                'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=600&q=80',
-        },
-        {
-            id: 'bold-cokelat',
-            title: 'Bold & Cokelat',
-            desc: 'Espresso Roast & Robusta Dampit',
-            href: '/shop?category=espresso-beans',
-            bgImage:
-                'https://images.unsplash.com/photo-1442512595331-e89e73853f31?auto=format&fit=crop&w=600&q=80',
-        },
-        {
-            id: 'clean-washed',
-            title: 'Clean & Asam Cerah',
-            desc: 'Washed Classic Terroir Kawi',
-            href: '/shop?category=classic-process',
-            bgImage:
-                'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=600&q=80',
-        },
-        {
-            id: 'home-brewer',
-            title: 'Paket Seduh Rumah',
-            desc: 'Starter Pack Biji Kopi Pemula',
-            href: '/shop',
-            bgImage:
-                'https://images.unsplash.com/photo-1587734195503-904fca47e0e9?auto=format&fit=crop&w=600&q=80',
-        },
-        {
-            id: 'coffee-shop-b2b',
-            title: 'Pasokan Kedai B2B',
-            desc: 'Wholesale Grosir & Mesin Espresso',
-            href: '/wholesale',
-            bgImage:
-                'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=600&q=80',
-        },
-    ];
-
-    const flavorProfiles =
-        settings?.home_flavor_items && settings.home_flavor_items.length > 0
-            ? settings.home_flavor_items
-            : defaultFlavorProfiles;
 
     return (
         <PublicLayout title="Speciality Coffee Roastery in Malang">
@@ -1545,85 +1480,6 @@ export default function Welcome({
                     viewAllHref={settings?.home_reels_view_all_url || '/video'}
                     reels={videoReels.length > 0 ? videoReels : undefined}
                 />
-
-                {/* ============================================================== */}
-                {/* 6. TEMUKAN KOPI BERDASARKAN KARAKTER RASA (Artatix "Kotamu!")   */}
-                {/* Region / Flavor Profile Cards with Arrow Pill Button            */}
-                {/* ============================================================== */}
-                <section className="mx-auto w-full max-w-7xl overflow-hidden px-4 sm:px-6 lg:px-8">
-                    <div className="mb-4 flex items-center justify-between gap-3 sm:mb-6">
-                        <div>
-                            <h2 className="text-xl font-bold text-brand-950 sm:text-2xl">
-                                {settings?.home_flavor_title ||
-                                    'Temukan Kopi Sesuai Karakter Seduhan Anda!'}
-                            </h2>
-                            <p className="mt-0.5 text-xs text-brand-700 sm:text-sm">
-                                {settings?.home_flavor_subtitle ||
-                                    'Pilih biji kopi berdasarkan preferensi aroma, metode seduh, atau kebutuhan bisnis'}
-                            </p>
-                        </div>
-                        <div className="flex shrink-0 items-center gap-1.5 sm:hidden">
-                            <button
-                                type="button"
-                                onClick={() => scrollChar('left')}
-                                aria-label="Geser ke kiri"
-                                className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-sand-200/60 text-brand-900 transition-transform hover:bg-sand-200 active:scale-95"
-                            >
-                                <ChevronLeft className="h-4 w-4" />
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => scrollChar('right')}
-                                aria-label="Geser ke kanan"
-                                className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-sand-200/60 text-brand-900 transition-transform hover:bg-sand-200 active:scale-95"
-                            >
-                                <ChevronRight className="h-4 w-4" />
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Responsive Grid / Horizontal Scroll for 6 Flavor Profiles */}
-                    <div
-                        ref={charScrollRef}
-                        className="no-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth pb-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:overflow-visible sm:pb-0 lg:grid-cols-6"
-                    >
-                        {flavorProfiles.map((item) => (
-                            <Link
-                                key={item.id}
-                                href={item.href}
-                                className="group relative flex aspect-3/4 w-[calc(50%-6px)] shrink-0 snap-start flex-col justify-between overflow-hidden rounded-2xl bg-brand-900 p-3.5 text-white sm:w-auto sm:p-4"
-                            >
-                                {/* Background Image */}
-                                <img
-                                    src={
-                                        resolveCategoryImageUrl(item.bgImage) ||
-                                        item.bgImage
-                                    }
-                                    alt={item.title}
-                                    className="absolute inset-0 h-full w-full object-cover opacity-50 transition-transform duration-300 group-hover:scale-105"
-                                    loading="lazy"
-                                />
-                                <div className="absolute inset-0 bg-brand-950/70" />
-
-                                {/* Top Badge / Spacer */}
-                                <div className="relative z-10" />
-
-                                {/* Bottom Content & Artatix Blue/Brand Arrow Pill */}
-                                <div className="relative z-10 space-y-2">
-                                    <span className="block text-xs leading-tight text-brand-200">
-                                        {item.desc}
-                                    </span>
-                                    <div className="flex w-full items-center justify-between rounded-xl bg-brand-700 px-3 py-2 text-xs font-bold text-white transition-colors hover:bg-brand-600">
-                                        <span className="truncate">
-                                            {item.title}
-                                        </span>
-                                        <ArrowUpRight className="ml-1 h-3.5 w-3.5 flex-shrink-0" />
-                                    </div>
-                                </div>
-                            </Link>
-                        ))}
-                    </div>
-                </section>
 
                 {/* ============================================================== */}
                 {/* CINEMATIC ROASTERY VIDEO (Above Footer)                        */}
