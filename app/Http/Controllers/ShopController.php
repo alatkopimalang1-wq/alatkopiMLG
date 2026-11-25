@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Filament\Pages\ManageDesktopMegaMenu;
+use App\Filament\Pages\ManageEquipmentBrands;
 use App\Models\BrewGuide;
 use App\Models\Category;
 use App\Models\Product;
@@ -71,6 +72,16 @@ class ShopController extends Controller
             $query->where('process', 'like', "%{$process}%");
         }
 
+        // Filter by brand (origin)
+        if ($brand = trim((string) $request->input('brand', ''))) {
+            if ($brand !== 'all') {
+                $query->where(function ($q) use ($brand) {
+                    $q->where('origin', $brand)
+                        ->orWhere('name', 'like', "%{$brand}%");
+                });
+            }
+        }
+
         // Sort
         $sort = $request->input('sort', 'featured');
         match ($sort) {
@@ -103,10 +114,12 @@ class ShopController extends Controller
         return Inertia::render('shop/index', [
             'products' => $products,
             'categories' => $categories,
+            'brands' => array_values(ManageEquipmentBrands::getBrandOptions()),
             'filters' => [
                 'q' => $request->input('q', ''),
                 'category' => $request->input('category', ''),
                 'series' => $request->input('series', ''),
+                'brand' => $request->input('brand', ''),
                 'sort' => $sort,
             ],
         ]);

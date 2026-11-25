@@ -31,10 +31,12 @@ interface ShopIndexProps {
         links: Array<{ url: string | null; label: string; active: boolean }>;
     };
     categories: Category[];
+    brands?: string[];
     filters: {
         q?: string;
         category?: string;
         series?: string;
+        brand?: string;
         sort?: string;
     };
 }
@@ -42,6 +44,7 @@ interface ShopIndexProps {
 export default function ShopIndex({
     products,
     categories = [],
+    brands = [],
     filters,
 }: ShopIndexProps) {
     const [searchTerm, setSearchTerm] = useState(filters.q || '');
@@ -49,9 +52,7 @@ export default function ShopIndex({
         filters.category || '',
     );
     const [selectedSeries, setSelectedSeries] = useState(filters.series || '');
-    const [selectedSort, setSelectedSort] = useState(
-        filters.sort || 'featured',
-    );
+    const [selectedBrand, setSelectedBrand] = useState(filters.brand || '');
 
     const [allProducts, setAllProducts] = useState<Product[]>(products.data);
     const [currentPage, setCurrentPage] = useState(products.current_page);
@@ -102,8 +103,8 @@ export default function ShopIndex({
         setSearchTerm(filters.q || '');
         setSelectedCategory(filters.category || '');
         setSelectedSeries(filters.series || '');
-        setSelectedSort(filters.sort || 'featured');
-    }, [filters.q, filters.category, filters.series, filters.sort]);
+        setSelectedBrand(filters.brand || '');
+    }, [filters.q, filters.category, filters.series, filters.brand]);
 
     // Sync when filters change or products update from server
     useEffect(() => {
@@ -135,7 +136,7 @@ export default function ShopIndex({
                 q: searchTerm,
                 category: selectedCategory,
                 series: selectedSeries,
-                sort: selectedSort,
+                brand: selectedBrand,
                 page: nextPage,
             },
             {
@@ -152,7 +153,7 @@ export default function ShopIndex({
         searchTerm,
         selectedCategory,
         selectedSeries,
-        selectedSort,
+        selectedBrand,
     ]);
 
     // IntersectionObserver for automatic lazy loading when scrolling
@@ -209,10 +210,10 @@ export default function ShopIndex({
                     newFilters.series !== undefined
                         ? newFilters.series
                         : selectedSeries,
-                sort:
-                    newFilters.sort !== undefined
-                        ? newFilters.sort
-                        : selectedSort,
+                brand:
+                    newFilters.brand !== undefined
+                        ? newFilters.brand
+                        : selectedBrand,
             },
             { preserveState: true, preserveScroll: true },
         );
@@ -253,7 +254,7 @@ export default function ShopIndex({
                                 onChange={(e) =>
                                     handleSearchChange(e.target.value)
                                 }
-                                placeholder="Cari nama kopi, varietas, rasa (e.g. Kawi, Peach, Washed)..."
+                                placeholder="Cari alat kopi, merek, atau tipe (e.g. Hario, Grinder, V60)..."
                                 className="w-full rounded-full border border-sand-200 bg-cream-50 py-2.5 pr-10 pl-10 text-[16px] text-brand-950 placeholder-transparent focus:border-brand-700 focus:outline-hidden sm:text-sm sm:placeholder-brand-400"
                             />
                             {searchTerm && (
@@ -272,49 +273,35 @@ export default function ShopIndex({
 
                         <div className="flex flex-shrink-0 items-center gap-2">
                             <span className="hidden text-xs font-medium text-brand-500 sm:inline">
-                                Urutkan:
+                                Filter Brand:
                             </span>
                             <Select
-                                value={selectedSort}
+                                value={selectedBrand || 'all'}
                                 onValueChange={(val: string) => {
-                                    setSelectedSort(val);
-                                    applyFilters({ sort: val });
+                                    const nextBrand = val === 'all' ? '' : val;
+                                    setSelectedBrand(nextBrand);
+                                    applyFilters({ brand: nextBrand });
                                 }}
                             >
-                                <SelectTrigger className="h-auto min-w-[140px] cursor-pointer rounded-full border border-sand-200 bg-cream-50 px-3.5 py-2 text-xs font-semibold text-brand-900 shadow-xs focus:border-brand-700 focus:outline-hidden">
-                                    <SelectValue placeholder="Best Seller" />
+                                <SelectTrigger className="h-auto min-w-[160px] cursor-pointer rounded-full border border-sand-200 bg-cream-50 px-3.5 py-2 text-xs font-semibold text-brand-900 shadow-xs focus:border-brand-700 focus:outline-hidden">
+                                    <SelectValue placeholder="Semua Brand" />
                                 </SelectTrigger>
                                 <SelectContent className="z-50 rounded-xl border border-sand-200 bg-white shadow-lg">
                                     <SelectItem
-                                        value="featured"
+                                        value="all"
                                         className="cursor-pointer py-1.5 text-xs font-medium"
                                     >
-                                        Best Seller
+                                        Semua Brand
                                     </SelectItem>
-                                    <SelectItem
-                                        value="newest"
-                                        className="cursor-pointer py-1.5 text-xs font-medium"
-                                    >
-                                        Terbaru
-                                    </SelectItem>
-                                    <SelectItem
-                                        value="price_asc"
-                                        className="cursor-pointer py-1.5 text-xs font-medium"
-                                    >
-                                        Harga: Terendah
-                                    </SelectItem>
-                                    <SelectItem
-                                        value="price_desc"
-                                        className="cursor-pointer py-1.5 text-xs font-medium"
-                                    >
-                                        Harga: Tertinggi
-                                    </SelectItem>
-                                    <SelectItem
-                                        value="name"
-                                        className="cursor-pointer py-1.5 text-xs font-medium"
-                                    >
-                                        Nama (A - Z)
-                                    </SelectItem>
+                                    {brands.map((brandName) => (
+                                        <SelectItem
+                                            key={brandName}
+                                            value={brandName}
+                                            className="cursor-pointer py-1.5 text-xs font-medium"
+                                        >
+                                            {brandName}
+                                        </SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                         </div>
@@ -429,13 +416,17 @@ export default function ShopIndex({
                         </strong>{' '}
                         produk
                     </span>
-                    {(filters.q || filters.series || filters.category) && (
+                    {(filters.q ||
+                        filters.series ||
+                        filters.category ||
+                        filters.brand) && (
                         <button
                             type="button"
                             onClick={() => {
                                 setSearchTerm('');
                                 setSelectedSeries('');
                                 setSelectedCategory('');
+                                setSelectedBrand('');
                                 router.get('/shop');
                             }}
                             className="font-semibold text-accent-copper hover:underline"
@@ -461,11 +452,12 @@ export default function ShopIndex({
                                 setSearchTerm('');
                                 setSelectedSeries('');
                                 setSelectedCategory('');
+                                setSelectedBrand('');
                                 router.get('/shop');
                             }}
                             className="cursor-pointer rounded-full bg-brand-700 px-5 py-2.5 text-xs font-semibold text-white"
                         >
-                            Tampilkan Semua Kopi
+                            Tampilkan Semua Produk
                         </button>
                     </div>
                 ) : (
