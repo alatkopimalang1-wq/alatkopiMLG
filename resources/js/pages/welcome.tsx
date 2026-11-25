@@ -41,14 +41,7 @@ import { DynamicCategoryIcon } from '@/components/dynamic-category-icon';
 import { FlashSaleSection } from '@/components/flash-sale-section';
 import { NewReleaseSection } from '@/components/new-release-section';
 import { BackInStockSection } from '@/components/back-in-stock-section';
-import type { HelixGalleryItem } from '@/components/helical-ribbon-gallery';
 import { CountingNumber } from '@animate-ui/react/primitives/texts/counting-number';
-
-const HelicalRibbonGallery = React.lazy(() =>
-    import('@/components/helical-ribbon-gallery').then((m) => ({
-        default: m.HelicalRibbonGallery,
-    })),
-);
 
 const CoverflowSlider = React.lazy(() =>
     import('@/components/coverflow-slider').then((m) => ({
@@ -61,49 +54,6 @@ const VideoReelsSlider = React.lazy(() =>
         default: m.VideoReelsSlider,
     })),
 );
-
-function LazyHelixGallery(props: any) {
-    const [inView, setInView] = useState(false);
-    const containerRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        if (inView) return;
-        const el = containerRef.current;
-        if (!el || typeof IntersectionObserver === 'undefined') {
-            setInView(true);
-            return;
-        }
-
-        const observer = new IntersectionObserver(
-            ([entry]) => {
-                if (entry.isIntersecting) {
-                    setInView(true);
-                    observer.disconnect();
-                }
-            },
-            { rootMargin: '600px 0px' },
-        );
-
-        observer.observe(el);
-        return () => observer.disconnect();
-    }, [inView]);
-
-    return (
-        <div ref={containerRef} className="min-h-[480px] w-full">
-            {inView ? (
-                <React.Suspense
-                    fallback={
-                        <div className="h-[480px] w-full animate-pulse rounded-3xl bg-brand-950/20" />
-                    }
-                >
-                    <HelicalRibbonGallery {...props} />
-                </React.Suspense>
-            ) : (
-                <div className="h-[480px] w-full rounded-3xl bg-brand-950/10" />
-            )}
-        </div>
-    );
-}
 
 function LazyCoverflowSlider(props: any) {
     const [inView, setInView] = useState(false);
@@ -206,7 +156,6 @@ interface WelcomeProps {
     upcomingEvents: Event[];
     spotlightProduct?: Product;
     videoReels?: any[];
-    helixGalleryImages?: HelixGalleryItem[];
 }
 
 const resolveImageUrl = (img: unknown, fallback = ''): string => {
@@ -271,7 +220,6 @@ export default function Welcome({
     latestPosts = [],
     spotlightProduct,
     videoReels = [],
-    helixGalleryImages = [],
 }: WelcomeProps) {
     const { props } = usePage<SanubariSharedProps>();
     const settings = props.settings;
@@ -1786,48 +1734,6 @@ export default function Welcome({
                     </div>
                 </section>
 
-                {/* ============================================================== */}
-                {/* 3D IMAGE HELIX / HELICAL RIBBON GALLERY (Paling Bawah / Footer)*/}
-                {/* Interactive 3D spiral ribbon gallery powered by Three.js       */}
-                {/* ============================================================== */}
-                <LazyHelixGallery
-                    items={helixGalleryImages}
-                    showHeader={
-                        settings?.home_helix_show_header === true ||
-                        settings?.home_helix_show_header === '1'
-                    }
-                    autoRotate={
-                        settings?.home_helix_auto_rotate !== false &&
-                        settings?.home_helix_auto_rotate !== '0'
-                    }
-                    autoRotateSpeed={
-                        settings?.home_helix_auto_rotate_speed
-                            ? Number(settings.home_helix_auto_rotate_speed)
-                            : 0.2
-                    }
-                    visibleColumns={
-                        settings?.home_helix_visible_columns
-                            ? Number(settings.home_helix_visible_columns)
-                            : 5
-                    }
-                    tiersCount={
-                        settings?.home_helix_tiers_count
-                            ? Number(settings.home_helix_tiers_count)
-                            : 2
-                    }
-                    title={
-                        settings?.home_helix_title ||
-                        'Helical Ribbon Showcase — Jejak Rasa Sanubari'
-                    }
-                    subtitle={
-                        settings?.home_helix_subtitle ||
-                        'Putar dan jelajahi arsip visual lereng Gunung Kawi, proses kurasi sangrai, dan suasana roastery dalam pita spiral 3D interaktif.'
-                    }
-                    badge={
-                        settings?.home_helix_badge ||
-                        'Galeri 3D Interaktif • Three.js'
-                    }
-                />
             </div>
         </PublicLayout>
     );
