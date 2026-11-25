@@ -239,40 +239,12 @@ export default function ShopIndex({
             </div>
 
             <div className="mx-auto max-w-7xl space-y-4 px-2 py-4 sm:space-y-6 sm:px-6 sm:py-8 lg:px-8">
-                {/* Search & Filter Bar */}
+                {/* Filter Bar */}
                 <div className="space-y-3 rounded-xl border border-sand-200/80 bg-white p-3 shadow-xs sm:space-y-4 sm:rounded-2xl sm:p-4">
-                    {/* Top Row: Search input & Sorting */}
-                    <div className="flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:items-center">
-                        <form
-                            onSubmit={handleSearch}
-                            className="relative flex-1"
-                        >
-                            <Search className="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-brand-400" />
-                            <input
-                                type="text"
-                                value={searchTerm}
-                                onChange={(e) =>
-                                    handleSearchChange(e.target.value)
-                                }
-                                placeholder="Cari alat kopi, merek, atau tipe (e.g. Hario, Grinder, V60)..."
-                                className="w-full rounded-full border border-sand-200 bg-cream-50 py-2.5 pr-10 pl-10 text-[16px] text-brand-950 placeholder-transparent focus:border-brand-700 focus:outline-hidden sm:text-sm sm:placeholder-brand-400"
-                            />
-                            {searchTerm && (
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setSearchTerm('');
-                                        applyFilters({ q: '' });
-                                    }}
-                                    className="absolute top-1/2 right-3.5 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                                >
-                                    <X className="h-4 w-4" />
-                                </button>
-                            )}
-                        </form>
-
+                    {/* Top Row: Brand Filter */}
+                    <div className="flex flex-wrap items-center justify-between gap-3">
                         <div className="flex flex-shrink-0 items-center gap-2">
-                            <span className="hidden text-xs font-medium text-brand-500 sm:inline">
+                            <span className="text-xs font-medium text-brand-500">
                                 Filter Brand:
                             </span>
                             <Select
@@ -283,7 +255,7 @@ export default function ShopIndex({
                                     applyFilters({ brand: nextBrand });
                                 }}
                             >
-                                <SelectTrigger className="h-auto min-w-[160px] cursor-pointer rounded-full border border-sand-200 bg-cream-50 px-3.5 py-2 text-xs font-semibold text-brand-900 shadow-xs focus:border-brand-700 focus:outline-hidden">
+                                <SelectTrigger className="h-auto min-w-[180px] cursor-pointer rounded-full border border-sand-200 bg-cream-50 px-3.5 py-2 text-xs font-semibold text-brand-900 shadow-xs focus:border-brand-700 focus:outline-hidden">
                                     <SelectValue placeholder="Semua Brand" />
                                 </SelectTrigger>
                                 <SelectContent className="z-50 rounded-xl border border-sand-200 bg-white shadow-lg">
