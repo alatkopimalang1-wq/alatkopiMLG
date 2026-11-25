@@ -162,8 +162,13 @@ export const CartDrawer: React.FC = () => {
                                                             </button>
                                                         </div>
                                                         <p className="text-xs font-medium text-accent-copper">
-                                                            {item.variant.label}{' '}
-                                                            • {item.grindOption}
+                                                            {item.variant.label}
+                                                            {item.grindOption &&
+                                                            item.product
+                                                                .series !==
+                                                                'alat-kopi'
+                                                                ? ` • ${item.grindOption}`
+                                                                : ''}
                                                         </p>
                                                         {item.customNotes && (
                                                             <p className="bg-sand-100/80 mt-1 rounded px-2 py-0.5 text-[11px] font-medium text-balance text-brand-600">

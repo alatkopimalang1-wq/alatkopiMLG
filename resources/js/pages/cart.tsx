@@ -719,11 +719,13 @@ export default function CartPage({
                                                                 {
                                                                     item.variant
                                                                         .label
-                                                                }{' '}
-                                                                ·{' '}
-                                                                {
-                                                                    item.grindOption
                                                                 }
+                                                                {item.grindOption &&
+                                                                item.product
+                                                                    .series !==
+                                                                    'alat-kopi'
+                                                                    ? ` · ${item.grindOption}`
+                                                                    : ''}
                                                             </p>
                                                             {item.customNotes && (
                                                                 <div className="mt-1.5 rounded-lg border border-amber-200/70 bg-amber-50/80 p-2 text-[11px] leading-snug text-brand-900">

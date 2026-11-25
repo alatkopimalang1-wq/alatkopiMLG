@@ -122,12 +122,22 @@ export default function ProductShow({
                   },
               ];
 
+    const isEquipment =
+        product.series === 'alat-kopi' ||
+        Boolean(
+            product.categories?.some(
+                (c) => c.slug === 'alat-kopi' || c.type === 'equipment',
+            ),
+        );
+
     const [selectedVariant, setSelectedVariant] = useState<ProductVariant>(
         variants[0],
     );
     const [selectedImage, setSelectedImage] = useState(0);
     const [quantity, setQuantity] = useState(1);
-    const [grindOption, setGrindOption] = useState('Biji Utuh (Whole Bean)');
+    const [grindOption, setGrindOption] = useState(
+        isEquipment ? '' : 'Biji Utuh (Whole Bean)',
+    );
 
     // Track Meta Pixel ViewContent
     useEffect(() => {
@@ -278,7 +288,12 @@ export default function ProductShow({
 
     const handleAddToCart = () => {
         if (isCurrentVariantOutOfStock) return;
-        addItem(product, selectedVariant, quantity, grindOption);
+        addItem(
+            product,
+            selectedVariant,
+            quantity,
+            isEquipment ? '' : grindOption,
+        );
         setIsAdded(true);
         setTimeout(() => setIsAdded(false), 1400);
     };
@@ -288,7 +303,7 @@ export default function ProductShow({
               `Halo Alat Kopi Malang! Saya ingin menanyakan ketersediaan restock produk:\n*${product.name}*\nUkuran: ${selectedVariant.label}\n\nMohon info estimasi ready stock kembali. Terima kasih!`,
           )}`
         : `https://wa.me/6285121930454?text=${encodeURIComponent(
-              `Halo Alat Kopi Malang! Saya ingin memesan langsung:\n*${product.name}*\nUkuran: ${selectedVariant.label}\nGilingan: ${grindOption}\nJumlah: ${quantity}x (${formatRupiah(selectedVariant.price * quantity)})\n\nMohon info ketersediaan stok & ongkir ke alamat saya. Terima kasih!`,
+              `Halo Alat Kopi Malang! Saya ingin memesan langsung:\n*${product.name}*\nVarian: ${selectedVariant.label}${!isEquipment && grindOption ? `\nGilingan: ${grindOption}` : ''}\nJumlah: ${quantity}x (${formatRupiah(selectedVariant.price * quantity)})\n\nMohon info ketersediaan stok & ongkir ke alamat saya. Terima kasih!`,
           )}`;
 
     const tokopediaUrl =
@@ -627,36 +642,38 @@ export default function ProductShow({
                             </div>
                         </div>
 
-                        {/* Grind Size Selection */}
-                        <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                                <label className="block text-sm font-bold tracking-wider text-brand-800 uppercase sm:text-sm md:text-base">
-                                    Pilihan Gilingan:
-                                </label>
-                                <span className="text-xs font-medium text-accent-copper sm:text-xs md:text-sm">
-                                    Gratis giling sesuai metode seduh
-                                </span>
+                        {/* Grind Size Selection (hanya untuk biji kopi, bukan alat kopi) */}
+                        {!isEquipment && (
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <label className="block text-sm font-bold tracking-wider text-brand-800 uppercase sm:text-sm md:text-base">
+                                        Pilihan Gilingan:
+                                    </label>
+                                    <span className="text-xs font-medium text-accent-copper sm:text-xs md:text-sm">
+                                        Gratis giling sesuai metode seduh
+                                    </span>
+                                </div>
+                                <Select
+                                    value={grindOption}
+                                    onValueChange={setGrindOption}
+                                >
+                                    <SelectTrigger className="flex h-auto w-full cursor-pointer items-center justify-between rounded-xl border border-sand-200 bg-white px-3.5 py-2.5 text-sm font-semibold text-brand-950 shadow-xs focus:border-brand-700 focus:outline-hidden sm:text-sm md:text-base">
+                                        <SelectValue placeholder="Pilih tingkat gilingan" />
+                                    </SelectTrigger>
+                                    <SelectContent className="z-50 rounded-xl border border-sand-200 bg-white p-1.5 shadow-xl">
+                                        {grindOptions.map((opt) => (
+                                            <SelectItem
+                                                key={opt}
+                                                value={opt}
+                                                className="cursor-pointer rounded-lg bg-transparent px-3 py-2.5 text-sm font-medium text-brand-900 transition-colors hover:bg-transparent hover:text-accent-copper focus:bg-transparent focus:text-accent-copper data-[highlighted]:bg-transparent data-[highlighted]:text-accent-copper data-[state=checked]:font-bold data-[state=checked]:text-brand-950 sm:text-sm md:text-base"
+                                            >
+                                                {opt}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
-                            <Select
-                                value={grindOption}
-                                onValueChange={setGrindOption}
-                            >
-                                <SelectTrigger className="flex h-auto w-full cursor-pointer items-center justify-between rounded-xl border border-sand-200 bg-white px-3.5 py-2.5 text-sm font-semibold text-brand-950 shadow-xs focus:border-brand-700 focus:outline-hidden sm:text-sm md:text-base">
-                                    <SelectValue placeholder="Pilih tingkat gilingan" />
-                                </SelectTrigger>
-                                <SelectContent className="z-50 rounded-xl border border-sand-200 bg-white p-1.5 shadow-xl">
-                                    {grindOptions.map((opt) => (
-                                        <SelectItem
-                                            key={opt}
-                                            value={opt}
-                                            className="cursor-pointer rounded-lg bg-transparent px-3 py-2.5 text-sm font-medium text-brand-900 transition-colors hover:bg-transparent hover:text-accent-copper focus:bg-transparent focus:text-accent-copper data-[highlighted]:bg-transparent data-[highlighted]:text-accent-copper data-[state=checked]:font-bold data-[state=checked]:text-brand-950 sm:text-sm md:text-base"
-                                        >
-                                            {opt}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
+                        )}
 
                         {/* Quantity Stepper & Add to Cart */}
                         <div className="space-y-3 pt-2">

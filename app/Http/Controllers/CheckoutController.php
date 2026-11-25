@@ -117,7 +117,9 @@ class CheckoutController extends Controller
                 'product_variant_id' => $variant->id,
                 'product_name' => $variant->product->name,
                 'variant_label' => $variant->label,
-                'grind_option' => $item['grind_option'] ?? 'Biji Utuh (Whole Bean)',
+                'grind_option' => $variant->product?->series === 'alat-kopi'
+                    ? ''
+                    : ($item['grind_option'] ?? 'Biji Utuh (Whole Bean)'),
                 'custom_notes' => $item['custom_notes'] ?? null,
                 'cost_price' => $itemCostPrice,
                 'price' => $unitPrice,

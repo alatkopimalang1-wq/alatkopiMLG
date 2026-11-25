@@ -63,11 +63,20 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
         grindOption: string = 'Biji Utuh (Whole Bean)',
         customNotes?: string,
     ) => {
+        const isEquipment =
+            product.series === 'alat-kopi' ||
+            Boolean(
+                product.categories?.some(
+                    (c) => c.slug === 'alat-kopi' || c.type === 'equipment',
+                ),
+            );
+        const resolvedGrindOption = isEquipment ? '' : grindOption;
+
         setItems((prev) => {
             const existingIndex = prev.findIndex(
                 (i) =>
                     i.variant.id === variant.id &&
-                    i.grindOption === grindOption &&
+                    i.grindOption === resolvedGrindOption &&
                     (i.customNotes || '') === (customNotes || ''),
             );
             if (existingIndex > -1) {
@@ -77,7 +86,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
             }
             return [
                 ...prev,
-                { product, variant, quantity, grindOption, customNotes },
+                {
+                    product,
+                    variant,
+                    quantity,
+                    grindOption: resolvedGrindOption,
+                    customNotes,
+                },
             ];
         });
         setIsCartOpen(true);

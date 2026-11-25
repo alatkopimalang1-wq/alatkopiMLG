@@ -131,7 +131,8 @@ class CartController extends Controller
             $lineTotal = $variant->price * $qty;
             $subtotal += $lineTotal;
 
-            $grind = $item['grind_option'] ?? 'Biji Utuh (Whole Bean)';
+            $isEquipment = $variant->product?->series === 'alat-kopi';
+            $grind = $isEquipment ? '' : ($item['grind_option'] ?? 'Biji Utuh (Whole Bean)');
             $customNotes = $item['custom_notes'] ?? null;
 
             $orderLines[] = [
@@ -158,7 +159,9 @@ class CartController extends Controller
             if (! empty($line['custom_notes'])) {
                 $linesText .= "   Racikan: {$line['custom_notes']}\n";
             }
-            $linesText .= "   Gilingan: {$line['grind_option']}\n";
+            if (! empty($line['grind_option'])) {
+                $linesText .= "   Gilingan: {$line['grind_option']}\n";
+            }
             $linesText .= "   Qty: {$line['quantity']}x — {$formattedPrice}\n\n";
         }
 
