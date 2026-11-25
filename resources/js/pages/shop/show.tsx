@@ -950,7 +950,7 @@ export default function ProductShow({
                         {product.description && (
                             <div className="space-y-2.5 border-t border-sand-200 pt-5">
                                 <h3 className="text-sm font-bold tracking-wider text-accent-copper uppercase sm:text-sm md:text-base">
-                                    Catatan Roaster & Deskripsi
+                                    Deskripsi & Spesifikasi
                                 </h3>
                                 <p className="text-sm leading-relaxed font-normal whitespace-pre-line text-brand-800 sm:text-base sm:leading-7 md:text-base md:leading-relaxed">
                                     {typeof product.description === 'string'
