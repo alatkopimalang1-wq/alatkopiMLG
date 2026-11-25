@@ -477,20 +477,20 @@ export default function ShopIndex({
                                     {isLoadingMore ? (
                                         <>
                                             <Loader2 className="h-4 w-4 animate-spin text-accent-copper" />
-                                            <span>Memuat Biji Kopi...</span>
+                                            <span>Memuat Alat Kopi...</span>
                                         </>
                                     ) : (
-                                        <span>Muat Lebih Banyak Biji Kopi</span>
+                                        <span>Muat Lebih Banyak Alat Kopi</span>
                                     )}
                                 </button>
                                 <span className="text-[11px] font-medium text-brand-600">
                                     Menampilkan {allProducts.length} dari{' '}
-                                    {products.total} biji kopi
+                                    {products.total} alat kopi
                                 </span>
                             </div>
                         ) : (
                             <div className="pt-8 text-center text-xs font-medium text-brand-500">
-                                Seluruh biji kopi ({allProducts.length}) telah
+                                Seluruh alat kopi ({allProducts.length}) telah
                                 ditampilkan
                             </div>
                         )}
