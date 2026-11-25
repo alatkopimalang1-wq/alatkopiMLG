@@ -135,6 +135,19 @@ class HomeController extends Controller
             $backInStockProducts = [];
         }
 
+        $brandPilihanActive = (bool) Setting::get('home_brand_pilihan_is_active', true);
+        $brandPilihanSlugs = Setting::get('home_brand_pilihan_slugs');
+        $equipmentBrands = $brandPilihanActive ? ManageEquipmentBrands::getActiveBrands() : [];
+
+        if ($brandPilihanActive && is_array($brandPilihanSlugs) && ! empty($brandPilihanSlugs)) {
+            $brandsBySlug = collect($equipmentBrands)->keyBy('slug');
+            $equipmentBrands = collect($brandPilihanSlugs)
+                ->map(fn ($slug) => $brandsBySlug->get($slug))
+                ->filter()
+                ->values()
+                ->all();
+        }
+
         return Inertia::render('welcome', [
             'featuredProducts' => [],
             'newArrivals' => [],
@@ -150,7 +163,7 @@ class HomeController extends Controller
             'upcomingEvents' => [],
             'spotlightProduct' => null,
             'videoReels' => VideoReel::active()->ordered()->get(),
-            'equipmentBrands' => ManageEquipmentBrands::getActiveBrands(),
+            'equipmentBrands' => $equipmentBrands,
         ]);
     }
 }

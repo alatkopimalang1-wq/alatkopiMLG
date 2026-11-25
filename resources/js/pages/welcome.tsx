@@ -1197,13 +1197,24 @@ export default function Welcome({
                 {/* ============================================================== */}
                 {equipmentBrands.length > 0 && (
                     <LazyCoverflowSlider
-                        title="Brand Pilihan"
-                        subtitle="Kumpulan merek alat kopi terkurasi yang tersedia di Alat Kopi Malang"
-                        ctaLabel="Lihat Produk"
+                        title={
+                            settings?.home_brand_pilihan_title ||
+                            'Brand Pilihan'
+                        }
+                        subtitle={
+                            settings?.home_brand_pilihan_subtitle ||
+                            'Kumpulan merek alat kopi terkurasi yang tersedia di Alat Kopi Malang'
+                        }
+                        ctaLabel={
+                            settings?.home_brand_pilihan_cta_label ||
+                            'Lihat Produk'
+                        }
                         slides={equipmentBrands.map((brand) => ({
                             id: brand.slug,
                             title: brand.name,
-                            city: 'BRAND PILIHAN',
+                            city:
+                                settings?.home_brand_pilihan_badge ||
+                                'BRAND PILIHAN',
                             image:
                                 resolveCategoryImageUrl(brand.image) ||
                                 brand.image ||
