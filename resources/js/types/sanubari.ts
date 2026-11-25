@@ -48,6 +48,7 @@ export interface Product {
     short_description?: string | null;
     tasting_notes?: string | null;
     origin?: string | null;
+    warranty?: string | null;
     region?: string | null;
     farm?: string | null;
     producer?: string | null;

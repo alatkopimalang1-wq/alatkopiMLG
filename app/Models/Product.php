@@ -25,6 +25,7 @@ class Product extends Model
         'short_description',
         'tasting_notes',
         'origin',
+        'warranty',
         'region',
         'farm',
         'producer',

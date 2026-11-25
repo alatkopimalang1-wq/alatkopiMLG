@@ -860,64 +860,92 @@ export default function ProductShow({
                             </div>
                         </div>
 
-                        {/* Technical Spec Tiles (NiR Style At-a-glance Specs) */}
-                        <div className="space-y-3.5 border-t border-sand-200 pt-6">
-                            <h3 className="text-sm font-bold tracking-wider text-accent-copper uppercase sm:text-sm md:text-base">
-                                Spesifikasi Kopi (Terroir & Profil)
-                            </h3>
-                            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3.5">
-                                <div className="rounded-xl border border-sand-200/90 bg-white p-3.5 shadow-2xs sm:p-4 md:rounded-2xl">
-                                    <span className="block text-xs font-semibold tracking-wider text-brand-400 uppercase sm:text-xs md:text-sm">
-                                        Origin
-                                    </span>
-                                    <span className="mt-1 block text-sm leading-snug font-bold text-brand-950 sm:text-base md:text-base">
-                                        {product.origin ||
-                                            'G. Kawi, Malang, Jawa Timur'}
-                                    </span>
-                                </div>
-                                <div className="rounded-xl border border-sand-200/90 bg-white p-3.5 shadow-2xs sm:p-4 md:rounded-2xl">
-                                    <span className="block text-xs font-semibold tracking-wider text-brand-400 uppercase sm:text-xs md:text-sm">
-                                        Varietas
-                                    </span>
-                                    <span className="mt-1 block text-sm leading-snug font-bold text-brand-950 sm:text-base md:text-base">
-                                        {product.varietal || 'Mix Varietals'}
-                                    </span>
-                                </div>
-                                <div className="rounded-xl border border-sand-200/90 bg-white p-3.5 shadow-2xs sm:p-4 md:rounded-2xl">
-                                    <span className="block text-xs font-semibold tracking-wider text-brand-400 uppercase sm:text-xs md:text-sm">
-                                        Proses
-                                    </span>
-                                    <span className="mt-1 block text-sm leading-snug font-bold text-brand-950 sm:text-base md:text-base">
-                                        {product.process || 'Natural'}
-                                    </span>
-                                </div>
-                                <div className="rounded-xl border border-sand-200/90 bg-white p-3.5 shadow-2xs sm:p-4 md:rounded-2xl">
-                                    <span className="block text-xs font-semibold tracking-wider text-brand-400 uppercase sm:text-xs md:text-sm">
-                                        Ketinggian
-                                    </span>
-                                    <span className="mt-1 block text-sm leading-snug font-bold text-brand-950 sm:text-base md:text-base">
-                                        {product.altitude || '1.400 MASL'}
-                                    </span>
-                                </div>
-                                <div className="rounded-xl border border-sand-200/90 bg-white p-3.5 shadow-2xs sm:p-4 md:rounded-2xl">
-                                    <span className="block text-xs font-semibold tracking-wider text-brand-400 uppercase sm:text-xs md:text-sm">
-                                        Roast Level
-                                    </span>
-                                    <span className="mt-1 block text-sm leading-snug font-bold text-brand-950 sm:text-base md:text-base">
-                                        {product.roast_level ||
-                                            'Light to Medium'}
-                                    </span>
-                                </div>
-                                <div className="rounded-xl border border-sand-200/90 bg-white p-3.5 shadow-2xs sm:p-4 md:rounded-2xl">
-                                    <span className="block text-xs font-semibold tracking-wider text-brand-400 uppercase sm:text-xs md:text-sm">
-                                        Sertifikasi
-                                    </span>
-                                    <span className="mt-1 block text-sm leading-snug font-bold text-brand-950 sm:text-base md:text-base">
-                                        PIRT & Halal
-                                    </span>
+                        {/* Technical Spec Tiles */}
+                        {isEquipment ? (
+                            <div className="space-y-3.5 border-t border-sand-200 pt-6">
+                                <h3 className="text-sm font-bold tracking-wider text-accent-copper uppercase sm:text-sm md:text-base">
+                                    Informasi Alat Kopi
+                                </h3>
+                                <div className="grid grid-cols-2 gap-2.5 sm:gap-3.5">
+                                    <div className="rounded-xl border border-sand-200/90 bg-white p-3.5 shadow-2xs sm:p-4 md:rounded-2xl">
+                                        <span className="block text-xs font-semibold tracking-wider text-brand-400 uppercase sm:text-xs md:text-sm">
+                                            Merek / Brand
+                                        </span>
+                                        <span className="mt-1 block text-sm leading-snug font-bold text-brand-950 sm:text-base md:text-base">
+                                            {product.origin ||
+                                                'Alat Kopi Malang'}
+                                        </span>
+                                    </div>
+                                    <div className="rounded-xl border border-sand-200/90 bg-white p-3.5 shadow-2xs sm:p-4 md:rounded-2xl">
+                                        <span className="block text-xs font-semibold tracking-wider text-brand-400 uppercase sm:text-xs md:text-sm">
+                                            Garansi
+                                        </span>
+                                        <span className="mt-1 block text-sm leading-snug font-bold text-brand-950 sm:text-base md:text-base">
+                                            {product.warranty ||
+                                                'Tanpa Garansi'}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        ) : (
+                            <div className="space-y-3.5 border-t border-sand-200 pt-6">
+                                <h3 className="text-sm font-bold tracking-wider text-accent-copper uppercase sm:text-sm md:text-base">
+                                    Spesifikasi Kopi (Terroir & Profil)
+                                </h3>
+                                <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3.5">
+                                    <div className="rounded-xl border border-sand-200/90 bg-white p-3.5 shadow-2xs sm:p-4 md:rounded-2xl">
+                                        <span className="block text-xs font-semibold tracking-wider text-brand-400 uppercase sm:text-xs md:text-sm">
+                                            Origin
+                                        </span>
+                                        <span className="mt-1 block text-sm leading-snug font-bold text-brand-950 sm:text-base md:text-base">
+                                            {product.origin ||
+                                                'G. Kawi, Malang, Jawa Timur'}
+                                        </span>
+                                    </div>
+                                    <div className="rounded-xl border border-sand-200/90 bg-white p-3.5 shadow-2xs sm:p-4 md:rounded-2xl">
+                                        <span className="block text-xs font-semibold tracking-wider text-brand-400 uppercase sm:text-xs md:text-sm">
+                                            Varietas
+                                        </span>
+                                        <span className="mt-1 block text-sm leading-snug font-bold text-brand-950 sm:text-base md:text-base">
+                                            {product.varietal || 'Mix Varietals'}
+                                        </span>
+                                    </div>
+                                    <div className="rounded-xl border border-sand-200/90 bg-white p-3.5 shadow-2xs sm:p-4 md:rounded-2xl">
+                                        <span className="block text-xs font-semibold tracking-wider text-brand-400 uppercase sm:text-xs md:text-sm">
+                                            Proses
+                                        </span>
+                                        <span className="mt-1 block text-sm leading-snug font-bold text-brand-950 sm:text-base md:text-base">
+                                            {product.process || 'Natural'}
+                                        </span>
+                                    </div>
+                                    <div className="rounded-xl border border-sand-200/90 bg-white p-3.5 shadow-2xs sm:p-4 md:rounded-2xl">
+                                        <span className="block text-xs font-semibold tracking-wider text-brand-400 uppercase sm:text-xs md:text-sm">
+                                            Ketinggian
+                                        </span>
+                                        <span className="mt-1 block text-sm leading-snug font-bold text-brand-950 sm:text-base md:text-base">
+                                            {product.altitude || '1.400 MASL'}
+                                        </span>
+                                    </div>
+                                    <div className="rounded-xl border border-sand-200/90 bg-white p-3.5 shadow-2xs sm:p-4 md:rounded-2xl">
+                                        <span className="block text-xs font-semibold tracking-wider text-brand-400 uppercase sm:text-xs md:text-sm">
+                                            Roast Level
+                                        </span>
+                                        <span className="mt-1 block text-sm leading-snug font-bold text-brand-950 sm:text-base md:text-base">
+                                            {product.roast_level ||
+                                                'Light to Medium'}
+                                        </span>
+                                    </div>
+                                    <div className="rounded-xl border border-sand-200/90 bg-white p-3.5 shadow-2xs sm:p-4 md:rounded-2xl">
+                                        <span className="block text-xs font-semibold tracking-wider text-brand-400 uppercase sm:text-xs md:text-sm">
+                                            Sertifikasi
+                                        </span>
+                                        <span className="mt-1 block text-sm leading-snug font-bold text-brand-950 sm:text-base md:text-base">
+                                            PIRT & Halal
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Description Text */}
                         {product.description && (

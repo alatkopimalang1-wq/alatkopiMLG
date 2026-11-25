@@ -34,6 +34,7 @@ test('admin can access equipment product pages and create a new equipment produc
         ->set('data.name', 'Fellow Stagg EKG Electric Kettle')
         ->set('data.slug', 'fellow-stagg-ekg-electric-kettle')
         ->set('data.origin', 'Fellow')
+        ->set('data.warranty', 'Garansi Resmi 1 Tahun')
         ->set('data.variants', [
             [
                 'label' => 'Matte Black 900ml',
@@ -50,6 +51,7 @@ test('admin can access equipment product pages and create a new equipment produc
     $created = Product::where('slug', 'fellow-stagg-ekg-electric-kettle')->first();
     expect($created)->not->toBeNull();
     expect($created->series)->toBe('alat-kopi');
+    expect($created->warranty)->toBe('Garansi Resmi 1 Tahun');
     expect($created->stock)->toBe(8);
     expect((int) $created->min_price)->toBe(2650000);
 
