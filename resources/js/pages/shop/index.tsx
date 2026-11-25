@@ -1,0 +1,546 @@
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Head, Link, router } from '@inertiajs/react';
+import {
+    Filter,
+    Search,
+    SlidersHorizontal,
+    X,
+    Loader2,
+    ChevronLeft,
+    ChevronRight,
+} from 'lucide-react';
+import { PublicLayout } from '@/layouts/public-layout';
+import type { Category, Product } from '@/types/sanubari';
+import { ProductCard } from '@/components/product-card';
+import { CoffeeBeanIcon } from '@/components/coffee-bean-icon';
+import { SectionHeading } from '@/components/ui/section-heading';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+
+interface ShopIndexProps {
+    products: {
+        data: Product[];
+        current_page: number;
+        last_page: number;
+        total: number;
+        links: Array<{ url: string | null; label: string; active: boolean }>;
+    };
+    categories: Category[];
+    filters: {
+        q?: string;
+        category?: string;
+        series?: string;
+        sort?: string;
+    };
+}
+
+export default function ShopIndex({
+    products,
+    categories = [],
+    filters,
+}: ShopIndexProps) {
+    const [searchTerm, setSearchTerm] = useState(filters.q || '');
+    const [selectedCategory, setSelectedCategory] = useState(
+        filters.category || '',
+    );
+    const [selectedSeries, setSelectedSeries] = useState(filters.series || '');
+    const [selectedSort, setSelectedSort] = useState(
+        filters.sort || 'featured',
+    );
+
+    const [allProducts, setAllProducts] = useState<Product[]>(products.data);
+    const [currentPage, setCurrentPage] = useState(products.current_page);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
+    const loadMoreSentinelRef = useRef<HTMLDivElement>(null);
+    const searchDebounceRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Horizontal scroll navigation for category filter pills
+    const pillsContainerRef = useRef<HTMLDivElement>(null);
+    const [canScrollLeft, setCanScrollLeft] = useState(false);
+    const [canScrollRight, setCanScrollRight] = useState(false);
+
+    const checkPillsScroll = useCallback(() => {
+        const el = pillsContainerRef.current;
+        if (el) {
+            setCanScrollLeft(el.scrollLeft > 6);
+            setCanScrollRight(
+                el.scrollLeft + el.clientWidth < el.scrollWidth - 6,
+            );
+        }
+    }, []);
+
+    useEffect(() => {
+        checkPillsScroll();
+        const el = pillsContainerRef.current;
+        if (!el) return;
+        const resizeObserver = new ResizeObserver(() => checkPillsScroll());
+        resizeObserver.observe(el);
+        window.addEventListener('resize', checkPillsScroll);
+        return () => {
+            resizeObserver.disconnect();
+            window.removeEventListener('resize', checkPillsScroll);
+        };
+    }, [checkPillsScroll, categories]);
+
+    const scrollPills = (direction: 'left' | 'right') => {
+        if (pillsContainerRef.current) {
+            const scrollAmount = direction === 'left' ? -240 : 240;
+            pillsContainerRef.current.scrollBy({
+                left: scrollAmount,
+                behavior: 'smooth',
+            });
+        }
+    };
+
+    // Sync state when props filters change from server/navigation
+    useEffect(() => {
+        setSearchTerm(filters.q || '');
+        setSelectedCategory(filters.category || '');
+        setSelectedSeries(filters.series || '');
+        setSelectedSort(filters.sort || 'featured');
+    }, [filters.q, filters.category, filters.series, filters.sort]);
+
+    // Sync when filters change or products update from server
+    useEffect(() => {
+        if (products.current_page === 1) {
+            setAllProducts(products.data);
+            setCurrentPage(1);
+        } else {
+            setAllProducts((prev) => {
+                const existing = new Set(prev.map((p) => p.id));
+                const newItems = products.data.filter(
+                    (p) => !existing.has(p.id),
+                );
+                return [...prev, ...newItems];
+            });
+            setCurrentPage(products.current_page);
+        }
+    }, [products]);
+
+    const hasMore = currentPage < products.last_page;
+
+    const loadMoreProducts = useCallback(() => {
+        if (isLoadingMore || !hasMore) return;
+        setIsLoadingMore(true);
+        const nextPage = currentPage + 1;
+
+        router.get(
+            '/shop',
+            {
+                q: searchTerm,
+                category: selectedCategory,
+                series: selectedSeries,
+                sort: selectedSort,
+                page: nextPage,
+            },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                only: ['products'],
+                onFinish: () => setIsLoadingMore(false),
+            },
+        );
+    }, [
+        isLoadingMore,
+        hasMore,
+        currentPage,
+        searchTerm,
+        selectedCategory,
+        selectedSeries,
+        selectedSort,
+    ]);
+
+    // IntersectionObserver for automatic lazy loading when scrolling
+    useEffect(() => {
+        if (!hasMore || isLoadingMore) return;
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting) {
+                    loadMoreProducts();
+                }
+            },
+            { rootMargin: '300px' },
+        );
+
+        const currentRef = loadMoreSentinelRef.current;
+        if (currentRef) {
+            observer.observe(currentRef);
+        }
+
+        return () => {
+            if (currentRef) observer.unobserve(currentRef);
+        };
+    }, [hasMore, isLoadingMore, loadMoreProducts]);
+
+    const handleSearchChange = (val: string) => {
+        setSearchTerm(val);
+        if (searchDebounceRef.current) {
+            clearTimeout(searchDebounceRef.current);
+        }
+        searchDebounceRef.current = setTimeout(() => {
+            applyFilters({ q: val });
+        }, 350);
+    };
+
+    const handleSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (searchDebounceRef.current) {
+            clearTimeout(searchDebounceRef.current);
+        }
+        applyFilters({ q: searchTerm });
+    };
+
+    const applyFilters = (newFilters: Partial<typeof filters>) => {
+        router.get(
+            '/shop',
+            {
+                q: newFilters.q !== undefined ? newFilters.q : searchTerm,
+                category:
+                    newFilters.category !== undefined
+                        ? newFilters.category
+                        : selectedCategory,
+                series:
+                    newFilters.series !== undefined
+                        ? newFilters.series
+                        : selectedSeries,
+                sort:
+                    newFilters.sort !== undefined
+                        ? newFilters.sort
+                        : selectedSort,
+            },
+            { preserveState: true, preserveScroll: true },
+        );
+    };
+
+    return (
+        <PublicLayout title="Katalog Biji Kopi Specialty">
+            {/* Header Banner */}
+            <div className="border-b border-brand-900 bg-brand-950 px-4 py-12 text-white sm:px-6 lg:px-8">
+                <div className="mx-auto max-w-7xl space-y-3">
+                    <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
+                        Katalog Biji Kopi{' '}
+                        <span className="font-serif-italic font-normal text-accent-copper italic">
+                            sanubari
+                        </span>
+                    </h1>
+                    <p className="max-w-2xl text-xs text-brand-300 sm:text-sm">
+                        Eksplorasi seluruh lini biji kopi artisan Gunung Kawi,
+                        filter beans single origin, eksperimen co-fermentasi,
+                        hingga espresso house blend.
+                    </p>
+                </div>
+            </div>
+
+            <div className="mx-auto max-w-7xl space-y-4 px-2 py-4 sm:space-y-6 sm:px-6 sm:py-8 lg:px-8">
+                {/* Search & Filter Bar */}
+                <div className="space-y-3 rounded-xl border border-sand-200/80 bg-white p-3 shadow-xs sm:space-y-4 sm:rounded-2xl sm:p-4">
+                    {/* Top Row: Search input & Sorting */}
+                    <div className="flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:items-center">
+                        <form
+                            onSubmit={handleSearch}
+                            className="relative flex-1"
+                        >
+                            <Search className="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-brand-400" />
+                            <input
+                                type="text"
+                                value={searchTerm}
+                                onChange={(e) =>
+                                    handleSearchChange(e.target.value)
+                                }
+                                placeholder="Cari nama kopi, varietas, rasa (e.g. Kawi, Peach, Washed)..."
+                                className="w-full rounded-full border border-sand-200 bg-cream-50 py-2.5 pr-10 pl-10 text-[16px] text-brand-950 placeholder-transparent focus:border-brand-700 focus:outline-hidden sm:text-sm sm:placeholder-brand-400"
+                            />
+                            {searchTerm && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setSearchTerm('');
+                                        applyFilters({ q: '' });
+                                    }}
+                                    className="absolute top-1/2 right-3.5 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                >
+                                    <X className="h-4 w-4" />
+                                </button>
+                            )}
+                        </form>
+
+                        <div className="flex flex-shrink-0 items-center gap-2">
+                            <span className="hidden text-xs font-medium text-brand-500 sm:inline">
+                                Urutkan:
+                            </span>
+                            <Select
+                                value={selectedSort}
+                                onValueChange={(val: string) => {
+                                    setSelectedSort(val);
+                                    applyFilters({ sort: val });
+                                }}
+                            >
+                                <SelectTrigger className="h-auto min-w-[140px] cursor-pointer rounded-full border border-sand-200 bg-cream-50 px-3.5 py-2 text-xs font-semibold text-brand-900 shadow-xs focus:border-brand-700 focus:outline-hidden">
+                                    <SelectValue placeholder="Best Seller" />
+                                </SelectTrigger>
+                                <SelectContent className="z-50 rounded-xl border border-sand-200 bg-white shadow-lg">
+                                    <SelectItem
+                                        value="featured"
+                                        className="cursor-pointer py-1.5 text-xs font-medium"
+                                    >
+                                        Best Seller
+                                    </SelectItem>
+                                    <SelectItem
+                                        value="newest"
+                                        className="cursor-pointer py-1.5 text-xs font-medium"
+                                    >
+                                        Terbaru
+                                    </SelectItem>
+                                    <SelectItem
+                                        value="price_asc"
+                                        className="cursor-pointer py-1.5 text-xs font-medium"
+                                    >
+                                        Harga: Terendah
+                                    </SelectItem>
+                                    <SelectItem
+                                        value="price_desc"
+                                        className="cursor-pointer py-1.5 text-xs font-medium"
+                                    >
+                                        Harga: Tertinggi
+                                    </SelectItem>
+                                    <SelectItem
+                                        value="name"
+                                        className="cursor-pointer py-1.5 text-xs font-medium"
+                                    >
+                                        Nama (A - Z)
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+
+                    {/* Filter Pills from Admin Dashboard Categories with Navigation Arrows */}
+                    <div className="relative">
+                        {/* Left Scroll Arrow (Desktop only, hidden on mobile) */}
+                        {canScrollLeft && (
+                            <div className="pointer-events-none absolute top-0 bottom-0 left-0 z-10 hidden items-center bg-gradient-to-r from-white via-white/95 to-transparent pr-3 pl-0.5 sm:flex">
+                                <button
+                                    type="button"
+                                    onClick={() => scrollPills('left')}
+                                    aria-label="Geser kategori ke kiri"
+                                    className="hover:bg-sand-50 pointer-events-auto flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border border-sand-200/90 bg-white text-brand-800 shadow-md transition-all active:scale-95 sm:h-8 sm:w-8"
+                                >
+                                    <ChevronLeft className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
+                                </button>
+                            </div>
+                        )}
+
+                        <div
+                            ref={pillsContainerRef}
+                            onScroll={checkPillsScroll}
+                            className="no-scrollbar flex [scrollbar-width:none] items-center gap-2 overflow-x-auto scroll-smooth pt-1 [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                            style={{
+                                scrollbarWidth: 'none',
+                                msOverflowStyle: 'none',
+                            }}
+                        >
+                            <Link
+                                href="/cybr"
+                                className="flex flex-shrink-0 items-center gap-1.5 rounded-full bg-accent-copper px-3.5 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-accent-copper/90"
+                            >
+                                <SlidersHorizontal className="h-3.5 w-3.5" />
+                                <span>Custom Blend (C.Y.B.R)</span>
+                            </Link>
+
+                            {/* All Products */}
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setSelectedCategory('');
+                                    setSelectedSeries('');
+                                    applyFilters({ category: '', series: '' });
+                                }}
+                                className={`flex-shrink-0 cursor-pointer rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${
+                                    !selectedCategory && !selectedSeries
+                                        ? 'bg-brand-700 text-white shadow-xs'
+                                        : 'border border-sand-200/80 bg-cream-100/80 text-brand-700 hover:bg-cream-100'
+                                }`}
+                            >
+                                Semua Kopi
+                            </button>
+
+                            {/* Dynamic Categories from Admin Dashboard */}
+                            {categories.map((cat) => {
+                                const catName =
+                                    typeof cat.name === 'string'
+                                        ? cat.name
+                                        : cat.name?.id ||
+                                          cat.name?.en ||
+                                          Object.values(cat.name || {})[0] ||
+                                          cat.slug;
+                                const isActive =
+                                    selectedCategory === cat.slug ||
+                                    (!selectedCategory &&
+                                        selectedSeries === cat.slug);
+
+                                return (
+                                    <button
+                                        key={cat.id}
+                                        type="button"
+                                        onClick={() => {
+                                            setSelectedCategory(cat.slug);
+                                            setSelectedSeries('');
+                                            applyFilters({
+                                                category: cat.slug,
+                                                series: '',
+                                            });
+                                        }}
+                                        className={`flex-shrink-0 cursor-pointer rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${
+                                            isActive
+                                                ? 'bg-brand-700 text-white shadow-xs'
+                                                : 'border border-sand-200/80 bg-cream-100/80 text-brand-700 hover:bg-cream-100'
+                                        }`}
+                                    >
+                                        {catName}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        {/* Right Scroll Arrow (Desktop only, hidden on mobile) */}
+                        {canScrollRight && (
+                            <div className="pointer-events-none absolute top-0 right-0 bottom-0 z-10 hidden items-center bg-gradient-to-l from-white via-white/95 to-transparent pr-0.5 pl-3 sm:flex">
+                                <button
+                                    type="button"
+                                    onClick={() => scrollPills('right')}
+                                    aria-label="Geser kategori ke kanan"
+                                    className="hover:bg-sand-50 pointer-events-auto flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border border-sand-200/90 bg-white text-brand-800 shadow-md transition-all active:scale-95 sm:h-8 sm:w-8"
+                                >
+                                    <ChevronRight className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Result Status */}
+                <div className="flex items-center justify-between px-1 text-xs text-brand-500">
+                    <span>
+                        Menampilkan{' '}
+                        <strong className="text-brand-900">
+                            {products.data.length}
+                        </strong>{' '}
+                        dari{' '}
+                        <strong className="text-brand-900">
+                            {products.total}
+                        </strong>{' '}
+                        produk
+                    </span>
+                    {(filters.q || filters.series || filters.category) && (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setSearchTerm('');
+                                setSelectedSeries('');
+                                setSelectedCategory('');
+                                router.get('/shop');
+                            }}
+                            className="font-semibold text-accent-copper hover:underline"
+                        >
+                            Reset Filter
+                        </button>
+                    )}
+                </div>
+
+                {/* Products Grid */}
+                {allProducts.length === 0 ? (
+                    <div className="space-y-3 rounded-2xl border border-sand-200 bg-white p-12 text-center">
+                        <p className="text-base font-bold text-brand-900">
+                            Tidak ada produk yang cocok dengan pencarian Anda
+                        </p>
+                        <p className="mx-auto max-w-sm text-xs text-brand-500">
+                            Coba ubah kata kunci pencarian atau reset filter
+                            untuk melihat seluruh koleksi biji kopi Sanubari.
+                        </p>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setSearchTerm('');
+                                setSelectedSeries('');
+                                setSelectedCategory('');
+                                router.get('/shop');
+                            }}
+                            className="cursor-pointer rounded-full bg-brand-700 px-5 py-2.5 text-xs font-semibold text-white"
+                        >
+                            Tampilkan Semua Kopi
+                        </button>
+                    </div>
+                ) : (
+                    <>
+                        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-6 lg:grid-cols-4">
+                            {allProducts.map((product) => (
+                                <ProductCard
+                                    key={product.id}
+                                    product={product}
+                                />
+                            ))}
+
+                            {/* Lazy load skeleton placeholder cards */}
+                            {isLoadingMore && (
+                                <>
+                                    {[1, 2, 3, 4].map((i) => (
+                                        <div
+                                            key={`lazy-skeleton-${i}`}
+                                            className="animate-pulse space-y-3 rounded-2xl border border-sand-200/60 bg-white p-4 sm:p-5"
+                                        >
+                                            <div className="flex aspect-square w-full items-center justify-center rounded-xl bg-sand-200/50">
+                                                <CoffeeBeanIcon className="h-8 w-8 animate-bounce text-accent-copper/60" />
+                                            </div>
+                                            <div className="h-4 w-2/3 rounded bg-sand-200/60" />
+                                            <div className="h-5 w-full rounded bg-sand-200/70" />
+                                            <div className="h-4 w-1/2 rounded bg-sand-200/40" />
+                                        </div>
+                                    ))}
+                                </>
+                            )}
+                        </div>
+
+                        {/* Lazy load intersection sentinel */}
+                        <div ref={loadMoreSentinelRef} className="h-4" />
+
+                        {/* Lazy load button & status */}
+                        {hasMore ? (
+                            <div className="flex flex-col items-center justify-center gap-2.5 pt-6">
+                                <button
+                                    type="button"
+                                    onClick={loadMoreProducts}
+                                    disabled={isLoadingMore}
+                                    className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-brand-900 px-6 py-3 text-xs font-bold text-white shadow-md transition-all hover:bg-brand-800 active:scale-95 disabled:opacity-60 sm:text-sm"
+                                >
+                                    {isLoadingMore ? (
+                                        <>
+                                            <Loader2 className="h-4 w-4 animate-spin text-accent-copper" />
+                                            <span>Memuat Biji Kopi...</span>
+                                        </>
+                                    ) : (
+                                        <span>Muat Lebih Banyak Biji Kopi</span>
+                                    )}
+                                </button>
+                                <span className="text-[11px] font-medium text-brand-600">
+                                    Menampilkan {allProducts.length} dari{' '}
+                                    {products.total} biji kopi
+                                </span>
+                            </div>
+                        ) : (
+                            <div className="pt-8 text-center text-xs font-medium text-brand-500">
+                                Seluruh biji kopi ({allProducts.length}) telah
+                                ditampilkan
+                            </div>
+                        )}
+                    </>
+                )}
+            </div>
+        </PublicLayout>
+    );
+}

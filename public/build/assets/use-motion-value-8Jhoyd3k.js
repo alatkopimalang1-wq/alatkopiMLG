@@ -1,0 +1,1 @@
+import{a as e,r as t}from"./createLucideIcon-Dtf6GpVi.js";import{E as n}from"./house-qRSr1FFd.js";import{r,t as i}from"./MotionConfigContext-BA14gA4P.js";var a=e(t(),1);function o(e){let t=r(()=>n(e)),{isStatic:o}=(0,a.useContext)(i);if(o){let[,n]=(0,a.useState)(e);(0,a.useEffect)(()=>t.on(`change`,n),[])}return t}export{o as t};

@@ -1,0 +1,38 @@
+{
+    "name": "Sanubari POS — Terminal Kasir",
+    "short_name": "Sanubari POS",
+    "description": "Aplikasi Kasir Point of Sale Sanubari Roastery",
+    "icons": [
+        {
+            "src": "/favicon-192x192.png?v=20261116",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/favicon-192x192.png?v=20261116",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "/favicon-512x512.png?v=20261116",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/favicon-512x512.png?v=20261116",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ],
+    "theme_color": "#1c1917",
+    "background_color": "#141210",
+    "display": "standalone",
+    "orientation": "any",
+    "start_url": "/pos/login",
+    "scope": "/pos",
+    "categories": ["business", "finance", "productivity"]
+}
