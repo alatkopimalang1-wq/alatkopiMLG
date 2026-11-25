@@ -3,8 +3,7 @@
 use App\Filament\Pages\HalamanAwal\ManageHeroSlider;
 use App\Filament\Pages\ManageContentPages;
 use App\Filament\Pages\ManageGeneralSettings;
-use App\Filament\Resources\Products\Pages\ListProducts;
-use App\Filament\Resources\Products\ProductResource;
+use App\Filament\Resources\EquipmentProducts\EquipmentProductResource;
 use App\Models\Category;
 use App\Models\Post;
 use App\Models\Product;
@@ -120,7 +119,7 @@ test('product can update marketplace urls in filament product resource', functio
     $user = User::factory()->create();
     $this->actingAs($user);
 
-    $response = $this->get(ProductResource::getUrl('edit', ['record' => $product]));
+    $response = $this->get(EquipmentProductResource::getUrl('edit', ['record' => $product]));
     $response->assertSuccessful();
 
     $product->update([

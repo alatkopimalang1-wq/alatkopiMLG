@@ -3,18 +3,18 @@
 use App\Filament\Pages\ManageEquipmentBrands;
 use App\Filament\Resources\EquipmentProducts\EquipmentProductResource;
 use App\Filament\Resources\EquipmentProducts\Pages\CreateEquipmentProduct;
-use App\Filament\Resources\Products\ProductResource;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\User;
 use Database\Seeders\EquipmentProductsSeeder;
 use Livewire\Livewire;
 
-test('equipment products seeder creates alat-kopi category and 4 example products', function () {
+test('equipment products seeder creates alat-kopi category and 8 example products', function () {
     $this->seed(EquipmentProductsSeeder::class);
 
     expect(Category::where('slug', 'alat-kopi')->exists())->toBeTrue();
-    expect(Product::where('series', 'alat-kopi')->count())->toBe(4);
+    expect(Product::where('series', 'alat-kopi')->count())->toBe(8);
+    expect(Product::where('series', '!=', 'alat-kopi')->count())->toBe(0);
 
     $this->get('/shop?series=alat-kopi')->assertSuccessful();
     $this->get('/shop/hario-v60-ceramic-dripper-02')->assertSuccessful();
@@ -55,9 +55,8 @@ test('admin can access equipment product pages and create a new equipment produc
     expect($created->stock)->toBe(8);
     expect((int) $created->min_price)->toBe(2650000);
 
-    // Ensure separation between Produk Alat Kopi and Produk Kopi
+    // Ensure it appears in Produk Alat Kopi
     expect(EquipmentProductResource::getEloquentQuery()->where('slug', 'fellow-stagg-ekg-electric-kettle')->exists())->toBeTrue();
-    expect(ProductResource::getEloquentQuery()->where('slug', 'fellow-stagg-ekg-electric-kettle')->exists())->toBeFalse();
 });
 
 test('admin can create equipment product without variants using direct price and stock', function () {

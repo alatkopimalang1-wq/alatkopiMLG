@@ -31,7 +31,7 @@ class ManageEquipmentBrands extends Page
 
     protected static ?string $title = 'Pengaturan Merek / Brand Alat Kopi';
 
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 2;
 
     /**
      * @var array<string, mixed>|null

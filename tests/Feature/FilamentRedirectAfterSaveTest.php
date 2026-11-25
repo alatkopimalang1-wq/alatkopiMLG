@@ -1,8 +1,8 @@
 <?php
 
 use App\Filament\Resources\Categories\Pages\EditCategory;
-use App\Filament\Resources\Products\Pages\EditProduct;
-use App\Filament\Resources\Products\ProductResource;
+use App\Filament\Resources\EquipmentProducts\EquipmentProductResource;
+use App\Filament\Resources\EquipmentProducts\Pages\EditEquipmentProduct;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\User;
@@ -50,13 +50,13 @@ test('edit product page falls back to products index when previous url is curren
         'max_price' => 60000,
     ]);
 
-    $editUrl = ProductResource::getUrl('edit', ['record' => $product]);
+    $editUrl = EquipmentProductResource::getUrl('edit', ['record' => $product]);
     $this->from($editUrl);
 
-    $expectedIndexUrl = ProductResource::getUrl('index');
+    $expectedIndexUrl = EquipmentProductResource::getUrl('index');
 
     Livewire::withQueryParams([])
-        ->test(EditProduct::class, ['record' => $product->getKey()])
+        ->test(EditEquipmentProduct::class, ['record' => $product->getKey()])
         ->fillForm([
             'name' => 'Kopi Fallback Test Updated',
         ])
