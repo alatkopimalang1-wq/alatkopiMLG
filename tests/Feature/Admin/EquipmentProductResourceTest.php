@@ -29,6 +29,7 @@ test('admin can access equipment product pages and create a new equipment produc
     $this->get('/admin/equipment-products/create')->assertSuccessful();
 
     Livewire::test(CreateEquipmentProduct::class)
+        ->set('data.has_variants', true)
         ->set('data.name', 'Fellow Stagg EKG Electric Kettle')
         ->set('data.slug', 'fellow-stagg-ekg-electric-kettle')
         ->set('data.origin', 'Fellow')
@@ -66,12 +67,16 @@ test('admin can create equipment product without variants using direct price and
     $this->actingAs($admin);
 
     Livewire::test(CreateEquipmentProduct::class)
+        ->set('data.has_variants', false)
         ->set('data.name', 'Hario Paper Filter V60 02 (100 Sheets)')
         ->set('data.slug', 'hario-paper-filter-v60-02')
         ->set('data.origin', 'Hario')
+        ->set('data.single_weight_grams', 250)
+        ->set('data.single_cost_price', 55000)
         ->set('data.min_price', 75000)
+        ->set('data.single_original_price', 85000)
         ->set('data.stock', 50)
-        ->set('data.variants', [])
+        ->set('data.single_sku', 'AKM-FILTER-V60-02')
         ->call('create')
         ->assertHasNoErrors();
 
@@ -81,7 +86,12 @@ test('admin can create equipment product without variants using direct price and
     expect((int) $created->max_price)->toBe(75000);
     expect($created->stock)->toBe(50);
     expect($created->variants()->count())->toBe(1);
-    expect($created->variants()->first()->label)->toBe('Standard');
+    $variant = $created->variants()->first();
+    expect($variant->label)->toBe('Standard');
+    expect($variant->weight_grams)->toBe(250);
+    expect((int) $variant->cost_price)->toBe(55000);
+    expect((int) $variant->original_price)->toBe(85000);
+    expect($variant->sku)->toBe('AKM-FILTER-V60-02');
 
     $this->get('/shop/hario-paper-filter-v60-02')->assertSuccessful();
 });

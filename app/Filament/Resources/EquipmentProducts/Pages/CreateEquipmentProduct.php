@@ -18,16 +18,27 @@ class CreateEquipmentProduct extends CreateRecord
         $data['series'] = 'alat-kopi';
         $data['freshness_days'] = (int) ($data['freshness_days'] ?? 365);
 
-        if (empty($data['max_price']) || (float) $data['max_price'] <= 0) {
-            $data['max_price'] = $data['min_price'] ?? 0;
-        }
+        $raw = $this->form->getRawState();
+        $hasVariants = (bool) ($raw['has_variants'] ?? false);
 
-        if (! empty($data['variants']) && is_array($data['variants'])) {
+        if ($hasVariants && ! empty($data['variants']) && is_array($data['variants'])) {
             $totalStock = 0;
+            $prices = [];
             foreach ($data['variants'] as $v) {
                 $totalStock += (int) ($v['stock'] ?? 0);
+                if (isset($v['price']) && (float) $v['price'] > 0) {
+                    $prices[] = (float) $v['price'];
+                }
             }
             $data['stock'] = $totalStock;
+            if (! empty($prices)) {
+                $data['min_price'] = min($prices);
+                $data['max_price'] = max($prices);
+            }
+        } else {
+            $data['min_price'] = (float) ($data['min_price'] ?? 0);
+            $data['max_price'] = $data['min_price'];
+            $data['stock'] = (int) ($data['stock'] ?? 0);
         }
 
         return $data;
@@ -36,22 +47,34 @@ class CreateEquipmentProduct extends CreateRecord
     protected function afterCreate(): void
     {
         $record = $this->getRecord();
-        if ($record instanceof Product) {
-            if ($record->variants()->count() === 0) {
-                $stock = (int) ($record->stock ?? 0);
-                $price = (float) ($record->min_price ?? 0);
-                $record->variants()->create([
-                    'label' => 'Standard',
-                    'weight_grams' => 500,
+        if (! $record instanceof Product) {
+            return;
+        }
+
+        $raw = $this->form->getRawState();
+        $hasVariants = (bool) ($raw['has_variants'] ?? false);
+
+        if (! $hasVariants || $record->variants()->count() === 0) {
+            $stock = (int) ($record->stock ?? 0);
+            $price = (float) ($record->min_price ?? 0);
+            $record->variants()->where('label', '!=', 'Standard')->delete();
+            $record->variants()->updateOrCreate(
+                ['label' => 'Standard'],
+                [
+                    'weight_grams' => (int) ($raw['single_weight_grams'] ?? 500),
+                    'cost_price' => filled($raw['single_cost_price'] ?? null) ? (float) $raw['single_cost_price'] : null,
                     'price' => $price,
+                    'original_price' => filled($raw['single_original_price'] ?? null) ? (float) $raw['single_original_price'] : null,
                     'stock' => $stock,
                     'stock_status' => $stock > 0 ? 'in_stock' : 'out_of_stock',
-                ]);
-            } else {
-                $record->syncPricesFromVariants();
-                $record->syncStockFromVariants();
-            }
-            $record->ensurePrimaryImage();
+                    'sku' => filled($raw['single_sku'] ?? null) ? (string) $raw['single_sku'] : null,
+                ]
+            );
+        } else {
+            $record->syncPricesFromVariants();
+            $record->syncStockFromVariants();
         }
+
+        $record->ensurePrimaryImage();
     }
 }

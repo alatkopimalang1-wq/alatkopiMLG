@@ -56,7 +56,7 @@ class EquipmentProductForm
                                 ->placeholder('timemore-chestnut-c3-manual-grinder')
                                 ->required(),
                         ]),
-                        Grid::make(3)->schema([
+                        Grid::make(2)->schema([
                             Select::make('status')
                                 ->label('Status')
                                 ->options([
@@ -74,14 +74,6 @@ class EquipmentProductForm
                                 ])
                                 ->required()
                                 ->default('all'),
-                            TextInput::make('stock')
-                                ->label('Stok Total (Pcs)')
-                                ->numeric()
-                                ->default(20)
-                                ->required()
-                                ->live()
-                                ->readOnly(fn (callable $get) => ! empty($get('variants')))
-                                ->helperText('Otomatis dihitung dari total stok varian di bawah.'),
                         ]),
                         Grid::make(2)->schema([
                             Select::make('categories')
@@ -130,23 +122,62 @@ class EquipmentProductForm
                             ->placeholder('Ketik metode lalu tekan enter (e.g. V60, Espresso, Pour Over)'),
                     ]),
 
-                Section::make('Harga & Tautan Marketplace')
+                Section::make('Harga, Stok & Varian Produk')
                     ->columnSpanFull()
                     ->schema([
-                        Grid::make(2)->schema([
-                            TextInput::make('min_price')
-                                ->label('Harga Produk / Harga Minimum (Rp)')
-                                ->helperText('Isi harga langsung jika produk tidak memiliki varian. Jika ada varian, otomatis mengikuti harga varian termurah.')
-                                ->required()
-                                ->numeric()
-                                ->default(0)
-                                ->prefix('Rp'),
-                            TextInput::make('max_price')
-                                ->label('Harga Maksimum (Rp, Opsional)')
-                                ->helperText('Boleh dikosongkan; otomatis mengikuti Harga Produk atau varian termahal.')
-                                ->numeric()
-                                ->prefix('Rp'),
-                        ]),
+                        Toggle::make('has_variants')
+                            ->label('Produk ini memiliki varian (Warna / Ukuran / Model)')
+                            ->helperText('Aktifkan jika alat kopi memiliki lebih dari satu varian warna/ukuran. Biarkan nonaktif untuk produk tunggal.')
+                            ->live()
+                            ->dehydrated(false)
+                            ->default(false),
+
+                        // Single Product (tanpa varian) — tanpa Nama Varian & Foto Varian
+                        Grid::make(1)
+                            ->visible(fn (callable $get): bool => ! $get('has_variants'))
+                            ->schema([
+                                Grid::make(2)->schema([
+                                    TextInput::make('single_weight_grams')
+                                        ->label('Berat Pengiriman (Gram)')
+                                        ->numeric()
+                                        ->default(500)
+                                        ->dehydrated(false)
+                                        ->required(fn (callable $get): bool => ! $get('has_variants')),
+                                ]),
+                                Grid::make(3)->schema([
+                                    TextInput::make('single_cost_price')
+                                        ->label('Harga Modal / HPP (Rp)')
+                                        ->numeric()
+                                        ->dehydrated(false)
+                                        ->prefix('Rp'),
+                                    TextInput::make('min_price')
+                                        ->label('Harga Jual (Rp)')
+                                        ->numeric()
+                                        ->prefix('Rp')
+                                        ->required(fn (callable $get): bool => ! $get('has_variants')),
+                                    TextInput::make('single_original_price')
+                                        ->label('Harga Coret / Promo (Rp)')
+                                        ->numeric()
+                                        ->dehydrated(false)
+                                        ->prefix('Rp'),
+                                ]),
+                                Grid::make(2)->schema([
+                                    TextInput::make('stock')
+                                        ->label('Stok (Pcs)')
+                                        ->numeric()
+                                        ->default(20)
+                                        ->required(fn (callable $get): bool => ! $get('has_variants')),
+                                    TextInput::make('single_sku')
+                                        ->label('SKU (Opsional)')
+                                        ->placeholder('e.g. AKM-TM-C3-BLK')
+                                        ->dehydrated(false),
+                                ]),
+                            ]),
+                    ]),
+
+                Section::make('Tautan Marketplace (Opsional)')
+                    ->columnSpanFull()
+                    ->schema([
                         Grid::make(2)->schema([
                             TextInput::make('tokopedia_url')
                                 ->label('Link Tokopedia (Opsional)')
@@ -159,6 +190,7 @@ class EquipmentProductForm
 
                 Section::make('Varian Produk (Warna / Ukuran / Tipe)')
                     ->columnSpanFull()
+                    ->visible(fn (callable $get): bool => (bool) $get('has_variants'))
                     ->description('Tambahkan varian alat kopi seperti warna, kapasitas, atau tipe beserta harga jual, HPP, dan stoknya.')
                     ->schema([
                         Repeater::make('variants')
