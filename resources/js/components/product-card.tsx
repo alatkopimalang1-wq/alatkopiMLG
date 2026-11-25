@@ -131,10 +131,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                                 : 'text-accent-copper'
                         }`}
                     >
-                        {product.series_label ||
-                            (product.series
-                                ? product.series.replace('-', ' ')
-                                : 'Specialty')}
+                        {product.origin ||
+                            product.series_label ||
+                            'Alat Kopi Malang'}
                     </span>
 
                     {/* Product Name (2 Lines Max) */}
@@ -248,8 +247,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                     }`}
                 >
                     <span className="capitalize">
-                        {product.series_label ||
-                            product.series?.replace('-', ' ')}
+                        {product.origin ||
+                            product.series_label ||
+                            'Alat Kopi Malang'}
                     </span>
                 </div>
 
