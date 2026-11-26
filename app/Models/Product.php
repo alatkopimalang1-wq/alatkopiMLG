@@ -82,6 +82,14 @@ class Product extends Model
     public function getIsOutOfStockAttribute(): bool
     {
         if (! empty($this->attributes['is_preorder']) || ($this->attributes['stock_status'] ?? 'in_stock') === 'pre_order') {
+            if (($this->attributes['stock_status'] ?? 'pre_order') === 'out_of_stock') {
+                return true;
+            }
+
+            if ($this->relationLoaded('variants') && $this->variants->isNotEmpty()) {
+                return $this->variants->every(fn ($v) => $v->stock_status === 'out_of_stock');
+            }
+
             return false;
         }
 
@@ -279,12 +287,18 @@ class Product extends Model
         if ($this->variants()->exists()) {
             $totalStock = (int) $this->variants()->sum('stock');
 
+        if ($this->is_preorder) {
+            $allVariantsOut = $this->variants()->where('stock_status', '!=', 'out_of_stock')->doesntExist();
             $this->updateQuietly([
                 'stock' => $totalStock,
-                'stock_status' => $this->is_preorder
-                    ? 'pre_order'
-                    : ($totalStock > 0 ? 'in_stock' : 'out_of_stock'),
+                'stock_status' => $allVariantsOut ? 'out_of_stock' : 'pre_order',
             ]);
+        } else {
+            $this->updateQuietly([
+                'stock' => $totalStock,
+                'stock_status' => $totalStock > 0 ? 'in_stock' : 'out_of_stock',
+            ]);
+        }
         }
     }
 
@@ -300,9 +314,11 @@ class Product extends Model
             }
 
             $stock = (int) ($product->stock ?? 0);
-            $product->stock_status = $product->is_preorder
-                ? 'pre_order'
-                : ($stock > 0 ? 'in_stock' : 'out_of_stock');
+            if ($product->is_preorder) {
+                $product->stock_status = $product->stock_status === 'out_of_stock' ? 'out_of_stock' : 'pre_order';
+            } else {
+                $product->stock_status = $stock > 0 ? 'in_stock' : 'out_of_stock';
+            }
         });
 
         static::saved(function (Product $product) {

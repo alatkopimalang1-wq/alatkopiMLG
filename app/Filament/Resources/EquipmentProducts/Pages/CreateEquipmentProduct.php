@@ -20,8 +20,10 @@ class CreateEquipmentProduct extends CreateRecord
         $isPreorder = (bool) ($data['is_preorder'] ?? false);
         if (! $isPreorder) {
             $data['preorder_dp_percent'] = 100;
+            $data['stock_status'] = (int) ($data['stock'] ?? 0) > 0 ? 'in_stock' : 'out_of_stock';
+        } else {
+            $data['stock_status'] = ($data['stock_status'] ?? 'pre_order') === 'out_of_stock' ? 'out_of_stock' : 'pre_order';
         }
-        $data['stock_status'] = $isPreorder ? 'pre_order' : ((int) ($data['stock'] ?? 0) > 0 ? 'in_stock' : 'out_of_stock');
 
         $raw = $this->form->getRawState();
         $hasVariants = (bool) ($raw['has_variants'] ?? false);
@@ -71,7 +73,9 @@ class CreateEquipmentProduct extends CreateRecord
                     'price' => $price,
                     'original_price' => filled($raw['single_original_price'] ?? null) ? (float) $raw['single_original_price'] : null,
                     'stock' => $stock,
-                    'stock_status' => $stock > 0 ? 'in_stock' : 'out_of_stock',
+                    'stock_status' => $record->is_preorder
+                        ? ($record->stock_status === 'out_of_stock' ? 'out_of_stock' : 'pre_order')
+                        : ($stock > 0 ? 'in_stock' : 'out_of_stock'),
                     'sku' => filled($raw['single_sku'] ?? null) ? (string) $raw['single_sku'] : null,
                 ]
             );

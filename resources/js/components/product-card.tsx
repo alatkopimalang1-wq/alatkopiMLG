@@ -59,25 +59,38 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         reservedStockByVariant,
     );
 
-    const isOutOfStock =
-        !isPreorder &&
+    const isPreorderOut =
+        isPreorder &&
         Boolean(
             product.is_out_of_stock ||
-                (realStock !== null && realStock <= 0) ||
                 product.stock_status === 'out_of_stock' ||
                 (product.variants &&
                     product.variants.length > 0 &&
-                    product.variants.every((v) => {
-                        const vEff = getEffectiveVariantStock(
-                            product,
-                            v,
-                            reservedStockByVariant,
-                        );
-                        return vEff !== null
-                            ? vEff <= 0
-                            : v.stock_status === 'out_of_stock';
-                    })),
+                    product.variants.every(
+                        (v) => v.stock_status === 'out_of_stock',
+                    )),
         );
+
+    const isOutOfStock =
+        isPreorderOut ||
+        (!isPreorder &&
+            Boolean(
+                product.is_out_of_stock ||
+                    (realStock !== null && realStock <= 0) ||
+                    product.stock_status === 'out_of_stock' ||
+                    (product.variants &&
+                        product.variants.length > 0 &&
+                        product.variants.every((v) => {
+                            const vEff = getEffectiveVariantStock(
+                                product,
+                                v,
+                                reservedStockByVariant,
+                            );
+                            return vEff !== null
+                                ? vEff <= 0
+                                : v.stock_status === 'out_of_stock';
+                        })),
+            ));
 
     // Full-Width Mobile Shape matching Otten Coffee reference (Image 2)
     const renderMobileShape = () => (

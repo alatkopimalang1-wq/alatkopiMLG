@@ -335,6 +335,12 @@ class PosController extends Controller
                 $quantity = (int) $itemData['quantity'];
                 $isPreorder = (bool) ($product?->is_preorder ?? false);
 
+                if ($variant && $isPreorder && ($variant->stock_status === 'out_of_stock' || ($product && $product->stock_status === 'out_of_stock'))) {
+                    throw new \Illuminate\Http\Exceptions\HttpResponseException(response()->json([
+                        'message' => "Produk Pre-Order '{$productName}' ({$variantLabel}) sedang kosong (Habis).",
+                    ], 422));
+                }
+
                 if ($variant && ! $isPreorder) {
                     $availableStock = (int) ($variant->stock ?? 0);
                     if ($availableStock <= 0 || $quantity > $availableStock) {
@@ -2254,6 +2260,10 @@ class PosController extends Controller
                 $totalStock = (int) ($product->variants->isNotEmpty()
                     ? $product->variants->sum('stock')
                     : ($product->stock ?? 0));
+                $isPreorderOut = $isPreorder && (
+                    $product->stock_status === 'out_of_stock'
+                    || ($product->variants->isNotEmpty() && $product->variants->every(fn (ProductVariant $v) => $v->stock_status === 'out_of_stock'))
+                );
 
                 return [
                     'id' => $product->id,
@@ -2272,8 +2282,8 @@ class PosController extends Controller
                     'max_price' => $maxPrice,
                     'is_preorder' => $isPreorder,
                     'stock' => $totalStock,
-                    'stock_status' => $isPreorder ? 'pre_order' : ($totalStock > 0 ? 'in_stock' : 'out_of_stock'),
-                    'is_out_of_stock' => $isPreorder ? false : ($totalStock <= 0),
+                    'stock_status' => $isPreorder ? ($isPreorderOut ? 'out_of_stock' : 'pre_order') : ($totalStock > 0 ? 'in_stock' : 'out_of_stock'),
+                    'is_out_of_stock' => $isPreorder ? $isPreorderOut : ($totalStock <= 0),
                     'variants' => $product->variants->map(function (ProductVariant $v) use ($isPreorder) {
                         $vStock = (int) ($v->stock ?? 0);
 
@@ -2286,7 +2296,7 @@ class PosController extends Controller
                             'weight_grams' => (int) $v->weight_grams,
                             'sku' => $v->sku,
                             'stock' => $vStock,
-                            'stock_status' => $isPreorder ? 'pre_order' : ($vStock > 0 ? 'in_stock' : 'out_of_stock'),
+                            'stock_status' => $isPreorder ? ($v->stock_status === 'out_of_stock' ? 'out_of_stock' : 'pre_order') : ($vStock > 0 ? 'in_stock' : 'out_of_stock'),
                         ];
                     })->values(),
                 ];

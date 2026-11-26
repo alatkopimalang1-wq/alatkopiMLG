@@ -176,10 +176,22 @@ class EquipmentProductForm
                                         ->label('Stok (Pcs)')
                                         ->numeric()
                                         ->default(20)
+                                        ->visible(fn (callable $get): bool => ! (bool) $get('is_preorder'))
                                         ->disabled(fn ($livewire): bool => $livewire instanceof \App\Filament\Resources\EquipmentProducts\Pages\EditEquipmentProduct)
-                                        ->dehydrated(fn ($livewire): bool => ! ($livewire instanceof \App\Filament\Resources\EquipmentProducts\Pages\EditEquipmentProduct))
+                                        ->dehydrated(fn ($livewire, callable $get): bool => ! (bool) $get('is_preorder') && ! ($livewire instanceof \App\Filament\Resources\EquipmentProducts\Pages\EditEquipmentProduct))
                                         ->helperText(fn ($livewire): ?string => $livewire instanceof \App\Filament\Resources\EquipmentProducts\Pages\EditEquipmentProduct ? 'Penambahan qty/stok hanya dapat dilakukan melalui menu Pembelian Produk.' : null)
-                                        ->required(fn ($livewire, callable $get): bool => ! ($livewire instanceof \App\Filament\Resources\EquipmentProducts\Pages\EditEquipmentProduct) && ! $get('has_variants')),
+                                        ->required(fn ($livewire, callable $get): bool => ! (bool) $get('is_preorder') && ! ($livewire instanceof \App\Filament\Resources\EquipmentProducts\Pages\EditEquipmentProduct) && ! $get('has_variants')),
+                                    Select::make('stock_status')
+                                        ->label('Status Stok Pre-Order')
+                                        ->options([
+                                            'pre_order' => 'Tersedia (Pre-Order)',
+                                            'out_of_stock' => 'Kosong (Habis)',
+                                        ])
+                                        ->default('pre_order')
+                                        ->native(false)
+                                        ->visible(fn (callable $get): bool => (bool) $get('is_preorder') && ! (bool) $get('has_variants'))
+                                        ->dehydrated(fn (callable $get): bool => (bool) $get('is_preorder') && ! (bool) $get('has_variants'))
+                                        ->required(fn (callable $get): bool => (bool) $get('is_preorder') && ! (bool) $get('has_variants')),
                                     TextInput::make('single_sku')
                                         ->label('SKU (Opsional)')
                                         ->placeholder('e.g. AKM-TM-C3-BLK')
@@ -257,10 +269,22 @@ class EquipmentProductForm
                                             ->label('Stok Varian (Pcs)')
                                             ->numeric()
                                             ->default(fn ($livewire): int => $livewire instanceof \App\Filament\Resources\EquipmentProducts\Pages\EditEquipmentProduct ? 0 : 20)
+                                            ->visible(fn (callable $get): bool => ! (bool) $get('../../is_preorder'))
                                             ->disabled(fn ($livewire): bool => $livewire instanceof \App\Filament\Resources\EquipmentProducts\Pages\EditEquipmentProduct)
-                                            ->dehydrated(fn ($livewire): bool => ! ($livewire instanceof \App\Filament\Resources\EquipmentProducts\Pages\EditEquipmentProduct))
+                                            ->dehydrated(fn ($livewire, callable $get): bool => ! (bool) $get('../../is_preorder') && ! ($livewire instanceof \App\Filament\Resources\EquipmentProducts\Pages\EditEquipmentProduct))
                                             ->helperText(fn ($livewire): ?string => $livewire instanceof \App\Filament\Resources\EquipmentProducts\Pages\EditEquipmentProduct ? 'Penambahan qty/stok hanya dapat dilakukan melalui menu Pembelian Produk.' : null)
-                                            ->required(fn ($livewire): bool => ! ($livewire instanceof \App\Filament\Resources\EquipmentProducts\Pages\EditEquipmentProduct)),
+                                            ->required(fn ($livewire, callable $get): bool => ! (bool) $get('../../is_preorder') && ! ($livewire instanceof \App\Filament\Resources\EquipmentProducts\Pages\EditEquipmentProduct)),
+                                        Select::make('stock_status')
+                                            ->label('Status Stok Pre-Order')
+                                            ->options([
+                                                'pre_order' => 'Tersedia (Pre-Order)',
+                                                'out_of_stock' => 'Kosong (Habis)',
+                                            ])
+                                            ->default('pre_order')
+                                            ->native(false)
+                                            ->visible(fn (callable $get): bool => (bool) $get('../../is_preorder'))
+                                            ->dehydrated(fn (callable $get): bool => (bool) $get('../../is_preorder'))
+                                            ->required(fn (callable $get): bool => (bool) $get('../../is_preorder')),
                                         TextInput::make('sku')
                                             ->label('SKU (Opsional)')
                                             ->placeholder('e.g. AKM-TM-C3-BLK'),

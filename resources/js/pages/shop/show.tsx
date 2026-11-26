@@ -313,28 +313,38 @@ export default function ProductShow({
         reservedStockByVariant,
     );
 
-    const isProductOutOfStock =
-        !isPreorder &&
+    const isPreorderOut =
+        isPreorder &&
         Boolean(
             product.is_out_of_stock ||
                 product.stock_status === 'out_of_stock' ||
                 (variants.length > 0 &&
-                    variants.every((v) => {
-                        const vEff = getEffectiveVariantStock(
-                            product,
-                            v,
-                            reservedStockByVariant,
-                        );
-                        return vEff !== null
-                            ? vEff <= 0
-                            : v.stock_status === 'out_of_stock';
-                    })),
+                    variants.every((v) => v.stock_status === 'out_of_stock')),
         );
-    const isCurrentVariantOutOfStock =
-        !isPreorder &&
-        (isProductOutOfStock ||
-            selectedVariant.stock_status === 'out_of_stock' ||
-            (selectedVariantStock !== null && selectedVariantStock <= 0));
+
+    const isProductOutOfStock =
+        isPreorderOut ||
+        (!isPreorder &&
+            Boolean(
+                product.is_out_of_stock ||
+                    product.stock_status === 'out_of_stock' ||
+                    (variants.length > 0 &&
+                        variants.every((v) => {
+                            const vEff = getEffectiveVariantStock(
+                                product,
+                                v,
+                                reservedStockByVariant,
+                            );
+                            return vEff !== null
+                                ? vEff <= 0
+                                : v.stock_status === 'out_of_stock';
+                        })),
+            ));
+    const isCurrentVariantOutOfStock = isPreorder
+        ? isProductOutOfStock || selectedVariant.stock_status === 'out_of_stock'
+        : isProductOutOfStock ||
+          selectedVariant.stock_status === 'out_of_stock' ||
+          (selectedVariantStock !== null && selectedVariantStock <= 0);
 
     const handleAddToCart = () => {
         if (isCurrentVariantOutOfStock) return;
@@ -768,13 +778,14 @@ export default function ProductShow({
                                                 v,
                                                 reservedStockByVariant,
                                             );
-                                        const vOutOfStock =
-                                            !isPreorder &&
-                                            (isProductOutOfStock ||
-                                                v.stock_status ===
-                                                    'out_of_stock' ||
-                                                (vEffStock !== null &&
-                                                    vEffStock <= 0));
+                                        const vOutOfStock = isPreorder
+                                            ? isProductOutOfStock ||
+                                              v.stock_status === 'out_of_stock'
+                                            : isProductOutOfStock ||
+                                              v.stock_status ===
+                                                  'out_of_stock' ||
+                                              (vEffStock !== null &&
+                                                  vEffStock <= 0);
                                         const vImage =
                                             v.image_url ||
                                             (v.image
@@ -874,9 +885,15 @@ export default function ProductShow({
                                     <span className="font-semibold text-brand-800">
                                         Ketersediaan:
                                     </span>
-                                    <span className="font-bold text-amber-700">
-                                        Pre-Order (Tanpa Batas Stok)
-                                    </span>
+                                    {isCurrentVariantOutOfStock ? (
+                                        <span className="font-bold text-rose-600">
+                                            Pre-Order — Kosong (Habis)
+                                        </span>
+                                    ) : (
+                                        <span className="font-bold text-amber-700">
+                                            Pre-Order — Tersedia
+                                        </span>
+                                    )}
                                 </div>
                             ) : selectedVariantStock !== null ? (
                                 <div className="flex items-center justify-between text-xs sm:text-sm">

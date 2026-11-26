@@ -510,7 +510,12 @@ export default function CartPage({
                 item.product.is_preorder ||
                     item.product.stock_status === 'pre_order',
             );
-            if (isPre) return false;
+            if (isPre) {
+                return (
+                    item.variant.stock_status === 'out_of_stock' ||
+                    item.product.stock_status === 'out_of_stock'
+                );
+            }
             const vStock = getEffectiveVariantStock(
                 item.product,
                 item.variant,
