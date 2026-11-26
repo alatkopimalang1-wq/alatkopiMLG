@@ -346,7 +346,7 @@ export default function OrderInvoicePage({ order, settings }: InvoiceProps) {
                                 <tr className="border-b-2 border-brand-950 text-[11px] font-bold tracking-wider text-brand-950 uppercase">
                                     <th className="w-8 py-2.5 pr-2">No</th>
                                     <th className="px-3 py-2.5">
-                                        Keterangan Produk & Racikan Kopi
+                                        Keterangan Produk
                                     </th>
                                     <th className="w-16 px-3 py-2.5 text-center">
                                         Qty
