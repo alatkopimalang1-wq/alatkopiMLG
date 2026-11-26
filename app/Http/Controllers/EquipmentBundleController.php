@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\EquipmentBundle;
+use App\Models\Order;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\Setting;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -37,6 +39,7 @@ class EquipmentBundleController extends Controller
             ->firstOrFail();
 
         $whatsapp = Setting::get('whatsapp', '6282132095241');
+        $reservedStock = Order::getUserPendingReservedStock(auth()->id());
 
         $serialized = [
             'id' => $bundle->id,
@@ -44,7 +47,7 @@ class EquipmentBundleController extends Controller
             'slug' => $bundle->slug,
             'description' => $bundle->description,
             'banner_image' => $bundle->banner_image,
-            'slots' => $bundle->slots->map(function ($slot) {
+            'slots' => $bundle->slots->map(function ($slot) use ($reservedStock) {
                 $discountPct = max(0.0, min(100.0, (float) ($slot->discount_percent ?? 0)));
 
                 if ($slot->slot_type === 'selectable' && $slot->category_id) {
@@ -57,37 +60,20 @@ class EquipmentBundleController extends Controller
                     $items = collect();
                     foreach ($categoryProducts as $prod) {
                         foreach ($prod->variants as $variant) {
-                            $rawImg = $variant->image
-                                ?: $prod->primaryImage?->path
-                                ?: $prod->images->first()?->path;
-
                             $basePrice = (float) $variant->price;
                             $normalPrice = (float) ($variant->original_price ?: $basePrice);
                             $bundlePrice = (float) round($basePrice * (1 - ($discountPct / 100)));
 
-                            $isPreorder = (bool) ($prod->is_preorder ?? false);
-                            $isOutOfStock = $isPreorder
-                                ? ($prod->stock_status === 'out_of_stock' || $variant->stock_status === 'out_of_stock')
-                                : ((int) ($variant->stock ?? 0) <= 0 || $variant->stock_status === 'out_of_stock');
-
-                            $items->push([
-                                'id' => $variant->id,
-                                'bundle_slot_id' => $slot->id,
-                                'bundle_slot_item_id' => null,
-                                'product_id' => $prod->id,
-                                'product_name' => $prod->name,
-                                'product_slug' => $prod->slug,
-                                'variant_id' => $variant->id,
-                                'variant_label' => $variant->label,
-                                'image' => $rawImg,
-                                'normal_price' => $normalPrice,
-                                'bundle_price' => $bundlePrice,
-                                'is_preorder' => $isPreorder,
-                                'stock' => (int) ($variant->stock ?? 0),
-                                'is_out_of_stock' => $isOutOfStock,
-                                'product' => $prod,
-                                'variant' => $variant,
-                            ]);
+                            $items->push($this->serializeSlotItem(
+                                id: $variant->id,
+                                slotId: $slot->id,
+                                slotItemId: null,
+                                prod: $prod,
+                                variant: $variant,
+                                normalPrice: $normalPrice,
+                                bundlePrice: $bundlePrice,
+                                reservedStock: $reservedStock,
+                            ));
                         }
                     }
 
@@ -109,45 +95,28 @@ class EquipmentBundleController extends Controller
                     'discount_percent' => $discountPct,
                     'is_optional' => (bool) $slot->is_optional,
                     'quantity' => max(1, (int) $slot->quantity),
-                    'items' => $slot->items->map(function ($item) use ($slot) {
+                    'items' => $slot->items->map(function ($item) use ($slot, $reservedStock) {
                         $prod = $item->product;
                         $variant = $item->variant;
                         if (! $prod || ! $variant) {
                             return null;
                         }
 
-                        $rawImg = $variant->image
-                            ?: $prod->primaryImage?->path
-                            ?: $prod->images->first()?->path;
-
                         $normalPrice = (float) ($variant->original_price ?: $variant->price);
                         $bundlePrice = $slot->slot_type === 'free'
                             ? 0.0
                             : ($item->bundle_price !== null ? (float) $item->bundle_price : (float) $variant->price);
 
-                        $isPreorder = (bool) ($prod->is_preorder ?? false);
-                        $isOutOfStock = $isPreorder
-                            ? ($prod->stock_status === 'out_of_stock' || $variant->stock_status === 'out_of_stock')
-                            : ((int) ($variant->stock ?? 0) <= 0 || $variant->stock_status === 'out_of_stock');
-
-                        return [
-                            'id' => $item->id,
-                            'bundle_slot_id' => $slot->id,
-                            'bundle_slot_item_id' => $item->id,
-                            'product_id' => $prod->id,
-                            'product_name' => $prod->name,
-                            'product_slug' => $prod->slug,
-                            'variant_id' => $variant->id,
-                            'variant_label' => $variant->label,
-                            'image' => $rawImg,
-                            'normal_price' => $normalPrice,
-                            'bundle_price' => $bundlePrice,
-                            'is_preorder' => $isPreorder,
-                            'stock' => (int) ($variant->stock ?? 0),
-                            'is_out_of_stock' => $isOutOfStock,
-                            'product' => $prod,
-                            'variant' => $variant,
-                        ];
+                        return $this->serializeSlotItem(
+                            id: $item->id,
+                            slotId: $slot->id,
+                            slotItemId: $item->id,
+                            prod: $prod,
+                            variant: $variant,
+                            normalPrice: $normalPrice,
+                            bundlePrice: $bundlePrice,
+                            reservedStock: $reservedStock,
+                        );
                     })->filter()->values(),
                 ];
             })->values(),
@@ -167,5 +136,57 @@ class EquipmentBundleController extends Controller
             'relatedBundles' => $relatedBundles,
             'whatsapp' => $whatsapp,
         ]);
+    }
+
+    /**
+     * Serialize a single bundle slot option with real effective stock.
+     */
+    private function serializeSlotItem(
+        int $id,
+        int $slotId,
+        ?int $slotItemId,
+        Product $prod,
+        ProductVariant $variant,
+        float $normalPrice,
+        float $bundlePrice,
+        array $reservedStock,
+    ): array {
+        $rawImg = $variant->image
+            ?: $prod->primaryImage?->path
+            ?: $prod->images->first()?->path;
+
+        $isPreorder = (bool) ($prod->is_preorder ?? false)
+            || $prod->stock_status === 'pre_order'
+            || $variant->stock_status === 'pre_order';
+
+        $rawStock = (int) ($variant->stock ?? 0);
+        $effectiveStock = $isPreorder
+            ? null
+            : max(0, $rawStock - (int) ($reservedStock[$variant->id] ?? 0));
+
+        $isOutOfStock = $isPreorder
+            ? ($prod->stock_status === 'out_of_stock' || $variant->stock_status === 'out_of_stock')
+            : ($prod->stock_status === 'out_of_stock'
+                || $variant->stock_status === 'out_of_stock'
+                || $effectiveStock <= 0);
+
+        return [
+            'id' => $id,
+            'bundle_slot_id' => $slotId,
+            'bundle_slot_item_id' => $slotItemId,
+            'product_id' => $prod->id,
+            'product_name' => $prod->name,
+            'product_slug' => $prod->slug,
+            'variant_id' => $variant->id,
+            'variant_label' => $variant->label,
+            'image' => $rawImg,
+            'normal_price' => $normalPrice,
+            'bundle_price' => $bundlePrice,
+            'is_preorder' => $isPreorder,
+            'stock' => $effectiveStock ?? $rawStock,
+            'is_out_of_stock' => $isOutOfStock,
+            'product' => $prod,
+            'variant' => $variant,
+        ];
     }
 }

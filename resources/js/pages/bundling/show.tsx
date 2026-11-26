@@ -112,7 +112,8 @@ export default function BundlingShow({
                 }
             }
             if (slot.slot_type === 'free' && slot.items.length > 0) {
-                init[slot.id] = slot.items[0];
+                init[slot.id] =
+                    slot.items.find((it) => !it.is_out_of_stock) ?? null;
             } else {
                 init[slot.id] = null;
             }
@@ -300,6 +301,28 @@ export default function BundlingShow({
 
         if (chosenEntries.length === 0) {
             setErrorMsg('Minimal pilih 1 produk terlebih dahulu.');
+            return;
+        }
+
+        const outOfStockEntry = chosenEntries.find(
+            ({ item }) => item.is_out_of_stock || (!item.is_preorder && item.stock <= 0),
+        );
+        if (outOfStockEntry) {
+            setErrorMsg(
+                `Stok "${outOfStockEntry.item.product_name}" sedang habis dan tidak dapat dipilih.`,
+            );
+            return;
+        }
+
+        const overStockEntry = chosenEntries.find(({ slot, item }) => {
+            if (item.is_preorder) return false;
+            const totalQty = (slotQtyBySlot[slot.id] ?? 1) * bundleQty;
+            return item.stock > 0 && totalQty > item.stock;
+        });
+        if (overStockEntry) {
+            setErrorMsg(
+                `Jumlah "${overStockEntry.item.product_name}" melebihi stok tersedia (${overStockEntry.item.stock} pcs).`,
+            );
             return;
         }
 
