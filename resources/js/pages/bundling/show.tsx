@@ -384,7 +384,7 @@ export default function BundlingShow({
                                 </span>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3">
+                            <div className="grid grid-cols-3 gap-1.5 sm:gap-3">
                                 {bundle.slots.map((slot) => {
                                     const chosen = selectedBySlot[slot.id];
                                     const isFree = slot.slot_type === 'free';
@@ -399,7 +399,7 @@ export default function BundlingShow({
                                                     setActiveModalSlot(slot);
                                                 }
                                             }}
-                                            className={`relative flex min-h-[185px] flex-col items-center justify-between overflow-hidden rounded-xl border bg-white p-3 text-center transition ${
+                                            className={`relative flex min-h-[135px] flex-col items-center justify-between overflow-hidden rounded-xl border bg-white p-1.5 text-center transition sm:min-h-[185px] sm:p-3 ${
                                                 isFree
                                                     ? 'border-sand-200'
                                                     : chosen
@@ -409,22 +409,22 @@ export default function BundlingShow({
                                         >
                                             {/* OPTIONAL Corner Ribbon */}
                                             {slot.is_optional && !isFree && (
-                                                <span className="absolute top-2.5 -left-6 z-10 -rotate-45 bg-rose-600 px-7 py-0.5 text-[9px] font-black tracking-wider text-white uppercase shadow-xs">
+                                                <span className="absolute top-2 -left-7 z-10 -rotate-45 bg-rose-600 px-7 py-0.5 text-[7px] font-black tracking-wider text-white uppercase shadow-xs sm:top-2.5 sm:-left-6 sm:text-[9px]">
                                                     OPTIONAL
                                                 </span>
                                             )}
 
                                             {/* Discount / Free Pill */}
                                             {isFree ? (
-                                                <span className="absolute top-2 left-2 z-10 rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-extrabold text-emerald-800 uppercase">
+                                                <span className="absolute top-1 left-1 z-10 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[8px] font-extrabold text-emerald-800 uppercase sm:top-2 sm:left-2 sm:px-2 sm:text-[9px]">
                                                     GRATIS
                                                 </span>
                                             ) : slotDiscount > 0 ? (
                                                 <span
-                                                    className={`absolute top-2 z-10 rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-extrabold text-amber-900 ${
+                                                    className={`absolute top-1 z-10 rounded-full bg-amber-100 px-1.5 py-0.5 text-[8px] font-extrabold text-amber-900 sm:top-2 sm:px-2 sm:text-[9px] ${
                                                         slot.is_optional
-                                                            ? 'right-8'
-                                                            : 'left-2'
+                                                            ? 'right-6 sm:right-8'
+                                                            : 'left-1 sm:left-2'
                                                     }`}
                                                 >
                                                     -{slotDiscount}%
@@ -441,16 +441,16 @@ export default function BundlingShow({
                                                             e,
                                                         )
                                                     }
-                                                    className="absolute top-1.5 right-1.5 z-10 rounded-full bg-gray-100 p-1 text-gray-500 hover:bg-rose-100 hover:text-rose-600"
+                                                    className="absolute top-1 right-1 z-10 rounded-full bg-gray-100 p-0.5 text-gray-500 hover:bg-rose-100 hover:text-rose-600 sm:top-1.5 sm:right-1.5 sm:p-1"
                                                     title="Hapus pilihan"
                                                 >
-                                                    <X className="h-3.5 w-3.5" />
+                                                    <X className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                                                 </button>
                                             )}
 
                                             {chosen ? (
                                                 <>
-                                                    <div className="mt-3 flex h-20 w-full items-center justify-center overflow-hidden rounded-lg bg-sand-50">
+                                                    <div className="mt-4 flex h-14 w-full items-center justify-center overflow-hidden rounded-lg bg-sand-50 sm:mt-3 sm:h-20">
                                                         <img
                                                             src={resolveImg(
                                                                 chosen.image,
@@ -458,12 +458,12 @@ export default function BundlingShow({
                                                             alt={
                                                                 chosen.product_name
                                                             }
-                                                            className="h-full w-full object-contain p-1"
+                                                            className="h-full w-full object-contain p-0.5 sm:p-1"
                                                         />
                                                     </div>
 
-                                                    <div className="mt-1.5 w-full">
-                                                        <div className="line-clamp-2 text-[11px] font-bold leading-snug text-brand-950">
+                                                    <div className="mt-1 w-full sm:mt-1.5">
+                                                        <div className="line-clamp-2 text-[10px] leading-tight font-bold text-brand-950 sm:text-[11px] sm:leading-snug">
                                                             {
                                                                 chosen.product_name
                                                             }
@@ -471,14 +471,14 @@ export default function BundlingShow({
                                                         <div className="mt-0.5">
                                                             {chosen.normal_price >
                                                                 chosen.bundle_price && (
-                                                                <span className="block text-[10px] text-gray-400 line-through">
+                                                                <span className="block text-[9px] text-gray-400 line-through sm:text-[10px]">
                                                                     {formatRupiah(
                                                                         chosen.normal_price,
                                                                     )}
                                                                 </span>
                                                             )}
                                                             <span
-                                                                className={`text-xs font-extrabold ${
+                                                                className={`text-[10px] font-extrabold sm:text-xs ${
                                                                     isFree
                                                                         ? 'text-emerald-700'
                                                                         : 'text-brand-950'
@@ -495,7 +495,7 @@ export default function BundlingShow({
 
                                                     {/* Qty Stepper inside box */}
                                                     <div
-                                                        className="mt-2 inline-flex items-center rounded-lg border border-sand-200 bg-sand-50/70"
+                                                        className="mt-1.5 inline-flex items-center rounded-md border border-sand-200 bg-sand-50/70 sm:mt-2 sm:rounded-lg"
                                                         onClick={(e) =>
                                                             e.stopPropagation()
                                                         }
@@ -519,11 +519,11 @@ export default function BundlingShow({
                                                                     }),
                                                                 )
                                                             }
-                                                            className="px-1.5 py-1 text-brand-800 hover:bg-sand-200/60"
+                                                            className="px-1 py-0.5 text-brand-800 hover:bg-sand-200/60 sm:px-1.5 sm:py-1"
                                                         >
-                                                            <Minus className="h-3 w-3" />
+                                                            <Minus className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                                                         </button>
-                                                        <span className="w-6 text-center text-[11px] font-bold text-brand-950">
+                                                        <span className="w-5 text-center text-[10px] font-bold text-brand-950 sm:w-6 sm:text-[11px]">
                                                             {slotQtyBySlot[
                                                                 slot.id
                                                             ] ?? 1}
@@ -553,18 +553,18 @@ export default function BundlingShow({
                                                                     }),
                                                                 )
                                                             }
-                                                            className="px-1.5 py-1 text-brand-800 hover:bg-sand-200/60 disabled:opacity-40"
+                                                            className="px-1 py-0.5 text-brand-800 hover:bg-sand-200/60 disabled:opacity-40 sm:px-1.5 sm:py-1"
                                                         >
-                                                            <Plus className="h-3 w-3" />
+                                                            <Plus className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                                                         </button>
                                                     </div>
                                                 </>
                                             ) : (
                                                 <div className="flex w-full flex-1 flex-col items-center justify-between">
                                                     <div className="flex aspect-square w-full items-center justify-center rounded-lg bg-neutral-100">
-                                                        <Plus className="h-6 w-6 stroke-[1.8] text-brand-900" />
+                                                        <Plus className="h-5 w-5 stroke-[1.8] text-brand-900 sm:h-6 sm:w-6" />
                                                     </div>
-                                                    <span className="mt-2.5 line-clamp-2 text-xs font-bold text-brand-950">
+                                                    <span className="mt-1.5 line-clamp-2 text-[10px] font-bold text-brand-950 sm:mt-2.5 sm:text-xs">
                                                         {slot.title}
                                                     </span>
                                                 </div>
