@@ -1,7 +1,9 @@
 <x-filament-panels::page>
     <style>
         @media (max-width: 767px) {
-            .equipment-table-wrap .fi-ta-table {
+            .equipment-table-wrap .fi-ta-table,
+            .equipment-table-wrap .fi-ta-filters-above-content-ctn,
+            .equipment-table-wrap .fi-ta-filters {
                 display: none !important;
             }
         }
