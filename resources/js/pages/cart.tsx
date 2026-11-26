@@ -933,13 +933,58 @@ export default function CartPage({
                                                             </button>
                                                         </div>
 
-                                                        <span className="text-xs font-extrabold text-brand-950">
-                                                            {formatRupiah(
-                                                                item.variant
-                                                                    .price *
-                                                                    item.quantity,
-                                                            )}
-                                                        </span>
+                                                        <div className="text-right">
+                                                            {(() => {
+                                                                const isPre = Boolean(
+                                                                    item.product
+                                                                        .is_preorder ||
+                                                                        item
+                                                                            .product
+                                                                            .stock_status ===
+                                                                            'pre_order',
+                                                                );
+                                                                const minDp =
+                                                                    item.product
+                                                                        .preorder_dp_percent ??
+                                                                    100;
+                                                                const dpPct =
+                                                                    isPre
+                                                                        ? Math.max(
+                                                                              minDp,
+                                                                              item.preorderDpPercent ??
+                                                                                  minDp,
+                                                                          )
+                                                                        : 100;
+                                                                const lineFull =
+                                                                    item.variant
+                                                                        .price *
+                                                                    item.quantity;
+                                                                const linePayable =
+                                                                    Math.round(
+                                                                        (lineFull *
+                                                                            dpPct) /
+                                                                            100,
+                                                                    );
+                                                                return (
+                                                                    <>
+                                                                        {isPre &&
+                                                                            dpPct <
+                                                                                100 && (
+                                                                                <span className="block text-[10px] font-semibold text-gray-400 line-through">
+                                                                                    {formatRupiah(
+                                                                                        lineFull,
+                                                                                    )}
+                                                                                </span>
+                                                                            )}
+                                                                        <span className="text-xs font-extrabold text-brand-950">
+                                                                            {formatRupiah(
+                                                                                linePayable,
+                                                                            )}
+                                                                        </span>
+                                                                    </>
+                                                                );
+                                                            })()}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>

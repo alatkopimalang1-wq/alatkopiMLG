@@ -610,7 +610,15 @@ export default function ProductShow({
                                     )}
                                 </span>
                             )}
-                            <div className="flex items-baseline gap-2">
+                            {isPreorder && selectedDpPercent < 100 && (
+                                <span className="block text-xs font-semibold text-brand-500 sm:text-sm">
+                                    Harga Normal:{' '}
+                                    <span className="line-through">
+                                        {formatRupiah(selectedVariant.price)}
+                                    </span>
+                                </span>
+                            )}
+                            <div className="flex flex-wrap items-baseline gap-2.5">
                                 <span
                                     className={`text-3xl font-black tracking-tight sm:text-3xl md:text-4xl ${
                                         isCurrentVariantOutOfStock
@@ -618,8 +626,21 @@ export default function ProductShow({
                                             : 'text-brand-950'
                                     }`}
                                 >
-                                    {formatRupiah(selectedVariant.price)}
+                                    {formatRupiah(
+                                        isPreorder && selectedDpPercent < 100
+                                            ? Math.round(
+                                                  (selectedVariant.price *
+                                                      selectedDpPercent) /
+                                                      100,
+                                              )
+                                            : selectedVariant.price,
+                                    )}
                                 </span>
+                                {isPreorder && selectedDpPercent < 100 && (
+                                    <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-800">
+                                        DP {selectedDpPercent}%
+                                    </span>
+                                )}
                             </div>
                             {isPreorder && (
                                 <div className="mt-3 space-y-2.5 rounded-xl border border-amber-200 bg-amber-50/90 p-3.5 text-xs text-amber-950">

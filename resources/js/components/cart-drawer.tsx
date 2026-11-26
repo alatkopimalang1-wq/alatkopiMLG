@@ -241,13 +241,60 @@ export const CartDrawer: React.FC = () => {
                                                                 <Plus className="h-3.5 w-3.5" />
                                                             </button>
                                                         </div>
-                                                        <span className="text-sm font-bold text-brand-900">
-                                                            {formatRupiah(
-                                                                item.variant
-                                                                    .price *
-                                                                    item.quantity,
-                                                            )}
-                                                        </span>
+                                                        <div className="text-right">
+                                                            {(() => {
+                                                                const isPre = Boolean(
+                                                                    item.product
+                                                                        .is_preorder ||
+                                                                        item
+                                                                            .product
+                                                                            .stock_status ===
+                                                                            'pre_order',
+                                                                );
+                                                                const minDp =
+                                                                    item.product
+                                                                        .preorder_dp_percent ??
+                                                                    100;
+                                                                const dpPct =
+                                                                    isPre
+                                                                        ? Math.max(
+                                                                              minDp,
+                                                                              item.preorderDpPercent ??
+                                                                                  minDp,
+                                                                          )
+                                                                        : 100;
+                                                                const lineFull =
+                                                                    item.variant
+                                                                        .price *
+                                                                    item.quantity;
+                                                                const linePayable =
+                                                                    Math.round(
+                                                                        (lineFull *
+                                                                            dpPct) /
+                                                                            100,
+                                                                    );
+                                                                return (
+                                                                    <>
+                                                                        {isPre &&
+                                                                            dpPct <
+                                                                                100 && (
+                                                                                <span className="block text-[10px] font-semibold text-amber-700">
+                                                                                    DP{' '}
+                                                                                    {
+                                                                                        dpPct
+                                                                                    }
+                                                                                    %
+                                                                                </span>
+                                                                            )}
+                                                                        <span className="text-sm font-bold text-brand-900">
+                                                                            {formatRupiah(
+                                                                                linePayable,
+                                                                            )}
+                                                                        </span>
+                                                                    </>
+                                                                );
+                                                            })()}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </motion.div>
