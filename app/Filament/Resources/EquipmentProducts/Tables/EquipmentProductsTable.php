@@ -245,7 +245,19 @@ class EquipmentProductsTable
                     ->options([
                         'active' => 'Aktif',
                         'archived' => 'Arsip',
-                    ]),
+                        'preorder' => 'Pre-Order',
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        $value = $data['value'] ?? null;
+                        if ($value === 'preorder') {
+                            return $query->where('is_preorder', true);
+                        }
+                        if (in_array($value, ['active', 'archived'], true)) {
+                            return $query->where('status', $value);
+                        }
+
+                        return $query;
+                    }),
             ])
             ->filtersLayout(\Filament\Tables\Enums\FiltersLayout::AboveContent)
             ->recordUrl(null)
