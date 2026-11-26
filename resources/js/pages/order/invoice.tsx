@@ -153,7 +153,7 @@ export default function OrderInvoicePage({ order, settings }: InvoiceProps) {
                 <div className="flex flex-col justify-between gap-6 border-b border-sand-200 pb-6 sm:flex-row sm:items-start">
                     <div className="flex items-start gap-3.5">
                         <img
-                            src="/brand/logo-circle.png"
+                            src="/brand/logo-circle.png?v=20261126"
                             alt="Alat Kopi Malang Logo"
                             className="mt-0.5 h-12 w-12 shrink-0 rounded-full border border-sand-200 object-cover"
                         />
@@ -163,8 +163,7 @@ export default function OrderInvoicePage({ order, settings }: InvoiceProps) {
                                     'Alat Kopi Malang'}
                             </h1>
                             <p className="text-xs font-medium text-brand-600">
-                                Specialty Coffee Roaster Malang · Close to Every
-                                Brew
+                                All Your Brewing Essentials in One Place
                             </p>
                             <p className="max-w-sm pt-1 text-[11px] leading-relaxed text-brand-500">
                                 {settings.address}
