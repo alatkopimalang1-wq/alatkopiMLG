@@ -187,23 +187,70 @@
                 </div>
             </div>
         @elseif($activeTab === 'pergerakan')
-            {{-- Riwayat Pergerakan Stok (PO Masuk, Penjualan Website, Penjualan POS, Penyesuaian Manual) --}}
-            <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-xs space-y-3">
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
-                    <input
-                        type="text"
-                        wire:model.live.debounce.300ms="movementSearch"
-                        placeholder="Cari produk, varian, SKU, atau nomor referensi (PO/AKM/POS/ADJ)..."
-                        class="w-full md:max-w-md rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500"
-                    />
+            @php
+                $totalIn = $movements->filter(fn ($m) => $m['qty_change'] > 0)->sum('qty_change');
+                $totalOut = abs($movements->filter(fn ($m) => $m['qty_change'] < 0)->sum('qty_change'));
+                $netMove = $totalIn - $totalOut;
+            @endphp
+            {{-- Riwayat Pergerakan Stok (Pembelian, Penjualan, Opname, Penambahan & Pengurangan Manual) --}}
+            <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-xs space-y-4">
+                {{-- Filter Tanggal, Bulan & Pencarian --}}
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-end">
+                    <div class="lg:col-span-2">
+                        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Cari Produk / SKU / Referensi</label>
+                        <input
+                            type="text"
+                            wire:model.live.debounce.300ms="movementSearch"
+                            placeholder="Cari nama produk, varian, SKU, PO/AKM/POS/ADJ..."
+                            class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500"
+                        />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Pilih Bulan</label>
+                        <input
+                            type="month"
+                            wire:model.live="monthFilter"
+                            class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500"
+                        />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Dari Tanggal</label>
+                        <input
+                            type="date"
+                            wire:model.live="startDate"
+                            class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500"
+                        />
+                    </div>
+                    <div class="flex items-end gap-2">
+                        <div class="flex-1">
+                            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Sampai Tanggal</label>
+                            <input
+                                type="date"
+                                wire:model.live="endDate"
+                                class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500"
+                            />
+                        </div>
+                        <button type="button"
+                                wire:click="resetMovementDates"
+                                class="px-2.5 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
+                                title="Tampilkan semua tanggal">
+                            Reset
+                        </button>
+                    </div>
+                </div>
 
+                {{-- Filter Sumber & Ringkasan Masuk/Keluar --}}
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pt-2 border-t border-gray-100 dark:border-gray-800">
                     <div class="flex flex-wrap items-center gap-1.5 text-xs">
                         @foreach([
-                            'all' => 'Semua Pergerakan',
+                            'all' => 'Semua',
                             'purchase' => 'Pembelian (PO)',
-                            'web_order' => 'Penjualan Website',
+                            'sales' => 'Semua Penjualan',
+                            'web_order' => 'Penjualan Web',
                             'pos_order' => 'Penjualan POS',
-                            'adjustment' => 'Penyesuaian Manual',
+                            'opname' => 'Opname',
+                            'manual_in' => 'Penambahan Manual',
+                            'manual_out' => 'Pengurangan Manual',
                         ] as $mKey => $mLabel)
                             <button type="button"
                                     wire:click="$set('movementSource', '{{ $mKey }}')"
@@ -211,6 +258,18 @@
                                 {{ $mLabel }}
                             </button>
                         @endforeach
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-3 text-xs font-semibold">
+                        <span class="px-2.5 py-1 rounded-md bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300">
+                            Masuk: +{{ number_format($totalIn) }} pcs
+                        </span>
+                        <span class="px-2.5 py-1 rounded-md bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300">
+                            Keluar: -{{ number_format($totalOut) }} pcs
+                        </span>
+                        <span class="px-2.5 py-1 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200">
+                            Selisih: {{ $netMove >= 0 ? '+' . number_format($netMove) : number_format($netMove) }} pcs
+                        </span>
                     </div>
                 </div>
 
@@ -240,6 +299,10 @@
                                             <span class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 text-xs font-semibold">{{ $mov['source_label'] }}</span>
                                         @elseif($mov['source'] === 'pos_order')
                                             <span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 text-xs font-semibold">{{ $mov['source_label'] }}</span>
+                                        @elseif($mov['source'] === 'manual_in')
+                                            <span class="px-2 py-0.5 rounded bg-teal-100 text-teal-700 dark:bg-teal-950/60 dark:text-teal-300 text-xs font-semibold">{{ $mov['source_label'] }}</span>
+                                        @elseif($mov['source'] === 'manual_out')
+                                            <span class="px-2 py-0.5 rounded bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 text-xs font-semibold">{{ $mov['source_label'] }}</span>
                                         @else
                                             <span class="px-2 py-0.5 rounded bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300 text-xs font-semibold">{{ $mov['source_label'] }}</span>
                                         @endif

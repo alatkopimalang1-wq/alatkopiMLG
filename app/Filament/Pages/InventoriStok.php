@@ -39,9 +39,38 @@ class InventoriStok extends Page
 
     public string $stockFilter = 'all'; // all, in_stock, low_stock, out_of_stock, preorder
 
-    public string $movementSource = 'all'; // all, purchase, web_order, pos_order, adjustment
+    public string $movementSource = 'all'; // all, purchase, sales, web_order, pos_order, opname, manual_in, manual_out
 
     public string $movementSearch = '';
+
+    public string $monthFilter = '';
+
+    public string $startDate = '';
+
+    public string $endDate = '';
+
+    public function mount(): void
+    {
+        $this->monthFilter = now()->format('Y-m');
+        $this->startDate = now()->startOfMonth()->toDateString();
+        $this->endDate = now()->endOfMonth()->toDateString();
+    }
+
+    public function updatedMonthFilter(string $value): void
+    {
+        if (preg_match('/^\d{4}-\d{2}$/', $value)) {
+            $carbon = \Carbon\Carbon::createFromFormat('Y-m', $value);
+            $this->startDate = $carbon->copy()->startOfMonth()->toDateString();
+            $this->endDate = $carbon->copy()->endOfMonth()->toDateString();
+        }
+    }
+
+    public function resetMovementDates(): void
+    {
+        $this->monthFilter = '';
+        $this->startDate = '';
+        $this->endDate = '';
+    }
 
     public function getMaxContentWidth(): ?string
     {
@@ -114,14 +143,24 @@ class InventoriStok extends Page
     public function getMovementsProperty()
     {
         $movements = collect();
+        $startDt = $this->startDate !== '' ? \Carbon\Carbon::parse($this->startDate)->startOfDay() : null;
+        $endDt = $this->endDate !== '' ? \Carbon\Carbon::parse($this->endDate)->endOfDay() : null;
 
         if (in_array($this->movementSource, ['all', 'purchase'], true)) {
             $purchaseItems = ProductPurchaseItem::query()
                 ->with(['purchase.user', 'product', 'variant'])
-                ->whereHas('purchase', fn ($q) => $q->whereNotNull('stock_applied_at'))
+                ->whereHas('purchase', function ($q) use ($startDt, $endDt) {
+                    $q->whereNotNull('stock_applied_at');
+                    if ($startDt) {
+                        $q->where('stock_applied_at', '>=', $startDt);
+                    }
+                    if ($endDt) {
+                        $q->where('stock_applied_at', '<=', $endDt);
+                    }
+                })
                 ->whereHas('product', fn ($q) => $q->where('series', 'alat-kopi'))
                 ->orderByDesc('id')
-                ->limit(100)
+                ->limit(300)
                 ->get();
 
             foreach ($purchaseItems as $pi) {
@@ -143,14 +182,22 @@ class InventoriStok extends Page
             }
         }
 
-        if (in_array($this->movementSource, ['all', 'web_order', 'pos_order'], true)) {
+        if (in_array($this->movementSource, ['all', 'sales', 'web_order', 'pos_order'], true)) {
             $orderItems = OrderItem::query()
                 ->with(['order', 'product', 'variant'])
                 ->where(fn ($q) => $q->where('is_preorder', false)->orWhereNull('is_preorder'))
                 ->whereHas('product', fn ($q) => $q->where('series', 'alat-kopi'))
-                ->whereHas('order', fn ($q) => $q->where('payment_status', 'paid')->where('status', '!=', 'cancelled'))
+                ->whereHas('order', function ($q) use ($startDt, $endDt) {
+                    $q->where('payment_status', 'paid')->where('status', '!=', 'cancelled');
+                    if ($startDt) {
+                        $q->where(fn ($dq) => $dq->where('paid_at', '>=', $startDt)->orWhere(fn ($sq) => $sq->whereNull('paid_at')->where('created_at', '>=', $startDt)));
+                    }
+                    if ($endDt) {
+                        $q->where(fn ($dq) => $dq->where('paid_at', '<=', $endDt)->orWhere(fn ($sq) => $sq->whereNull('paid_at')->where('created_at', '<=', $endDt)));
+                    }
+                })
                 ->orderByDesc('id')
-                ->limit(150)
+                ->limit(300)
                 ->get();
 
             foreach ($orderItems as $oi) {
@@ -165,7 +212,7 @@ class InventoriStok extends Page
 
                 $isPos = $order->is_pos;
                 $src = $isPos ? 'pos_order' : 'web_order';
-                if ($this->movementSource !== 'all' && $this->movementSource !== $src) {
+                if (! in_array($this->movementSource, ['all', 'sales', $src], true)) {
                     continue;
                 }
 
@@ -186,20 +233,45 @@ class InventoriStok extends Page
             }
         }
 
-        if (in_array($this->movementSource, ['all', 'adjustment'], true)) {
-            $adjs = StockAdjustment::query()
+        if (in_array($this->movementSource, ['all', 'opname', 'manual_in', 'manual_out'], true)) {
+            $adjQuery = StockAdjustment::query()
                 ->with(['product', 'variant', 'user'])
-                ->orderByDesc('id')
-                ->limit(100)
-                ->get();
+                ->orderByDesc('id');
+
+            if ($this->movementSource === 'opname') {
+                $adjQuery->where('type', 'opname');
+            } elseif ($this->movementSource === 'manual_in') {
+                $adjQuery->where('type', 'in');
+            } elseif ($this->movementSource === 'manual_out') {
+                $adjQuery->where('type', 'out');
+            }
+
+            if ($startDt) {
+                $adjQuery->where('created_at', '>=', $startDt);
+            }
+            if ($endDt) {
+                $adjQuery->where('created_at', '<=', $endDt);
+            }
+
+            $adjs = $adjQuery->limit(300)->get();
 
             foreach ($adjs as $adj) {
+                $src = match ($adj->type) {
+                    'in' => 'manual_in',
+                    'out' => 'manual_out',
+                    default => 'opname',
+                };
+                $srcLabel = match ($adj->type) {
+                    'in' => 'Penambahan Manual',
+                    'out' => 'Pengurangan Manual',
+                    default => 'Stok Opname',
+                };
                 $movements->push([
                     'timestamp' => $adj->created_at?->timestamp ?? 0,
                     'date' => $adj->created_at?->format('d M Y, H:i') ?? '—',
                     'ref' => $adj->adjustment_number,
-                    'source' => 'adjustment',
-                    'source_label' => 'Penyesuaian Manual',
+                    'source' => $src,
+                    'source_label' => $srcLabel,
                     'product_name' => $adj->product?->name ?? 'Produk',
                     'variant_label' => $adj->variant?->label ?? 'Default',
                     'sku' => $adj->variant?->sku ?? '—',
@@ -220,7 +292,7 @@ class InventoriStok extends Page
             });
         }
 
-        return $movements->sortByDesc('timestamp')->take(150)->values();
+        return $movements->sortByDesc('timestamp')->take(300)->values();
     }
 
     public function adjustStockAction(): Action
