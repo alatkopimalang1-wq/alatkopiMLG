@@ -384,8 +384,8 @@ export default function BundlingShow({
                                 </span>
                             </div>
 
-                            <div className="space-y-2.5">
-                                {bundle.slots.map((slot, index) => {
+                            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3">
+                                {bundle.slots.map((slot) => {
                                     const chosen = selectedBySlot[slot.id];
                                     const isFree = slot.slot_type === 'free';
                                     const slotDiscount =
@@ -394,43 +394,63 @@ export default function BundlingShow({
                                     return (
                                         <div
                                             key={slot.id}
-                                            className={`rounded-xl border bg-white p-3.5 transition ${
-                                                chosen
-                                                    ? 'border-brand-300 shadow-2xs'
-                                                    : 'border-sand-200'
+                                            onClick={() => {
+                                                if (!isFree) {
+                                                    setActiveModalSlot(slot);
+                                                }
+                                            }}
+                                            className={`relative flex min-h-[185px] flex-col items-center justify-between overflow-hidden rounded-xl border bg-white p-3 text-center transition ${
+                                                isFree
+                                                    ? 'border-sand-200'
+                                                    : chosen
+                                                      ? 'cursor-pointer border-brand-600 shadow-2xs ring-1 ring-brand-600/20 hover:shadow-md'
+                                                      : 'cursor-pointer border-sand-300 hover:border-brand-700 hover:shadow-md'
                                             }`}
                                         >
-                                            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-xs font-bold text-brand-950 sm:text-sm">
-                                                        {index + 1}. {slot.title}
-                                                    </span>
-                                                    {!isFree &&
-                                                        (slot.is_optional ? (
-                                                            <span className="rounded bg-sand-100 px-1.5 py-0.5 text-[10px] font-semibold text-brand-700">
-                                                                Opsional
-                                                            </span>
-                                                        ) : (
-                                                            <span className="rounded bg-rose-50 px-1.5 py-0.5 text-[10px] font-bold text-rose-700">
-                                                                Wajib
-                                                            </span>
-                                                        ))}
-                                                </div>
+                                            {/* OPTIONAL Corner Ribbon */}
+                                            {slot.is_optional && !isFree && (
+                                                <span className="absolute top-2.5 -left-6 z-10 -rotate-45 bg-rose-600 px-7 py-0.5 text-[9px] font-black tracking-wider text-white uppercase shadow-xs">
+                                                    OPTIONAL
+                                                </span>
+                                            )}
 
-                                                {isFree ? (
-                                                    <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-extrabold text-emerald-800 uppercase">
-                                                        GRATIS
-                                                    </span>
-                                                ) : slotDiscount > 0 ? (
-                                                    <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-extrabold text-amber-900">
-                                                        Diskon {slotDiscount}%
-                                                    </span>
-                                                ) : null}
-                                            </div>
+                                            {/* Discount / Free Pill */}
+                                            {isFree ? (
+                                                <span className="absolute top-2 left-2 z-10 rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-extrabold text-emerald-800 uppercase">
+                                                    GRATIS
+                                                </span>
+                                            ) : slotDiscount > 0 ? (
+                                                <span
+                                                    className={`absolute top-2 z-10 rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-extrabold text-amber-900 ${
+                                                        slot.is_optional
+                                                            ? 'right-8'
+                                                            : 'left-2'
+                                                    }`}
+                                                >
+                                                    -{slotDiscount}%
+                                                </span>
+                                            ) : null}
+
+                                            {/* Clear button on selected selectable slot */}
+                                            {!isFree && chosen && (
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) =>
+                                                        handleClearSlot(
+                                                            slot.id,
+                                                            e,
+                                                        )
+                                                    }
+                                                    className="absolute top-1.5 right-1.5 z-10 rounded-full bg-gray-100 p-1 text-gray-500 hover:bg-rose-100 hover:text-rose-600"
+                                                    title="Hapus pilihan"
+                                                >
+                                                    <X className="h-3.5 w-3.5" />
+                                                </button>
+                                            )}
 
                                             {chosen ? (
-                                                <div className="flex items-center justify-between gap-3">
-                                                    <div className="flex min-w-0 flex-1 items-center gap-3">
+                                                <>
+                                                    <div className="mt-3 flex h-20 w-full items-center justify-center overflow-hidden rounded-lg bg-sand-50">
                                                         <img
                                                             src={resolveImg(
                                                                 chosen.image,
@@ -438,161 +458,116 @@ export default function BundlingShow({
                                                             alt={
                                                                 chosen.product_name
                                                             }
-                                                            className="h-12 w-12 flex-shrink-0 rounded-lg border border-sand-200 object-cover"
+                                                            className="h-full w-full object-contain p-1"
                                                         />
-                                                        <div className="min-w-0">
-                                                            <div className="truncate text-xs font-bold text-brand-950 sm:text-sm">
-                                                                {
-                                                                    chosen.product_name
-                                                                }
-                                                            </div>
-                                                            {chosen.variant_label &&
-                                                                chosen.variant_label !==
-                                                                    'Standard' && (
-                                                                    <div className="text-[11px] text-brand-600">
-                                                                        Varian:{' '}
-                                                                        {
-                                                                            chosen.variant_label
-                                                                        }
-                                                                    </div>
-                                                                )}
-                                                            <div className="mt-0.5 flex items-center gap-1.5 text-xs">
-                                                                {chosen.normal_price >
-                                                                    chosen.bundle_price && (
-                                                                    <span className="text-gray-400 line-through">
-                                                                        {formatRupiah(
-                                                                            chosen.normal_price,
-                                                                        )}
-                                                                    </span>
-                                                                )}
-                                                                <span
-                                                                    className={`font-extrabold ${
-                                                                        isFree
-                                                                            ? 'text-emerald-700'
-                                                                            : 'text-brand-950'
-                                                                    }`}
-                                                                >
-                                                                    {isFree
-                                                                        ? 'GRATIS (Rp0)'
-                                                                        : formatRupiah(
-                                                                              chosen.bundle_price,
-                                                                          )}
+                                                    </div>
+
+                                                    <div className="mt-1.5 w-full">
+                                                        <div className="line-clamp-2 text-[11px] font-bold leading-snug text-brand-950">
+                                                            {
+                                                                chosen.product_name
+                                                            }
+                                                        </div>
+                                                        <div className="mt-0.5">
+                                                            {chosen.normal_price >
+                                                                chosen.bundle_price && (
+                                                                <span className="block text-[10px] text-gray-400 line-through">
+                                                                    {formatRupiah(
+                                                                        chosen.normal_price,
+                                                                    )}
                                                                 </span>
-                                                            </div>
+                                                            )}
+                                                            <span
+                                                                className={`text-xs font-extrabold ${
+                                                                    isFree
+                                                                        ? 'text-emerald-700'
+                                                                        : 'text-brand-950'
+                                                                }`}
+                                                            >
+                                                                {isFree
+                                                                    ? 'Rp0'
+                                                                    : formatRupiah(
+                                                                          chosen.bundle_price,
+                                                                      )}
+                                                            </span>
                                                         </div>
                                                     </div>
 
-                                                    <div className="flex flex-shrink-0 items-center gap-2">
-                                                        {/* Qty Stepper per item */}
-                                                        <div className="inline-flex items-center rounded-lg border border-sand-200 bg-sand-50/70">
-                                                            <button
-                                                                type="button"
-                                                                onClick={() =>
-                                                                    setSlotQtyBySlot(
-                                                                        (
-                                                                            prev,
-                                                                        ) => ({
-                                                                            ...prev,
-                                                                            [slot.id]:
-                                                                                Math.max(
-                                                                                    1,
-                                                                                    (prev[
-                                                                                        slot
-                                                                                            .id
-                                                                                    ] ??
-                                                                                        1) -
-                                                                                        1,
-                                                                                ),
-                                                                        }),
-                                                                    )
-                                                                }
-                                                                className="px-2 py-1.5 text-brand-800 hover:bg-sand-200/60"
-                                                            >
-                                                                <Minus className="h-3 w-3" />
-                                                            </button>
-                                                            <span className="w-7 text-center text-xs font-bold text-brand-950">
-                                                                {slotQtyBySlot[
-                                                                    slot.id
-                                                                ] ?? 1}
-                                                            </span>
-                                                            <button
-                                                                type="button"
-                                                                disabled={
-                                                                    !chosen.is_preorder &&
-                                                                    chosen.stock >
-                                                                        0 &&
-                                                                    (slotQtyBySlot[
-                                                                        slot.id
-                                                                    ] ?? 1) >=
-                                                                        chosen.stock
-                                                                }
-                                                                onClick={() =>
-                                                                    setSlotQtyBySlot(
-                                                                        (
-                                                                            prev,
-                                                                        ) => ({
-                                                                            ...prev,
-                                                                            [slot.id]:
+                                                    {/* Qty Stepper inside box */}
+                                                    <div
+                                                        className="mt-2 inline-flex items-center rounded-lg border border-sand-200 bg-sand-50/70"
+                                                        onClick={(e) =>
+                                                            e.stopPropagation()
+                                                        }
+                                                    >
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                setSlotQtyBySlot(
+                                                                    (prev) => ({
+                                                                        ...prev,
+                                                                        [slot.id]:
+                                                                            Math.max(
+                                                                                1,
                                                                                 (prev[
                                                                                     slot
                                                                                         .id
                                                                                 ] ??
-                                                                                    1) +
-                                                                                1,
-                                                                        }),
-                                                                    )
-                                                                }
-                                                                className="px-2 py-1.5 text-brand-800 hover:bg-sand-200/60 disabled:opacity-40"
-                                                            >
-                                                                <Plus className="h-3 w-3" />
-                                                            </button>
-                                                        </div>
-
-                                                        {!isFree && (
-                                                            <>
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() =>
-                                                                        setActiveModalSlot(
-                                                                            slot,
-                                                                        )
-                                                                    }
-                                                                    className="cursor-pointer rounded-lg border border-brand-300 bg-white px-2.5 py-1.5 text-xs font-bold text-brand-800 transition hover:bg-sand-100"
-                                                                >
-                                                                    Ganti
-                                                                </button>
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={(
-                                                                        e,
-                                                                    ) =>
-                                                                        handleClearSlot(
-                                                                            slot.id,
-                                                                            e,
-                                                                        )
-                                                                    }
-                                                                    className="rounded-lg p-1.5 text-gray-400 hover:bg-rose-50 hover:text-rose-600"
-                                                                    title="Hapus pilihan"
-                                                                >
-                                                                    <X className="h-4 w-4" />
-                                                                </button>
-                                                            </>
-                                                        )}
+                                                                                    1) -
+                                                                                    1,
+                                                                            ),
+                                                                    }),
+                                                                )
+                                                            }
+                                                            className="px-1.5 py-1 text-brand-800 hover:bg-sand-200/60"
+                                                        >
+                                                            <Minus className="h-3 w-3" />
+                                                        </button>
+                                                        <span className="w-6 text-center text-[11px] font-bold text-brand-950">
+                                                            {slotQtyBySlot[
+                                                                slot.id
+                                                            ] ?? 1}
+                                                        </span>
+                                                        <button
+                                                            type="button"
+                                                            disabled={
+                                                                !chosen.is_preorder &&
+                                                                chosen.stock >
+                                                                    0 &&
+                                                                (slotQtyBySlot[
+                                                                    slot.id
+                                                                ] ?? 1) >=
+                                                                    chosen.stock
+                                                            }
+                                                            onClick={() =>
+                                                                setSlotQtyBySlot(
+                                                                    (prev) => ({
+                                                                        ...prev,
+                                                                        [slot.id]:
+                                                                            (prev[
+                                                                                slot
+                                                                                    .id
+                                                                            ] ??
+                                                                                1) +
+                                                                            1,
+                                                                    }),
+                                                                )
+                                                            }
+                                                            className="px-1.5 py-1 text-brand-800 hover:bg-sand-200/60 disabled:opacity-40"
+                                                        >
+                                                            <Plus className="h-3 w-3" />
+                                                        </button>
                                                     </div>
-                                                </div>
+                                                </>
                                             ) : (
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        setActiveModalSlot(slot)
-                                                    }
-                                                    className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-brand-300 bg-sand-50/70 px-3 py-2.5 text-xs font-bold text-brand-800 transition hover:border-brand-700 hover:bg-sand-100"
-                                                >
-                                                    <Plus className="h-4 w-4" />
-                                                    <span>
-                                                        Pilih {slot.title}
+                                                <div className="flex w-full flex-1 flex-col items-center justify-between">
+                                                    <div className="flex aspect-square w-full items-center justify-center rounded-lg bg-neutral-100">
+                                                        <Plus className="h-6 w-6 stroke-[1.8] text-brand-900" />
+                                                    </div>
+                                                    <span className="mt-2.5 line-clamp-2 text-xs font-bold text-brand-950">
+                                                        {slot.title}
                                                     </span>
-                                                </button>
+                                                </div>
                                             )}
                                         </div>
                                     );
