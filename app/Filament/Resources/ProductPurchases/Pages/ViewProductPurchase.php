@@ -78,6 +78,26 @@ class ViewProductPurchase extends ViewRecord
 
         /** @var ProductPurchase $po */
         $po = $this->getRecord();
+
+        $restrictedWhenUnpaid = [
+            ProductPurchase::STATUS_DIKIRIM,
+            ProductPurchase::STATUS_DITERIMA,
+            ProductPurchase::STATUS_SELESAI,
+            ProductPurchase::STATUS_RETUR,
+        ];
+
+        if (! $po->is_paid && in_array($value, $restrictedWhenUnpaid, true)) {
+            $this->selectedStatus = (string) $po->status;
+
+            Notification::make()
+                ->title('Pembayaran Belum Lunas')
+                ->body('Status PO belum dapat diubah ke '.(ProductPurchase::STATUS_LABELS[$value] ?? $value).' sebelum status pembayaran ditandai Sudah Bayar.')
+                ->danger()
+                ->send();
+
+            return;
+        }
+
         $hadStock = $po->hasStockApplied();
 
         $po->status = $value;
@@ -195,6 +215,15 @@ class ViewProductPurchase extends ViewRecord
                 ]);
 
                 if ($postStock) {
+                    if (! $po->is_paid) {
+                        Notification::make()
+                            ->title('Pembayaran Belum Lunas')
+                            ->body('PO belum dibayar. Tandai Sudah Bayar terlebih dahulu sebelum menerima barang dan menambah stok.')
+                            ->danger()
+                            ->send();
+
+                        return;
+                    }
                     if (! $po->isStockInStatus()) {
                         $po->status = ProductPurchase::STATUS_DITERIMA;
                         $po->save();

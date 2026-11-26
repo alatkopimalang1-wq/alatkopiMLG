@@ -109,7 +109,17 @@
                             class="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-medium text-gray-800 dark:text-gray-200 px-3 py-1.5 focus:ring-2 focus:ring-primary-500"
                         >
                             @foreach(\App\Models\ProductPurchase::STATUS_LABELS as $statusKey => $statusLabel)
-                                <option value="{{ $statusKey }}">{{ $statusLabel }}</option>
+                                @php
+                                    $isDisabledOption = ! $po->is_paid && in_array($statusKey, [
+                                        \App\Models\ProductPurchase::STATUS_DIKIRIM,
+                                        \App\Models\ProductPurchase::STATUS_DITERIMA,
+                                        \App\Models\ProductPurchase::STATUS_SELESAI,
+                                        \App\Models\ProductPurchase::STATUS_RETUR,
+                                    ], true);
+                                @endphp
+                                <option value="{{ $statusKey }}" @disabled($isDisabledOption)>
+                                    {{ $statusLabel }}{{ $isDisabledOption ? ' (Perlu Bayar)' : '' }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
@@ -169,7 +179,9 @@
                     <h3 class="text-sm font-bold text-gray-900 dark:text-white">Info Penerimaan</h3>
                     <button type="button"
                             wire:click="mountAction('editReceiving')"
-                            class="inline-flex items-center gap-1 rounded-md {{ $po->hasStockApplied() ? 'bg-sky-600 hover:bg-sky-700' : 'bg-emerald-600 hover:bg-emerald-700' }} px-2.5 py-1 text-xs font-semibold text-white transition">
+                            @disabled(! $po->is_paid && ! $po->hasStockApplied())
+                            title="{{ ! $po->is_paid && ! $po->hasStockApplied() ? 'Lunasi pembayaran terlebih dahulu sebelum menerima barang' : '' }}"
+                            class="inline-flex items-center gap-1 rounded-md {{ $po->hasStockApplied() ? 'bg-sky-600 hover:bg-sky-700' : 'bg-emerald-600 hover:bg-emerald-700' }} px-2.5 py-1 text-xs font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-50">
                         <x-heroicon-m-pencil-square class="w-3.5 h-3.5" />
                         {{ $po->hasStockApplied() ? 'Ubah' : 'Terima Barang' }}
                     </button>

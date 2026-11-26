@@ -41,12 +41,22 @@ class ProductPurchaseForm
 
                             Select::make('status')
                                 ->label('Status PO')
-                                ->options([
-                                    ProductPurchase::STATUS_DIPESAN => 'Dipesan (Butuh Diproses)',
-                                    ProductPurchase::STATUS_DIKIRIM => 'Dikirim (Butuh Diproses)',
-                                    ProductPurchase::STATUS_DITERIMA => 'Diterima (Tambah Stok Sekarang)',
-                                    ProductPurchase::STATUS_SELESAI => 'Selesai (Tambah Stok Sekarang)',
-                                ])
+                                ->options(function (callable $get): array {
+                                    $isPaid = (bool) $get('is_paid');
+                                    if (! $isPaid) {
+                                        return [
+                                            ProductPurchase::STATUS_DIPESAN => 'Dipesan (Butuh Diproses)',
+                                            ProductPurchase::STATUS_DIBATALKAN => 'Dibatalkan',
+                                        ];
+                                    }
+
+                                    return [
+                                        ProductPurchase::STATUS_DIPESAN => 'Dipesan (Butuh Diproses)',
+                                        ProductPurchase::STATUS_DIKIRIM => 'Dikirim (Butuh Diproses)',
+                                        ProductPurchase::STATUS_DITERIMA => 'Diterima (Tambah Stok Sekarang)',
+                                        ProductPurchase::STATUS_SELESAI => 'Selesai (Tambah Stok Sekarang)',
+                                    ];
+                                })
                                 ->default(ProductPurchase::STATUS_DIPESAN)
                                 ->required(),
 
@@ -58,6 +68,12 @@ class ProductPurchaseForm
                             Toggle::make('is_paid')
                                 ->label('Status Pembayaran: Sudah Bayar')
                                 ->default(false)
+                                ->live()
+                                ->afterStateUpdated(function (bool $state, callable $get, callable $set): void {
+                                    if (! $state && ! in_array($get('status'), [ProductPurchase::STATUS_DIPESAN, ProductPurchase::STATUS_DIBATALKAN], true)) {
+                                        $set('status', ProductPurchase::STATUS_DIPESAN);
+                                    }
+                                })
                                 ->inline(false),
 
                             Select::make('payment_method')
