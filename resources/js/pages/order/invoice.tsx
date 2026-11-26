@@ -169,8 +169,7 @@ export default function OrderInvoicePage({ order, settings }: InvoiceProps) {
                             <p className="max-w-sm pt-1 text-[11px] leading-relaxed text-brand-500">
                                 {settings.address}
                                 <br />
-                                WhatsApp: {settings.phone} · Email:{' '}
-                                {settings.email}
+                                WhatsApp: {settings.phone}
                             </p>
                         </div>
                     </div>
@@ -258,11 +257,6 @@ export default function OrderInvoicePage({ order, settings }: InvoiceProps) {
                         <p className="text-brand-700">
                             Nomor WhatsApp: {order.customer_phone}
                         </p>
-                        {order.customer_email && (
-                            <p className="text-brand-700">
-                                Email: {order.customer_email}
-                            </p>
-                        )}
                         <div className="pt-1 text-brand-600">
                             <span className="block font-semibold text-brand-800">
                                 Metode Pembayaran:
@@ -336,10 +330,6 @@ export default function OrderInvoicePage({ order, settings }: InvoiceProps) {
 
                 {/* Items Table */}
                 <div className="space-y-4 py-6">
-                    <h3 className="text-xs font-bold tracking-wider text-brand-400 uppercase">
-                        Rincian Biji Kopi & Produk yang Dipesan
-                    </h3>
-
                     <div className="overflow-x-auto">
                         <table className="w-full border-collapse text-left text-xs">
                             <thead>
