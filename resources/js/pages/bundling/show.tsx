@@ -798,7 +798,7 @@ export default function BundlingShow({
                             </button>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-3 overflow-y-auto p-4 sm:gap-4">
+                        <div className="grid grid-cols-3 gap-2.5 overflow-y-auto p-3.5 sm:gap-3 sm:p-4">
                             {activeModalSlot.items.map((opt) => {
                                 const isSelected =
                                     selectedBySlot[activeModalSlot.id]?.id ===
@@ -812,7 +812,7 @@ export default function BundlingShow({
                                                 opt,
                                             )
                                         }
-                                        className={`relative flex flex-col justify-between rounded-xl border p-3 text-center transition ${
+                                        className={`relative flex flex-col justify-between rounded-xl border p-2 text-center transition ${
                                             opt.is_out_of_stock
                                                 ? 'cursor-not-allowed border-gray-200 bg-gray-50 opacity-75'
                                                 : isSelected
@@ -824,7 +824,7 @@ export default function BundlingShow({
                                             <img
                                                 src={resolveImg(opt.image)}
                                                 alt={opt.product_name}
-                                                className={`h-full w-full object-contain p-2 ${
+                                                className={`h-full w-full object-cover ${
                                                     opt.is_out_of_stock
                                                         ? 'grayscale opacity-50'
                                                         : ''
@@ -832,25 +832,25 @@ export default function BundlingShow({
                                             />
                                             {opt.is_out_of_stock && (
                                                 <div className="absolute inset-0 flex items-center justify-center bg-black/25">
-                                                    <span className="-rotate-12 border-2 border-rose-600 bg-white/95 px-2.5 py-1 text-xs font-black tracking-widest text-rose-600 uppercase shadow-sm">
+                                                    <span className="-rotate-12 border-2 border-rose-600 bg-white/95 px-2 py-0.5 text-[10px] font-black tracking-widest text-rose-600 uppercase shadow-sm">
                                                         STOK HABIS
                                                     </span>
                                                 </div>
                                             )}
                                         </div>
 
-                                        <div className="mt-2.5">
-                                            <div className="line-clamp-2 text-xs font-bold text-gray-900">
+                                        <div className="mt-2">
+                                            <div className="line-clamp-2 text-[11px] font-bold leading-snug text-gray-900 sm:text-xs">
                                                 {opt.product_name}
                                                 {opt.variant_label &&
                                                 opt.variant_label !== 'Standard'
                                                     ? ` (${opt.variant_label})`
                                                     : ''}
                                             </div>
-                                            <div className="mt-1 text-xs">
+                                            <div className="mt-1 text-[11px] sm:text-xs">
                                                 {opt.normal_price >
                                                     opt.bundle_price && (
-                                                    <span className="mr-1 text-rose-500 line-through">
+                                                    <span className="block text-[10px] text-rose-500 line-through">
                                                         {formatRupiah(
                                                             opt.normal_price,
                                                         )}
