@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import {
     ArrowLeft,
     CheckCircle2,
@@ -353,8 +353,7 @@ export default function BundlingShow({
         setAddedSuccess(true);
         setTimeout(() => {
             setAddedSuccess(false);
-            router.visit('/keranjang');
-        }, 500);
+        }, 1400);
     };
 
     const waUrl = useMemo(() => {
