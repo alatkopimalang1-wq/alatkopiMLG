@@ -858,71 +858,56 @@ export default function BundlingShow({
                         </div>
 
                         {activeProductGroup ? (
-                            <div className="grid grid-cols-3 gap-2.5 overflow-y-auto p-3.5 sm:gap-3 sm:p-4">
-                                {activeProductGroup.variants.map((opt) => {
-                                    const isSelected =
-                                        selectedBySlot[activeModalSlot.id]
-                                            ?.id === opt.id;
-                                    return (
-                                        <div
-                                            key={opt.id}
-                                            onClick={() =>
-                                                handleSelectOption(
-                                                    activeModalSlot,
-                                                    opt,
-                                                )
-                                            }
-                                            className={`relative flex flex-col justify-between rounded-xl border p-2 text-center transition ${
-                                                opt.is_out_of_stock
-                                                    ? 'cursor-not-allowed border-gray-200 bg-gray-50 opacity-75'
-                                                    : isSelected
-                                                      ? 'cursor-pointer border-brand-700 bg-sand-50 ring-2 ring-brand-700'
-                                                      : 'cursor-pointer border-gray-200 bg-white hover:border-brand-700 hover:shadow-md'
-                                            }`}
-                                        >
-                                            <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-gray-50">
-                                                <img
-                                                    src={resolveImg(opt.image)}
-                                                    alt={opt.variant_label}
-                                                    className={`h-full w-full object-cover ${
-                                                        opt.is_out_of_stock
-                                                            ? 'grayscale opacity-50'
-                                                            : ''
-                                                    }`}
-                                                />
-                                                {opt.is_out_of_stock && (
-                                                    <div className="absolute inset-0 flex items-center justify-center bg-black/25">
-                                                        <span className="-rotate-12 border-2 border-rose-600 bg-white/95 px-2 py-0.5 text-[10px] font-black tracking-widest text-rose-600 uppercase shadow-sm">
-                                                            STOK HABIS
-                                                        </span>
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            <div className="mt-2">
-                                                <div className="line-clamp-2 text-[11px] font-bold leading-snug text-gray-900 sm:text-xs">
+                            <div className="space-y-3 overflow-y-auto p-5">
+                                <label className="block text-sm font-bold tracking-wider text-brand-800 uppercase">
+                                    Pilih Varian:
+                                </label>
+                                <div className="flex flex-wrap gap-2.5">
+                                    {activeProductGroup.variants.map((opt) => {
+                                        const isSelected =
+                                            selectedBySlot[activeModalSlot.id]
+                                                ?.id === opt.id;
+                                        return (
+                                            <button
+                                                key={opt.id}
+                                                type="button"
+                                                disabled={opt.is_out_of_stock}
+                                                onClick={() =>
+                                                    handleSelectOption(
+                                                        activeModalSlot,
+                                                        opt,
+                                                    )
+                                                }
+                                                className={`inline-flex flex-col items-start rounded-xl px-4 py-2.5 text-left transition-all ${
+                                                    opt.is_out_of_stock
+                                                        ? 'cursor-not-allowed border border-sand-200 bg-gray-50 text-gray-400 line-through opacity-60'
+                                                        : isSelected
+                                                          ? 'cursor-pointer bg-brand-700 text-white shadow-sm ring-2 ring-brand-700'
+                                                          : 'cursor-pointer border border-sand-200 bg-white text-brand-800 hover:bg-cream-100'
+                                                }`}
+                                            >
+                                                <span className="text-sm font-bold">
                                                     {opt.variant_label ||
-                                                        'Standard'}
-                                                </div>
-                                                <div className="mt-1 text-[11px] sm:text-xs">
-                                                    {opt.normal_price >
-                                                        opt.bundle_price && (
-                                                        <span className="block text-[10px] text-rose-500 line-through">
-                                                            {formatRupiah(
-                                                                opt.normal_price,
-                                                            )}
-                                                        </span>
+                                                        'Standard'}{' '}
+                                                    {opt.is_out_of_stock
+                                                        ? '(Habis)'
+                                                        : ''}
+                                                </span>
+                                                <span
+                                                    className={`mt-0.5 text-xs font-semibold ${
+                                                        isSelected
+                                                            ? 'text-white/90'
+                                                            : 'text-brand-600'
+                                                    }`}
+                                                >
+                                                    {formatRupiah(
+                                                        opt.bundle_price,
                                                     )}
-                                                    <span className="font-extrabold text-gray-900">
-                                                        {formatRupiah(
-                                                            opt.bundle_price,
-                                                        )}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
+                                                </span>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
                             </div>
                         ) : (
                             <div className="grid grid-cols-3 gap-2.5 overflow-y-auto p-3.5 sm:gap-3 sm:p-4">
