@@ -2086,8 +2086,25 @@ export function generateWhatsAppReceiptUrl(
         normalizedPhone = '62' + normalizedPhone.substring(1);
     }
 
-    const itemsText = receipt.items
-        .map((i, idx) => {
+    const itemsText = groupReceiptItemsForDisplay(receipt.items)
+        .map((entry, idx) => {
+            if (entry.type === 'bundle') {
+                const subLines = entry.items
+                    .map((bi, bIdx) => {
+                        const cleanVar = cleanVariantLabelForReceipt(bi.variant_label);
+                        const variant =
+                            cleanVar &&
+                            cleanVar !== 'Default' &&
+                            cleanVar !== 'Standar' &&
+                            cleanVar !== 'Standard'
+                                ? ` (${cleanVar})`
+                                : '';
+                        return `   ITEM ${bIdx + 1}: ${bi.product_name}${variant} (${bi.unit_qty}x = Rp ${formatRp(bi.discounted_line_price)})`;
+                    })
+                    .join('\n');
+                return `${idx + 1}. *${entry.bundleName}* (${entry.bundleQty}x)\n${subLines}\n   Total Paket: Rp ${formatRp(entry.totalDiscounted)}`;
+            }
+            const i = entry.item;
             const cleanVar = cleanVariantLabelForReceipt(i.variant_label);
             const variant =
                 cleanVar &&
