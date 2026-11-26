@@ -66,16 +66,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     );
 
     const isPreorderOut =
-        isPreorder &&
-        Boolean(
-            product.is_out_of_stock ||
-                product.stock_status === 'out_of_stock' ||
-                (product.variants &&
-                    product.variants.length > 0 &&
-                    product.variants.every(
-                        (v) => v.stock_status === 'out_of_stock',
-                    )),
-        );
+        isPreorder && product.stock_status === 'out_of_stock';
 
     const isOutOfStock =
         isPreorderOut ||

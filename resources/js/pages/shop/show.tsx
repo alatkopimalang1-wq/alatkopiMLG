@@ -314,13 +314,7 @@ export default function ProductShow({
     );
 
     const isPreorderOut =
-        isPreorder &&
-        Boolean(
-            product.is_out_of_stock ||
-                product.stock_status === 'out_of_stock' ||
-                (variants.length > 0 &&
-                    variants.every((v) => v.stock_status === 'out_of_stock')),
-        );
+        isPreorder && product.stock_status === 'out_of_stock';
 
     const isProductOutOfStock =
         isPreorderOut ||
@@ -341,7 +335,8 @@ export default function ProductShow({
                         })),
             ));
     const isCurrentVariantOutOfStock = isPreorder
-        ? isProductOutOfStock || selectedVariant.stock_status === 'out_of_stock'
+        ? isProductOutOfStock ||
+          (variants.length > 1 && selectedVariant.stock_status === 'out_of_stock')
         : isProductOutOfStock ||
           selectedVariant.stock_status === 'out_of_stock' ||
           (selectedVariantStock !== null && selectedVariantStock <= 0);

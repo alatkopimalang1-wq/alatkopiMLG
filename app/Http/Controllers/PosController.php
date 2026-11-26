@@ -336,7 +336,7 @@ class PosController extends Controller
                 $quantity = (int) $itemData['quantity'];
                 $isPreorder = (bool) ($product?->is_preorder ?? false);
 
-                if ($variant && $isPreorder && ($variant->stock_status === 'out_of_stock' || ($product && $product->stock_status === 'out_of_stock'))) {
+                if ($variant && $isPreorder && $product && $product->stock_status === 'out_of_stock') {
                     throw new \Illuminate\Http\Exceptions\HttpResponseException(response()->json([
                         'message' => "Produk Pre-Order '{$productName}' ({$variantLabel}) sedang kosong (Habis).",
                     ], 422));
@@ -2263,10 +2263,7 @@ class PosController extends Controller
                 $totalStock = (int) ($product->variants->isNotEmpty()
                     ? $product->variants->sum('stock')
                     : ($product->stock ?? 0));
-                $isPreorderOut = $isPreorder && (
-                    $product->stock_status === 'out_of_stock'
-                    || ($product->variants->isNotEmpty() && $product->variants->every(fn (ProductVariant $v) => $v->stock_status === 'out_of_stock'))
-                );
+                $isPreorderOut = $isPreorder && $product->stock_status === 'out_of_stock';
 
                 return [
                     'id' => $product->id,

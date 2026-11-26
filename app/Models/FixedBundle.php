@@ -89,7 +89,7 @@ class FixedBundle extends Model
                 || $variant->stock_status === 'pre_order';
 
             if ($isPreorder) {
-                if ($prod->stock_status === 'out_of_stock' || $variant->stock_status === 'out_of_stock') {
+                if ($prod->stock_status === 'out_of_stock') {
                     $isOutOfStock = true;
                 }
             } else {
@@ -178,7 +178,7 @@ class FixedBundle extends Model
 
             $vStock = (int) ($variant->stock ?? 0);
             if ($isPreorder) {
-                if ($prod->stock_status === 'out_of_stock' || $variant->stock_status === 'out_of_stock') {
+                if ($prod->stock_status === 'out_of_stock') {
                     $isOutOfStock = true;
                     $maxBundleStock = 0;
                 }

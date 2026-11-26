@@ -82,15 +82,7 @@ class Product extends Model
     public function getIsOutOfStockAttribute(): bool
     {
         if (! empty($this->attributes['is_preorder']) || ($this->attributes['stock_status'] ?? 'in_stock') === 'pre_order') {
-            if (($this->attributes['stock_status'] ?? 'pre_order') === 'out_of_stock') {
-                return true;
-            }
-
-            if ($this->relationLoaded('variants') && $this->variants->isNotEmpty()) {
-                return $this->variants->every(fn ($v) => $v->stock_status === 'out_of_stock');
-            }
-
-            return false;
+            return ($this->attributes['stock_status'] ?? 'pre_order') === 'out_of_stock';
         }
 
         if (isset($this->attributes['stock']) && (int) $this->attributes['stock'] <= 0) {
@@ -288,10 +280,9 @@ class Product extends Model
             $totalStock = (int) $this->variants()->sum('stock');
 
         if ($this->is_preorder) {
-            $allVariantsOut = $this->variants()->where('stock_status', '!=', 'out_of_stock')->doesntExist();
             $this->updateQuietly([
                 'stock' => $totalStock,
-                'stock_status' => $allVariantsOut ? 'out_of_stock' : 'pre_order',
+                'stock_status' => $this->stock_status === 'out_of_stock' ? 'out_of_stock' : 'pre_order',
             ]);
         } else {
             $this->updateQuietly([
@@ -322,6 +313,9 @@ class Product extends Model
         });
 
         static::saved(function (Product $product) {
+            if ($product->is_preorder && $product->stock_status !== 'out_of_stock' && ($product->wasChanged('is_preorder') || $product->wasChanged('stock_status'))) {
+                $product->variants()->where('stock_status', 'out_of_stock')->update(['stock_status' => 'pre_order']);
+            }
             if (! \App\Services\MarketplaceStockSyncService::$isSyncing && \App\Services\MarketplaceStockSyncService::isAutoSyncEnabled()) {
                 if (! $product->variants()->exists() && ($product->wasChanged('stock') || $product->wasRecentlyCreated)) {
                     \App\Services\MarketplaceStockSyncService::pushStockToMarketplacesForProduct($product);

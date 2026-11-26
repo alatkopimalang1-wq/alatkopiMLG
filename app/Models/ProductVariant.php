@@ -157,7 +157,13 @@ class ProductVariant extends Model
             if (\Illuminate\Support\Facades\Schema::hasColumn('product_variants', 'stock')) {
                 $isPreorderProduct = (bool) ($variant->product?->is_preorder ?? false);
                 if ($isPreorderProduct) {
-                    $variant->stock_status = $variant->stock_status === 'out_of_stock' ? 'out_of_stock' : 'pre_order';
+                    if ($variant->product?->stock_status === 'out_of_stock') {
+                        $variant->stock_status = 'out_of_stock';
+                    } else {
+                        $variant->stock_status = ($variant->isDirty('stock_status') && $variant->stock_status === 'out_of_stock')
+                            ? 'out_of_stock'
+                            : 'pre_order';
+                    }
                 } else {
                     $stock = (int) ($variant->stock ?? 0);
                     $variant->stock_status = $stock > 0 ? 'in_stock' : 'out_of_stock';
