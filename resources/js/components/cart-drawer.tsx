@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'motion/react';
-import { ArrowRight, Minus, Plus, ShoppingBag, Trash2, X } from 'lucide-react';
+import { ArrowRight, Minus, Pencil, Plus, ShoppingBag, Trash2, X } from 'lucide-react';
 import { SlidingNumber } from '@animate-ui/react/primitives/texts/sliding-number';
 import { transition } from '@animate-ui/react/utils/motion';
 import { useCart } from '@/context/cart-context';
@@ -183,22 +183,44 @@ export const CartDrawer: React.FC = () => {
                                                                         .name
                                                                 }
                                                             </h4>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() =>
-                                                                    removeItem(
-                                                                        item
-                                                                            .variant
-                                                                            .id,
-                                                                        item.grindOption,
-                                                                        item.customNotes,
-                                                                    )
-                                                                }
-                                                                className="cursor-pointer p-0.5 text-gray-400 transition-colors hover:text-red-500 active:scale-95"
-                                                                aria-label="Hapus produk"
-                                                            >
-                                                                <Trash2 className="h-4 w-4" />
-                                                            </button>
+                                                            <div className="flex flex-shrink-0 items-center gap-1">
+                                                                {item.bundleItems &&
+                                                                    item.bundleItems
+                                                                        .length >
+                                                                        0 && (
+                                                                        <Link
+                                                                            href={`/paket-bundling/${item.product.slug}?edit=${encodeURIComponent(item.customNotes || '')}`}
+                                                                            onClick={() =>
+                                                                                setIsCartOpen(
+                                                                                    false,
+                                                                                )
+                                                                            }
+                                                                            className="inline-flex items-center gap-1 rounded-md border border-brand-200 bg-sand-50 px-2 py-0.5 text-[11px] font-bold text-brand-800 transition-colors hover:bg-sand-200/70"
+                                                                            title="Edit paket bundling"
+                                                                        >
+                                                                            <Pencil className="h-3 w-3" />
+                                                                            <span>
+                                                                                Edit
+                                                                            </span>
+                                                                        </Link>
+                                                                    )}
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() =>
+                                                                        removeItem(
+                                                                            item
+                                                                                .variant
+                                                                                .id,
+                                                                            item.grindOption,
+                                                                            item.customNotes,
+                                                                        )
+                                                                    }
+                                                                    className="cursor-pointer p-0.5 text-gray-400 transition-colors hover:text-red-500 active:scale-95"
+                                                                    aria-label="Hapus produk"
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </button>
+                                                            </div>
                                                         </div>
                                                         {item.bundleItems &&
                                                         item.bundleItems.length >

@@ -70,14 +70,47 @@ export default function BundlingShow({
     relatedBundles?: Product[];
     whatsapp?: string;
 }) {
-    const { addItem } = useCart();
-    const [bundleQty, setBundleQty] = useState(1);
+    const { items: cartItems, addItem, replaceCartItem } = useCart();
+
+    const editKey = useMemo(() => {
+        if (typeof window === 'undefined') return '';
+        return new URLSearchParams(window.location.search).get('edit') || '';
+    }, []);
+
+    const editingCartItem = useMemo(() => {
+        if (!editKey) return undefined;
+        return cartItems.find(
+            (ci) =>
+                ci.bundleItems &&
+                ci.bundleItems.length > 0 &&
+                ci.variant.id === 1000000 + bundle.id &&
+                (ci.customNotes || '') === editKey,
+        );
+    }, [cartItems, editKey, bundle.id]);
+
+    const [bundleQty, setBundleQty] = useState(
+        () => editingCartItem?.quantity ?? 1,
+    );
     const [selectedImageIdx, setSelectedImageIdx] = useState(0);
     const [selectedBySlot, setSelectedBySlot] = useState<
         Record<number, BundleSlotItemData | null>
     >(() => {
         const init: Record<number, BundleSlotItemData | null> = {};
         bundle.slots.forEach((slot) => {
+            if (editingCartItem?.bundleItems) {
+                const sub = editingCartItem.bundleItems.find(
+                    (b) => b.slot_id === slot.id,
+                );
+                if (sub) {
+                    const match = slot.items.find(
+                        (it) => it.variant_id === sub.variant_id,
+                    );
+                    if (match) {
+                        init[slot.id] = match;
+                        return;
+                    }
+                }
+            }
             if (slot.slot_type === 'free' && slot.items.length > 0) {
                 init[slot.id] = slot.items[0];
             } else {
@@ -90,6 +123,15 @@ export default function BundlingShow({
         () => {
             const init: Record<number, number> = {};
             bundle.slots.forEach((slot) => {
+                if (editingCartItem?.bundleItems) {
+                    const sub = editingCartItem.bundleItems.find(
+                        (b) => b.slot_id === slot.id,
+                    );
+                    if (sub) {
+                        init[slot.id] = Math.max(1, sub.quantity || 1);
+                        return;
+                    }
+                }
                 init[slot.id] = Math.max(1, slot.quantity || 1);
             });
             return init;
@@ -338,17 +380,38 @@ export default function BundlingShow({
             stock_status: 'in_stock',
         };
 
-        addItem(
-            bundleProduct,
-            bundleVariant,
-            bundleQty,
-            '',
-            `bundle:${bundle.id}:${signature}`,
-            undefined,
-            undefined,
-            undefined,
-            bundleSubItems,
-        );
+        const newNotes = `bundle:${bundle.id}:${signature}`;
+
+        if (editingCartItem) {
+            replaceCartItem(
+                editingCartItem.variant.id,
+                editingCartItem.grindOption,
+                editingCartItem.customNotes,
+                {
+                    product: bundleProduct,
+                    variant: bundleVariant,
+                    quantity: bundleQty,
+                    grindOption: '',
+                    customNotes: newNotes,
+                    bundleItems: bundleSubItems,
+                },
+            );
+            if (typeof window !== 'undefined' && window.location.search) {
+                window.history.replaceState({}, '', window.location.pathname);
+            }
+        } else {
+            addItem(
+                bundleProduct,
+                bundleVariant,
+                bundleQty,
+                '',
+                newNotes,
+                undefined,
+                undefined,
+                undefined,
+                bundleSubItems,
+            );
+        }
 
         setAddedSuccess(true);
         setTimeout(() => {
@@ -734,13 +797,19 @@ export default function BundlingShow({
                                     {addedSuccess ? (
                                         <>
                                             <CheckCircle2 className="h-4 w-4 text-emerald-200" />
-                                            <span>Berhasil Ditambahkan!</span>
+                                            <span>
+                                                {editingCartItem
+                                                    ? 'Paket Diperbarui!'
+                                                    : 'Berhasil Ditambahkan!'}
+                                            </span>
                                         </>
                                     ) : (
                                         <>
                                             <ShoppingBag className="hidden h-4 w-4 sm:inline-block" />
                                             <span>
-                                                Tambah ke Keranjang
+                                                {editingCartItem
+                                                    ? 'Simpan Perubahan Paket'
+                                                    : 'Tambah ke Keranjang'}
                                                 {bundleTotal > 0
                                                     ? ` • ${formatRupiah(bundleTotal)}`
                                                     : ''}

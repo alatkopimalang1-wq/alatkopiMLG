@@ -15,6 +15,7 @@ import {
     MessageCircle,
     Minus,
     Package,
+    Pencil,
     Plus,
     QrCode,
     RefreshCw,
@@ -981,21 +982,39 @@ export default function CartPage({
                                                                 </div>
                                                             )}
                                                         </div>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() =>
-                                                                removeItem(
-                                                                    item.variant
-                                                                        .id,
-                                                                    item.grindOption,
-                                                                    item.customNotes,
-                                                                )
-                                                            }
-                                                            className="cursor-pointer p-1 text-gray-400 hover:text-red-500"
-                                                            aria-label="Hapus item"
-                                                        >
-                                                            <Trash2 className="h-3.5 w-3.5" />
-                                                        </button>
+                                                        <div className="flex flex-shrink-0 items-center gap-1">
+                                                            {item.bundleItems &&
+                                                                item.bundleItems
+                                                                    .length >
+                                                                    0 && (
+                                                                    <Link
+                                                                        href={`/paket-bundling/${item.product.slug}?edit=${encodeURIComponent(item.customNotes || '')}`}
+                                                                        className="inline-flex items-center gap-1 rounded-md border border-brand-200 bg-sand-50 px-2 py-0.5 text-[11px] font-bold text-brand-800 transition-colors hover:bg-sand-200/70"
+                                                                        title="Edit paket bundling"
+                                                                    >
+                                                                        <Pencil className="h-3 w-3" />
+                                                                        <span>
+                                                                            Edit
+                                                                        </span>
+                                                                    </Link>
+                                                                )}
+                                                            <button
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    removeItem(
+                                                                        item
+                                                                            .variant
+                                                                            .id,
+                                                                        item.grindOption,
+                                                                        item.customNotes,
+                                                                    )
+                                                                }
+                                                                className="cursor-pointer p-1 text-gray-400 hover:text-red-500"
+                                                                aria-label="Hapus item"
+                                                            >
+                                                                <Trash2 className="h-3.5 w-3.5" />
+                                                            </button>
+                                                        </div>
                                                     </div>
 
                                                     <div className="mt-1 flex items-center justify-between">

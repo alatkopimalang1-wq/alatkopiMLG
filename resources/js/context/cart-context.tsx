@@ -25,6 +25,12 @@ interface CartContextType {
         grindOption: string,
         customNotes?: string,
     ) => void;
+    replaceCartItem: (
+        oldVariantId: number,
+        oldGrindOption: string,
+        oldCustomNotes: string | undefined,
+        newItem: CartItem,
+    ) => void;
     updateQuantity: (
         variantId: number,
         grindOption: string,
@@ -188,6 +194,29 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
         );
     };
 
+    const replaceCartItem = (
+        oldVariantId: number,
+        oldGrindOption: string,
+        oldCustomNotes: string | undefined,
+        newItem: CartItem,
+    ) => {
+        setItems((prev) => {
+            const idx = prev.findIndex(
+                (i) =>
+                    i.variant.id === oldVariantId &&
+                    i.grindOption === oldGrindOption &&
+                    (i.customNotes || '') === (oldCustomNotes || ''),
+            );
+            if (idx === -1) {
+                return [...prev, newItem];
+            }
+            const next = [...prev];
+            next[idx] = newItem;
+            return next;
+        });
+        setIsCartOpen(true);
+    };
+
     const updateQuantity = (
         variantId: number,
         grindOption: string,
@@ -264,6 +293,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
                 items,
                 addItem,
                 removeItem,
+                replaceCartItem,
                 updateQuantity,
                 updateItemDpPercent,
                 clearCart,
