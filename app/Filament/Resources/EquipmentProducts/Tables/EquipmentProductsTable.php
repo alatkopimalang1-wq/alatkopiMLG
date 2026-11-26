@@ -91,13 +91,13 @@ class EquipmentProductsTable
                             return new HtmlString('');
                         }
                         if ($variants->count() === 1 && strcasecmp((string) $variants->first()->label, 'Standard') === 0) {
-                            return new HtmlString('<div class="h-6 leading-6 text-xs text-gray-400">—</div>');
+                            return new HtmlString('<div class="h-7 leading-7 text-sm text-gray-400">—</div>');
                         }
 
                         $lines = $variants->map(function ($v) {
                             $label = e((string) $v->label);
 
-                            return "<div class=\"h-6 leading-6 text-xs text-gray-700 dark:text-gray-200 whitespace-nowrap\">{$label}</div>";
+                            return "<div class=\"h-7 leading-7 text-sm text-gray-700 dark:text-gray-200 whitespace-nowrap\">{$label}</div>";
                         })->implode('');
 
                         return new HtmlString("<div class=\"space-y-1\">{$lines}</div>");
@@ -109,13 +109,13 @@ class EquipmentProductsTable
                     ->state(function (Product $record): HtmlString {
                         $variants = $record->variants;
                         if ($variants->isEmpty()) {
-                            return new HtmlString('<div class="h-6 leading-6 text-xs text-gray-400">—</div>');
+                            return new HtmlString('<div class="h-7 leading-7 text-sm text-gray-400">—</div>');
                         }
 
                         $lines = $variants->map(function ($v) {
                             $sku = ! empty($v->sku) ? e((string) $v->sku) : '—';
 
-                            return "<div class=\"h-6 leading-6 font-mono text-xs text-gray-600 dark:text-gray-300 whitespace-nowrap\">{$sku}</div>";
+                            return "<div class=\"h-7 leading-7 font-mono text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap\">{$sku}</div>";
                         })->implode('');
 
                         return new HtmlString("<div class=\"space-y-1\">{$lines}</div>");
@@ -135,15 +135,15 @@ class EquipmentProductsTable
                                     ? '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-rose-600 text-white">Kosong (PO)</span>'
                                     : '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-emerald-600 text-white">Tersedia (PO)</span>';
 
-                                return new HtmlString("<div class=\"h-6 flex items-center\">{$badge}</div>");
+                                return new HtmlString("<div class=\"h-7 flex items-center\">{$badge}</div>");
                             }
 
                             $lines = $variants->map(function ($v) use ($record) {
                                 $isOut = $record->stock_status === 'out_of_stock' || $v->stock_status === 'out_of_stock';
 
                                 return $isOut
-                                    ? '<div class="h-6 flex items-center"><span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-rose-600 text-white">Kosong (PO)</span></div>'
-                                    : '<div class="h-6 flex items-center"><span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-emerald-600 text-white">Tersedia (PO)</span></div>';
+                                    ? '<div class="h-7 flex items-center"><span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-rose-600 text-white">Kosong (PO)</span></div>'
+                                    : '<div class="h-7 flex items-center"><span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-emerald-600 text-white">Tersedia (PO)</span></div>';
                             })->implode('');
 
                             return new HtmlString("<div class=\"space-y-1\">{$lines}</div>");
@@ -152,19 +152,19 @@ class EquipmentProductsTable
                         if ($variants->isEmpty()) {
                             $qty = (int) ($record->stock ?? 0);
                             if ($qty <= 1) {
-                                return new HtmlString("<div class=\"h-6 flex items-center\"><span class=\"inline-flex items-center justify-center min-w-[22px] px-1.5 py-0.5 rounded text-xs font-bold bg-amber-500 text-white\">{$qty}</span></div>");
+                                return new HtmlString("<div class=\"h-7 flex items-center\"><span class=\"inline-flex items-center justify-center min-w-[24px] px-2 py-0.5 rounded text-sm font-bold bg-amber-500 text-white\">{$qty}</span></div>");
                             }
 
-                            return new HtmlString("<div class=\"h-6 leading-6 text-xs font-semibold text-gray-800 dark:text-gray-200\">{$qty}</div>");
+                            return new HtmlString("<div class=\"h-7 leading-7 text-sm font-semibold text-gray-800 dark:text-gray-200\">{$qty}</div>");
                         }
 
                         $lines = $variants->map(function ($v) {
                             $qty = (int) ($v->stock ?? 0);
                             if ($qty <= 1) {
-                                return "<div class=\"h-6 flex items-center\"><span class=\"inline-flex items-center justify-center min-w-[22px] px-1.5 py-0.5 rounded text-xs font-bold bg-amber-500 text-white\">{$qty}</span></div>";
+                                return "<div class=\"h-7 flex items-center\"><span class=\"inline-flex items-center justify-center min-w-[24px] px-2 py-0.5 rounded text-sm font-bold bg-amber-500 text-white\">{$qty}</span></div>";
                             }
 
-                            return "<div class=\"h-6 leading-6 text-xs font-semibold text-gray-800 dark:text-gray-200\">{$qty}</div>";
+                            return "<div class=\"h-7 leading-7 text-sm font-semibold text-gray-800 dark:text-gray-200\">{$qty}</div>";
                         })->implode('');
 
                         return new HtmlString("<div class=\"space-y-1\">{$lines}</div>");
@@ -176,13 +176,13 @@ class EquipmentProductsTable
                     ->state(function (Product $record): HtmlString {
                         $variants = $record->variants;
                         if ($variants->isEmpty()) {
-                            return new HtmlString('<div class="h-6 leading-6 text-xs text-gray-400">0,00</div>');
+                            return new HtmlString('<div class="h-7 leading-7 text-sm text-gray-400">0,00</div>');
                         }
 
                         $lines = $variants->map(function ($v) {
                             $cost = number_format((float) ($v->cost_price ?? 0), 2, ',', '.');
 
-                            return "<div class=\"h-6 leading-6 text-xs text-gray-700 dark:text-gray-200 whitespace-nowrap\"><span class=\"border-b border-dashed border-gray-400/60 pb-0.5\">{$cost}</span></div>";
+                            return "<div class=\"h-7 leading-7 text-sm text-gray-700 dark:text-gray-200 whitespace-nowrap\"><span class=\"border-b border-dashed border-gray-400/60 pb-0.5\">{$cost}</span></div>";
                         })->implode('');
 
                         return new HtmlString("<div class=\"space-y-1\">{$lines}</div>");
@@ -197,13 +197,13 @@ class EquipmentProductsTable
                         if ($variants->isEmpty()) {
                             $price = number_format((float) ($record->min_price ?? 0), 2, ',', '.');
 
-                            return new HtmlString("<div class=\"h-6 leading-6 text-xs font-semibold text-gray-800 dark:text-gray-200 whitespace-nowrap\"><span class=\"border-b border-dashed border-gray-400/60 pb-0.5\">{$price}</span></div>");
+                            return new HtmlString("<div class=\"h-7 leading-7 text-sm font-semibold text-gray-800 dark:text-gray-200 whitespace-nowrap\"><span class=\"border-b border-dashed border-gray-400/60 pb-0.5\">{$price}</span></div>");
                         }
 
                         $lines = $variants->map(function ($v) {
                             $price = number_format((float) ($v->price ?? 0), 2, ',', '.');
 
-                            return "<div class=\"h-6 leading-6 text-xs font-semibold text-gray-800 dark:text-gray-200 whitespace-nowrap\"><span class=\"border-b border-dashed border-gray-400/60 pb-0.5\">{$price}</span></div>";
+                            return "<div class=\"h-7 leading-7 text-sm font-semibold text-gray-800 dark:text-gray-200 whitespace-nowrap\"><span class=\"border-b border-dashed border-gray-400/60 pb-0.5\">{$price}</span></div>";
                         })->implode('');
 
                         return new HtmlString("<div class=\"space-y-1\">{$lines}</div>");
