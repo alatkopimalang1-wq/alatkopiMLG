@@ -54,14 +54,11 @@ class ListProductPurchases extends ListRecords
                 ->badge(fn (): int => ProductPurchase::where('status', ProductPurchase::STATUS_DIBATALKAN)->count())
                 ->badgeColor('danger')
                 ->modifyQueryUsing(fn (Builder $query): Builder => $query->where('status', ProductPurchase::STATUS_DIBATALKAN)),
-
-            'semua' => Tab::make('Semua')
-                ->badge(fn (): int => ProductPurchase::count()),
         ];
     }
 
     public function getDefaultActiveTab(): string|int|null
     {
-        return 'semua';
+        return 'butuh_diproses';
     }
 }
