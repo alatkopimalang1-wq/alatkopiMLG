@@ -176,7 +176,10 @@ class EquipmentProductForm
                                         ->label('Stok (Pcs)')
                                         ->numeric()
                                         ->default(20)
-                                        ->required(fn (callable $get): bool => ! $get('has_variants')),
+                                        ->disabled(fn ($livewire): bool => $livewire instanceof \App\Filament\Resources\EquipmentProducts\Pages\EditEquipmentProduct)
+                                        ->dehydrated(fn ($livewire): bool => ! ($livewire instanceof \App\Filament\Resources\EquipmentProducts\Pages\EditEquipmentProduct))
+                                        ->helperText(fn ($livewire): ?string => $livewire instanceof \App\Filament\Resources\EquipmentProducts\Pages\EditEquipmentProduct ? 'Penambahan qty/stok hanya dapat dilakukan melalui menu Pembelian Produk.' : null)
+                                        ->required(fn ($livewire, callable $get): bool => ! ($livewire instanceof \App\Filament\Resources\EquipmentProducts\Pages\EditEquipmentProduct) && ! $get('has_variants')),
                                     TextInput::make('single_sku')
                                         ->label('SKU (Opsional)')
                                         ->placeholder('e.g. AKM-TM-C3-BLK')
@@ -253,19 +256,11 @@ class EquipmentProductForm
                                         TextInput::make('stock')
                                             ->label('Stok Varian (Pcs)')
                                             ->numeric()
-                                            ->default(20)
-                                            ->required()
-                                            ->live(onBlur: true)
-                                            ->afterStateUpdated(function ($state, callable $get, callable $set) {
-                                                $variants = $get('../../variants');
-                                                if (is_array($variants)) {
-                                                    $total = 0;
-                                                    foreach ($variants as $v) {
-                                                        $total += (int) ($v['stock'] ?? 0);
-                                                    }
-                                                    $set('../../stock', $total);
-                                                }
-                                            }),
+                                            ->default(fn ($livewire): int => $livewire instanceof \App\Filament\Resources\EquipmentProducts\Pages\EditEquipmentProduct ? 0 : 20)
+                                            ->disabled(fn ($livewire): bool => $livewire instanceof \App\Filament\Resources\EquipmentProducts\Pages\EditEquipmentProduct)
+                                            ->dehydrated(fn ($livewire): bool => ! ($livewire instanceof \App\Filament\Resources\EquipmentProducts\Pages\EditEquipmentProduct))
+                                            ->helperText(fn ($livewire): ?string => $livewire instanceof \App\Filament\Resources\EquipmentProducts\Pages\EditEquipmentProduct ? 'Penambahan qty/stok hanya dapat dilakukan melalui menu Pembelian Produk.' : null)
+                                            ->required(fn ($livewire): bool => ! ($livewire instanceof \App\Filament\Resources\EquipmentProducts\Pages\EditEquipmentProduct)),
                                         TextInput::make('sku')
                                             ->label('SKU (Opsional)')
                                             ->placeholder('e.g. AKM-TM-C3-BLK'),

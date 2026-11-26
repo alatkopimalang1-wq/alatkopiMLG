@@ -48,26 +48,29 @@ class EditEquipmentProduct extends EditRecord
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
+        $record = $this->getRecord();
+        $existingStock = $record instanceof Product ? (int) ($record->stock ?? 0) : 0;
+
         $data['series'] = 'alat-kopi';
         $isPreorder = (bool) ($data['is_preorder'] ?? false);
         if (! $isPreorder) {
             $data['preorder_dp_percent'] = 100;
         }
-        $data['stock_status'] = $isPreorder ? 'pre_order' : ((int) ($data['stock'] ?? 0) > 0 ? 'in_stock' : 'out_of_stock');
+        $data['stock'] = $existingStock;
+        $data['stock_status'] = $isPreorder ? 'pre_order' : ($existingStock > 0 ? 'in_stock' : 'out_of_stock');
 
         $raw = $this->form->getRawState();
         $hasVariants = (bool) ($raw['has_variants'] ?? false);
 
         if ($hasVariants && ! empty($data['variants']) && is_array($data['variants'])) {
-            $totalStock = 0;
             $prices = [];
-            foreach ($data['variants'] as $v) {
-                $totalStock += (int) ($v['stock'] ?? 0);
+            foreach ($data['variants'] as $key => $v) {
+                // Prevent direct stock modification during product edit; preserve DB stock
+                unset($data['variants'][$key]['stock']);
                 if (isset($v['price']) && (float) $v['price'] > 0) {
                     $prices[] = (float) $v['price'];
                 }
             }
-            $data['stock'] = $totalStock;
             if (! empty($prices)) {
                 $data['min_price'] = min($prices);
                 $data['max_price'] = max($prices);
@@ -75,7 +78,6 @@ class EditEquipmentProduct extends EditRecord
         } else {
             $data['min_price'] = (float) ($data['min_price'] ?? 0);
             $data['max_price'] = $data['min_price'];
-            $data['stock'] = (int) ($data['stock'] ?? 0);
         }
 
         return $data;
