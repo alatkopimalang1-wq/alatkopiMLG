@@ -586,6 +586,9 @@ export default function CartPage({
                         ...(dpPercent !== undefined
                             ? { preorder_dp_percent: dpPercent }
                             : {}),
+                        ...(i.bundleSlotId !== undefined
+                            ? { bundle_slot_id: i.bundleSlotId }
+                            : {}),
                         ...(i.bundleSlotItemId !== undefined
                             ? { bundle_slot_item_id: i.bundleSlotItemId }
                             : {}),

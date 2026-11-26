@@ -12,12 +12,16 @@ class EquipmentBundleSlot extends Model
         'equipment_bundle_id',
         'title',
         'slot_type',
+        'category_id',
+        'discount_percent',
         'is_optional',
         'quantity',
         'sort_order',
     ];
 
     protected $casts = [
+        'category_id' => 'integer',
+        'discount_percent' => 'float',
         'is_optional' => 'boolean',
         'quantity' => 'integer',
         'sort_order' => 'integer',
@@ -26,6 +30,11 @@ class EquipmentBundleSlot extends Model
     public function bundle(): BelongsTo
     {
         return $this->belongsTo(EquipmentBundle::class, 'equipment_bundle_id');
+    }
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
     }
 
     public function items(): HasMany

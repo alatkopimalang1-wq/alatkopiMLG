@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\EquipmentBundles\Schemas;
 
+use App\Models\Category;
 use App\Models\EquipmentBundle;
 use App\Models\Product;
 use App\Models\ProductVariant;
@@ -111,6 +112,38 @@ class EquipmentBundleForm
                                         ->required(),
                                 ]),
 
+                                Grid::make(2)->schema([
+                                    Select::make('category_id')
+                                        ->label('Pilih Kategori Produk')
+                                        ->options(fn (): array => Category::query()
+                                            ->orderBy('sort_order')
+                                            ->get()
+                                            ->mapWithKeys(function (Category $c) {
+                                                $name = $c->name;
+                                                if (is_array($name)) {
+                                                    $name = $name[app()->getLocale()] ?? $name['id'] ?? $name['en'] ?? reset($name) ?? '';
+                                                }
+
+                                                return [$c->id => (string) $name];
+                                            })
+                                            ->all())
+                                        ->searchable()
+                                        ->preload()
+                                        ->visible(fn (callable $get): bool => ($get('slot_type') ?? 'selectable') === 'selectable')
+                                        ->required(fn (callable $get): bool => ($get('slot_type') ?? 'selectable') === 'selectable')
+                                        ->helperText('Semua produk dalam kategori ini otomatis menjadi pilihan slot dengan mengikuti harga masing-masing produk.'),
+
+                                    TextInput::make('discount_percent')
+                                        ->label('Diskon Bundling Kategori (%)')
+                                        ->numeric()
+                                        ->minValue(0)
+                                        ->maxValue(100)
+                                        ->default(0)
+                                        ->suffix('%')
+                                        ->visible(fn (callable $get): bool => ($get('slot_type') ?? 'selectable') === 'selectable')
+                                        ->helperText('Potongan persen otomatis dari harga normal produk di kategori ini.'),
+                                ]),
+
                                 Toggle::make('is_optional')
                                     ->label('Opsional (Tampilkan pita OPTIONAL, pelanggan boleh tidak memilih)')
                                     ->visible(fn (callable $get): bool => ($get('slot_type') ?? 'selectable') === 'selectable')
@@ -118,11 +151,13 @@ class EquipmentBundleForm
 
                                 Repeater::make('items')
                                     ->relationship('items')
-                                    ->label('Pilihan Produk pada Slot Ini')
+                                    ->label('Produk Gratis / Bonus Tetap')
                                     ->orderColumn('sort_order')
-                                    ->minItems(1)
+                                    ->visible(fn (callable $get): bool => ($get('slot_type') ?? 'selectable') === 'free')
+                                    ->minItems(fn (callable $get): int => ($get('slot_type') ?? 'selectable') === 'free' ? 1 : 0)
+                                    ->maxItems(1)
                                     ->defaultItems(1)
-                                    ->helperText('Untuk slot "Produk Gratis / Bonus Tetap", isi 1 produk dengan Harga Bundling = 0.')
+                                    ->helperText('Pilih produk bonus yang otomatis berstatus GRATIS (Rp 0) pada paket ini.')
                                     ->schema([
                                         Grid::make(3)->schema([
                                             Select::make('product_id')

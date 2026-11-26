@@ -151,6 +151,7 @@ export interface CartItem {
     grindOption: string;
     customNotes?: string;
     preorderDpPercent?: number;
+    bundleSlotId?: number;
     bundleSlotItemId?: number;
 }
 

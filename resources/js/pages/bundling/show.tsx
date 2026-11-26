@@ -15,6 +15,8 @@ import type { Product, ProductVariant } from '@/types/sanubari';
 
 interface BundleSlotItemData {
     id: number;
+    bundle_slot_id?: number;
+    bundle_slot_item_id?: number | null;
     product_id: number;
     product_name: string;
     product_slug: string;
@@ -155,7 +157,8 @@ export default function BundlingShow({
                 '',
                 `Paket Bundling: ${bundle.name} (${slot.title})`,
                 undefined,
-                item.id,
+                item.bundle_slot_item_id ?? undefined,
+                item.bundle_slot_id ?? slot.id,
             );
         });
 

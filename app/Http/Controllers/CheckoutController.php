@@ -34,6 +34,7 @@ class CheckoutController extends Controller
             'items.*.grind_option' => 'nullable|string|max:100',
             'items.*.custom_notes' => 'nullable|string|max:500',
             'items.*.preorder_dp_percent' => 'nullable|integer|in:30,50,70,100',
+            'items.*.bundle_slot_id' => 'nullable|integer|exists:equipment_bundle_slots,id',
             'items.*.bundle_slot_item_id' => 'nullable|integer|exists:equipment_bundle_slot_items,id',
             'fulfillment_type' => 'nullable|string|in:delivery,pickup',
             'customer.name' => 'required|string|max:100',
@@ -119,6 +120,17 @@ class CheckoutController extends Controller
                     $unitPrice = $bundleSlotItem->slot?->slot_type === 'free'
                         ? 0.0
                         : ($bundleSlotItem->bundle_price !== null ? (float) $bundleSlotItem->bundle_price : (float) $variant->price);
+                }
+            } elseif (! empty($item['bundle_slot_id'])) {
+                $bundleSlot = \App\Models\EquipmentBundleSlot::find($item['bundle_slot_id']);
+                if ($bundleSlot && $bundleSlot->slot_type === 'selectable' && $bundleSlot->category_id) {
+                    $belongsToCategory = $variant->product->categories()
+                        ->where('categories.id', $bundleSlot->category_id)
+                        ->exists();
+                    if ($belongsToCategory) {
+                        $discPct = max(0.0, min(100.0, (float) ($bundleSlot->discount_percent ?? 0)));
+                        $unitPrice = (float) round((float) $variant->price * (1 - ($discPct / 100)));
+                    }
                 }
             }
             $lineTotal = $unitPrice * $qty;

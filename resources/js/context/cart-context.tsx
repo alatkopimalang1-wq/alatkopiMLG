@@ -12,6 +12,7 @@ interface CartContextType {
         customNotes?: string,
         preorderDpPercent?: number,
         bundleSlotItemId?: number,
+        bundleSlotId?: number,
     ) => void;
     removeItem: (
         variantId: number,
@@ -72,6 +73,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
         customNotes?: string,
         preorderDpPercent?: number,
         bundleSlotItemId?: number,
+        bundleSlotId?: number,
     ) => {
         const isEquipment =
             product.series === 'alat-kopi' ||
@@ -138,6 +140,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
                     preorderDpPercent: isPreorder
                         ? resolvedDpPercent
                         : undefined,
+                    bundleSlotId,
                     bundleSlotItemId,
                 },
             ];
