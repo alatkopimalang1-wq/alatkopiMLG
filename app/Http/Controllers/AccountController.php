@@ -35,7 +35,7 @@ class AccountController extends Controller
                 $q->orWhere('customer_phone', $altPhone);
             }
         })
-            ->with('items')
+            ->with(['items.product.primaryImage', 'items.variant'])
             ->latest()
             ->get()
             ->map(function ($order) {
@@ -57,13 +57,17 @@ class AccountController extends Controller
                     'customer_address' => $order->customer_address,
                     'items_count' => $order->items->sum('quantity'),
                     'items' => $order->items->map(fn ($item) => [
+                        'id' => $item->id,
                         'product_name' => $item->product_name,
                         'variant_label' => $item->variant_label,
                         'grind_option' => $item->grind_option,
                         'custom_notes' => $item->custom_notes,
                         'quantity' => $item->quantity,
                         'price' => (float) $item->price,
+                        'normal_price' => (float) ($item->variant?->original_price ?: $item->variant?->price ?: $item->price),
                         'subtotal' => (float) $item->subtotal,
+                        'is_preorder' => (bool) ($item->product?->is_preorder ?? false) || $item->product?->stock_status === 'pre_order' || $item->variant?->stock_status === 'pre_order',
+                        'image' => $item->variant?->image_url ?? $item->product?->primaryImage?->path,
                     ]),
                 ];
             });

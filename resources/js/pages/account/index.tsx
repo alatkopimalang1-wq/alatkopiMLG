@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { PublicLayout } from '@/layouts/public-layout';
+import { BundleCartItemDetails } from '@/components/bundle-cart-item-details';
+import { groupOrderItems } from '@/lib/order-bundle-groups';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import PasswordInput from '@/components/password-input';
@@ -32,13 +34,17 @@ import {
 } from 'lucide-react';
 
 interface OrderItem {
+    id?: number;
     product_name: string;
     variant_label: string;
     grind_option?: string;
     custom_notes?: string;
     quantity: number;
     price: number;
+    normal_price?: number;
     subtotal: number;
+    is_preorder?: boolean;
+    image?: string | null;
 }
 
 interface OrderSummary {
@@ -461,53 +467,97 @@ export default function CustomerAccount({
 
                                         {/* Body Pesanan: Daftar Item */}
                                         <div className="divide-sand-100 divide-y p-4 sm:p-5">
-                                            {order.items.map((item, idx) => (
-                                                <div
-                                                    key={idx}
-                                                    className="flex items-start justify-between gap-4 py-3 first:pt-0 last:pb-0"
-                                                >
-                                                    <div className="space-y-1">
-                                                        <h4 className="text-sm leading-snug font-bold text-brand-950">
-                                                            {item.quantity}x{' '}
-                                                            {item.product_name}
-                                                        </h4>
-                                                        <div className="flex flex-wrap items-center gap-2 text-xs text-brand-600">
-                                                            <span className="bg-sand-100 rounded-md px-2 py-0.5 text-[11px] font-medium">
-                                                                {
-                                                                    item.variant_label
-                                                                }
-                                                            </span>
-                                                            {item.grind_option && (
-                                                                <span className="rounded-md bg-cream-100 px-2 py-0.5 text-[11px] font-medium text-brand-800">
-                                                                    {
-                                                                        item.grind_option
-                                                                    }
-                                                                </span>
-                                                            )}
+                                            {groupOrderItems(order.items).map((entry) => {
+                                                if (entry.type === 'bundle') {
+                                                    return (
+                                                        <div
+                                                            key={entry.key}
+                                                            className="space-y-2 py-3 first:pt-0 last:pb-0"
+                                                        >
+                                                            <div className="flex items-center gap-3">
+                                                                {entry.image && (
+                                                                    <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-xl border border-sand-200 bg-cream-50">
+                                                                        <img
+                                                                            src={
+                                                                                entry.image.startsWith('http://') ||
+                                                                                entry.image.startsWith('https://')
+                                                                                    ? entry.image
+                                                                                    : `/storage/${entry.image.replace(/^\/?(public\/|storage\/)?/, '')}`
+                                                                            }
+                                                                            alt={entry.bundleName}
+                                                                            className="h-full w-full object-cover"
+                                                                        />
+                                                                    </div>
+                                                                )}
+                                                                <h4 className="text-sm font-bold text-brand-950">
+                                                                    {entry.bundleName}
+                                                                </h4>
+                                                            </div>
+                                                            <BundleCartItemDetails
+                                                                bundleItems={entry.bundleItems}
+                                                                packageQty={1}
+                                                            />
                                                         </div>
-                                                        {item.custom_notes && (
-                                                            <p className="mt-1 rounded-lg border border-amber-200/50 bg-amber-50/70 p-2 text-xs font-medium text-accent-copper">
-                                                                {
-                                                                    item.custom_notes
-                                                                }
-                                                            </p>
-                                                        )}
+                                                    );
+                                                }
+
+                                                const item = entry.item;
+                                                const rawImg = item.image;
+                                                const imgUrl = rawImg
+                                                    ? rawImg.startsWith('http://') ||
+                                                      rawImg.startsWith('https://')
+                                                        ? rawImg
+                                                        : `/storage/${rawImg.replace(/^\/?(public\/|storage\/)?/, '')}`
+                                                    : '/brand/logo-circle.png';
+                                                return (
+                                                    <div
+                                                        key={entry.key}
+                                                        className="flex items-start justify-between gap-4 py-3 first:pt-0 last:pb-0"
+                                                    >
+                                                        <div className="flex min-w-0 flex-1 items-start gap-3">
+                                                            <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-xl border border-sand-200 bg-cream-50">
+                                                                <img
+                                                                    src={imgUrl}
+                                                                    alt={item.product_name}
+                                                                    className="h-full w-full object-cover"
+                                                                />
+                                                            </div>
+                                                            <div className="min-w-0 flex-1 space-y-1">
+                                                                <div className="flex flex-wrap items-center gap-2">
+                                                                    <h4 className="text-sm leading-snug font-bold text-brand-950">
+                                                                        {item.product_name}
+                                                                    </h4>
+                                                                    {item.is_preorder && (
+                                                                        <span className="inline-flex items-center rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-bold tracking-wide text-amber-800 uppercase">
+                                                                            Pre-Order
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <p className="text-xs font-medium text-accent-copper">
+                                                                    Varian: {item.variant_label}
+                                                                    {item.grind_option
+                                                                        ? ` · ${item.grind_option}`
+                                                                        : ''}
+                                                                </p>
+                                                                {item.custom_notes && (
+                                                                    <p className="mt-1 rounded-lg border border-amber-200/50 bg-amber-50/70 p-2 text-xs font-medium text-accent-copper">
+                                                                        {item.custom_notes}
+                                                                    </p>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                        <div className="shrink-0 text-right">
+                                                            <span className="text-xs font-medium text-brand-500">
+                                                                {item.quantity}x @{' '}
+                                                                {formatRupiah(item.price)}
+                                                            </span>
+                                                            <div className="text-sm font-extrabold text-brand-950">
+                                                                {formatRupiah(item.subtotal)}
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                    <div className="shrink-0 text-right">
-                                                        <span className="text-sm font-bold text-brand-950">
-                                                            {formatRupiah(
-                                                                item.subtotal,
-                                                            )}
-                                                        </span>
-                                                        <p className="text-[11px] text-brand-400">
-                                                            @
-                                                            {formatRupiah(
-                                                                item.price,
-                                                            )}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            ))}
+                                                );
+                                            })}
                                         </div>
 
                                         {/* Footer Pesanan: Pengiriman & Aksi */}
