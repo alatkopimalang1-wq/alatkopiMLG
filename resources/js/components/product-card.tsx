@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from '@inertiajs/react';
-import { ShoppingBag, Heart, Plus } from 'lucide-react';
+import { ShoppingBag, Plus } from 'lucide-react';
 import type { Product } from '@/types/sanubari';
 import { formatRupiah } from '@/lib/trans';
 import { CoffeeBeanIcon } from '@/components/coffee-bean-icon';
@@ -132,11 +132,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                         Best Seller
                     </span>
                 ) : null}
-
-                {/* Top-Right Heart Wishlist Pill */}
-                <div className="absolute top-2 right-2 z-20 flex h-7 w-7 items-center justify-center rounded-full bg-white/85 text-brand-400 shadow-xs backdrop-blur-xs">
-                    <Heart className="h-3.5 w-3.5 text-brand-400" />
-                </div>
             </Link>
 
             {/* Content Body with Compact Padding */}
