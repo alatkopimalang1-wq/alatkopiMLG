@@ -54,9 +54,7 @@
         <div class="card">
             <h4>Supplier</h4>
             <div class="row"><span class="label">Nama:</span> <strong>{{ $po->supplier_name ?: '-' }}</strong></div>
-            <div class="row"><span class="label">Telpon:</span> {{ $po->supplier_phone ?: '-' }}</div>
-            <div class="row"><span class="label">Kontak PIC:</span> {{ $po->supplier_contact ?: '-' }}</div>
-            <div class="row"><span class="label">Email:</span> {{ $po->supplier_email ?: '-' }}</div>
+            <div class="row"><span class="label">Kontak:</span> {{ $po->supplier_phone ?: '-' }}</div>
             <div class="row"><span class="label">Alamat:</span> {{ $po->supplier_address ?: '-' }}</div>
         </div>
         <div class="card">

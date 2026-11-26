@@ -83,22 +83,12 @@ class ProductPurchaseForm
                                 ->label('Nama Supplier')
                                 ->placeholder('e.g. GUERERRO / PT Sukses Jaya'),
                             TextInput::make('supplier_phone')
-                                ->label('Telpon')
+                                ->label('Kontak')
                                 ->placeholder('08xxx'),
-                            TextInput::make('supplier_contact')
-                                ->label('Personal Yg Dihubungi')
-                                ->placeholder('Nama PIC supplier'),
-                        ]),
-                        Grid::make(2)->schema([
-                            TextInput::make('supplier_email')
-                                ->label('Email Supplier')
-                                ->email(),
                             TextInput::make('supplier_address')
-                                ->label('Alamat Supplier'),
+                                ->label('Alamat')
+                                ->placeholder('Alamat supplier'),
                         ]),
-                        Textarea::make('supplier_notes')
-                            ->label('Catatan Supplier')
-                            ->rows(2),
                     ]),
 
                 Section::make('Produk Pesanan (Alat Kopi)')

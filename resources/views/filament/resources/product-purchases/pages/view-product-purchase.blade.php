@@ -148,24 +148,12 @@
                             <dd class="font-semibold text-gray-800 dark:text-gray-200 mt-0.5">{{ $po->supplier_name ?: '—' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-gray-400 dark:text-gray-500">Telpon</dt>
+                            <dt class="text-gray-400 dark:text-gray-500">Kontak</dt>
                             <dd class="text-gray-700 dark:text-gray-300 mt-0.5">{{ $po->supplier_phone ?: '—' }}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-gray-400 dark:text-gray-500">Personal Yg Dihubungi</dt>
-                            <dd class="text-gray-700 dark:text-gray-300 mt-0.5">{{ $po->supplier_contact ?: '—' }}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-gray-400 dark:text-gray-500">Email</dt>
-                            <dd class="text-gray-700 dark:text-gray-300 mt-0.5">{{ $po->supplier_email ?: '—' }}</dd>
                         </div>
                         <div>
                             <dt class="text-gray-400 dark:text-gray-500">Alamat</dt>
                             <dd class="text-gray-700 dark:text-gray-300 mt-0.5">{{ $po->supplier_address ?: '—' }}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-gray-400 dark:text-gray-500">Catatan</dt>
-                            <dd class="text-gray-700 dark:text-gray-300 mt-0.5">{{ $po->supplier_notes ?: '—' }}</dd>
                         </div>
                     </dl>
                 </div>

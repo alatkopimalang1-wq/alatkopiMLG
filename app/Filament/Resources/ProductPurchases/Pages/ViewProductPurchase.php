@@ -131,20 +131,12 @@ class ViewProductPurchase extends ViewRecord
             ->fillForm([
                 'supplier_name' => $po->supplier_name,
                 'supplier_phone' => $po->supplier_phone,
-                'supplier_contact' => $po->supplier_contact,
-                'supplier_email' => $po->supplier_email,
                 'supplier_address' => $po->supplier_address,
-                'supplier_notes' => $po->supplier_notes,
             ])
             ->schema([
-                Grid::make(2)->schema([
-                    TextInput::make('supplier_name')->label('Nama Supplier'),
-                    TextInput::make('supplier_phone')->label('Telpon'),
-                    TextInput::make('supplier_contact')->label('Personal Yg Dihubungi'),
-                    TextInput::make('supplier_email')->label('Email')->email(),
-                ]),
+                TextInput::make('supplier_name')->label('Nama Supplier'),
+                TextInput::make('supplier_phone')->label('Kontak'),
                 Textarea::make('supplier_address')->label('Alamat')->rows(2),
-                Textarea::make('supplier_notes')->label('Catatan Supplier')->rows(2),
             ])
             ->action(function (array $data) use ($po) {
                 $po->update($data);
