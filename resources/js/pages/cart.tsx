@@ -810,7 +810,7 @@ export default function CartPage({
                                     </button>
                                 </div>
 
-                                <div className="max-h-[400px] divide-y divide-sand-200/60 overflow-y-auto pr-1">
+                                <div className="divide-y divide-sand-200/60">
                                     {items.map((item, idx) => {
                                         const rawImg =
                                             item.variant?.image_url ||
