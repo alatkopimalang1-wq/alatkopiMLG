@@ -163,6 +163,8 @@ export interface BundleCartSubItem {
     bundle_price: number;
     weight_grams?: number;
     is_preorder?: boolean;
+    preorder_dp_percent?: number;
+    selected_dp_percent?: number;
 }
 
 export interface CartItem {

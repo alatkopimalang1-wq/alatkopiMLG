@@ -184,6 +184,7 @@ class EquipmentBundleController extends Controller
             'normal_price' => $normalPrice,
             'bundle_price' => $bundlePrice,
             'is_preorder' => $isPreorder,
+            'preorder_dp_percent' => $isPreorder ? (int) ($prod->preorder_dp_percent ?? 100) : 100,
             'stock' => $effectiveStock ?? $rawStock,
             'is_out_of_stock' => $isOutOfStock,
             'product' => $prod,

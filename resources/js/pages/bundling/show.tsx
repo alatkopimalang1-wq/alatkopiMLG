@@ -341,6 +341,19 @@ export default function BundlingShow({
                 normal_price: item.normal_price,
                 bundle_price: item.bundle_price,
                 weight_grams: item.variant.weight_grams || 0,
+                is_preorder: Boolean(
+                    item.is_preorder ||
+                        item.product?.is_preorder ||
+                        item.product?.stock_status === 'pre_order',
+                ),
+                preorder_dp_percent:
+                    item.preorder_dp_percent ??
+                    item.product?.preorder_dp_percent ??
+                    100,
+                selected_dp_percent:
+                    item.preorder_dp_percent ??
+                    item.product?.preorder_dp_percent ??
+                    100,
             }),
         );
 

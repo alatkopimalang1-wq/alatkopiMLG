@@ -20,11 +20,34 @@ export const CartDrawer: React.FC = () => {
         isCartOpen,
         setIsCartOpen,
         updateQuantity,
+        updateBundleItemDpPercent,
         removeItem,
     } = useCart();
 
     const { regularSubtotal, preorderDpSubtotal } = items.reduce(
         (acc, item) => {
+            if (item.bundleItems && item.bundleItems.length > 0) {
+                for (const sub of item.bundleItems) {
+                    const subTotal =
+                        (Number(sub.bundle_price) || 0) *
+                        (sub.quantity || 1) *
+                        item.quantity;
+                    if (sub.is_preorder) {
+                        const minDp = sub.preorder_dp_percent ?? 100;
+                        const dpPercent = Math.max(
+                            minDp,
+                            sub.selected_dp_percent ?? minDp,
+                        );
+                        acc.preorderDpSubtotal += Math.round(
+                            (subTotal * dpPercent) / 100,
+                        );
+                    } else {
+                        acc.regularSubtotal += subTotal;
+                    }
+                }
+                return acc;
+            }
+
             const lineTotal = (Number(item.variant.price) || 0) * item.quantity;
             const isPreorder = Boolean(
                 item.product.is_preorder ||
@@ -48,6 +71,13 @@ export const CartDrawer: React.FC = () => {
     );
     const payableSubtotal = regularSubtotal + preorderDpSubtotal;
     const hasPreorderDp = items.some((item) => {
+        if (item.bundleItems && item.bundleItems.length > 0) {
+            return item.bundleItems.some((sub) => {
+                if (!sub.is_preorder) return false;
+                const minDp = sub.preorder_dp_percent ?? 100;
+                return Math.max(minDp, sub.selected_dp_percent ?? minDp) < 100;
+            });
+        }
         const isPreorder = Boolean(
             item.product.is_preorder ||
                 item.product.stock_status === 'pre_order',
@@ -358,6 +388,20 @@ export const CartDrawer: React.FC = () => {
                                                                 }
                                                                 packageQty={
                                                                     item.quantity
+                                                                }
+                                                                onChangeSubItemDpPercent={(
+                                                                    subIdx,
+                                                                    pct,
+                                                                ) =>
+                                                                    updateBundleItemDpPercent(
+                                                                        item
+                                                                            .variant
+                                                                            .id,
+                                                                        item.grindOption,
+                                                                        item.customNotes,
+                                                                        subIdx,
+                                                                        pct,
+                                                                    )
                                                                 }
                                                             />
                                                         ) : (

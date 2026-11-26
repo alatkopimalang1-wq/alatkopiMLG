@@ -43,6 +43,13 @@ interface CartContextType {
         dpPercent: number,
         customNotes?: string,
     ) => void;
+    updateBundleItemDpPercent: (
+        variantId: number,
+        grindOption: string,
+        customNotes: string | undefined,
+        subIndex: number,
+        dpPercent: number,
+    ) => void;
     clearCart: () => void;
     itemCount: number;
     subtotal: number;
@@ -279,6 +286,39 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
         );
     };
 
+    const updateBundleItemDpPercent = (
+        variantId: number,
+        grindOption: string,
+        customNotes: string | undefined,
+        subIndex: number,
+        dpPercent: number,
+    ) => {
+        setItems((prev) =>
+            prev.map((i) => {
+                if (
+                    i.variant.id === variantId &&
+                    i.grindOption === grindOption &&
+                    (i.customNotes || '') === (customNotes || '') &&
+                    Array.isArray(i.bundleItems)
+                ) {
+                    const nextSubs = i.bundleItems.map((sub, idx) => {
+                        if (idx !== subIndex) return sub;
+                        const minDp = sub.preorder_dp_percent ?? 100;
+                        return {
+                            ...sub,
+                            selected_dp_percent: Math.max(minDp, dpPercent),
+                        };
+                    });
+                    return {
+                        ...i,
+                        bundleItems: nextSubs,
+                    };
+                }
+                return i;
+            }),
+        );
+    };
+
     const clearCart = () => setItems([]);
 
     const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
@@ -296,6 +336,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
                 replaceCartItem,
                 updateQuantity,
                 updateItemDpPercent,
+                updateBundleItemDpPercent,
                 clearCart,
                 itemCount,
                 subtotal,

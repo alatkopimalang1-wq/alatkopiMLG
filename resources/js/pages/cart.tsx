@@ -163,6 +163,7 @@ export default function CartPage({
         subtotal,
         updateQuantity,
         updateItemDpPercent,
+        updateBundleItemDpPercent,
         removeItem,
         clearCart,
     } = useCart();
@@ -448,6 +449,29 @@ export default function CartPage({
     const { regularSubtotal, preorderFullSubtotal, preorderDpSubtotal } =
         items.reduce(
             (acc, item) => {
+                if (item.bundleItems && item.bundleItems.length > 0) {
+                    for (const sub of item.bundleItems) {
+                        const subTotal =
+                            (Number(sub.bundle_price) || 0) *
+                            (sub.quantity || 1) *
+                            item.quantity;
+                        if (sub.is_preorder) {
+                            const minDp = sub.preorder_dp_percent ?? 100;
+                            const dpPercent = Math.max(
+                                minDp,
+                                sub.selected_dp_percent ?? minDp,
+                            );
+                            acc.preorderFullSubtotal += subTotal;
+                            acc.preorderDpSubtotal += Math.round(
+                                (subTotal * dpPercent) / 100,
+                            );
+                        } else {
+                            acc.regularSubtotal += subTotal;
+                        }
+                    }
+                    return acc;
+                }
+
                 const lineTotal =
                     (Number(item.variant.price) || 0) * item.quantity;
                 const isPreorder = Boolean(
@@ -477,6 +501,17 @@ export default function CartPage({
         );
     const payableSubtotal = regularSubtotal + preorderDpSubtotal;
     const hasPreorderDp = items.some((item) => {
+        if (item.bundleItems && item.bundleItems.length > 0) {
+            return item.bundleItems.some((sub) => {
+                if (!sub.is_preorder) return false;
+                const minDp = sub.preorder_dp_percent ?? 100;
+                const chosenDp = Math.max(
+                    minDp,
+                    sub.selected_dp_percent ?? minDp,
+                );
+                return chosenDp < 100;
+            });
+        }
         const isPreorder = Boolean(
             item.product.is_preorder ||
                 item.product.stock_status === 'pre_order',
@@ -578,20 +613,32 @@ export default function CartPage({
                             !/^(Custom|Paket Bundling:?)\s+/i.test(i.product.name)
                                 ? `Paket Bundling: ${i.product.name}`
                                 : i.product.name;
-                        return i.bundleItems.map((sub) => ({
-                            variant_id: sub.variant_id,
-                            quantity: sub.quantity * i.quantity,
-                            grind_option: '',
-                            custom_notes: `${notePrefix} (${sub.slot_title})`,
-                            price: sub.bundle_price,
-                            ...(sub.slot_id !== undefined
-                                ? { bundle_slot_id: sub.slot_id }
-                                : {}),
-                            ...(sub.slot_item_id !== null &&
-                            sub.slot_item_id !== undefined
-                                ? { bundle_slot_item_id: sub.slot_item_id }
-                                : {}),
-                        }));
+                        return i.bundleItems.map((sub) => {
+                            const minDp = sub.preorder_dp_percent ?? 100;
+                            const subDpPercent = sub.is_preorder
+                                ? Math.max(
+                                      minDp,
+                                      sub.selected_dp_percent ?? minDp,
+                                  )
+                                : undefined;
+                            return {
+                                variant_id: sub.variant_id,
+                                quantity: sub.quantity * i.quantity,
+                                grind_option: '',
+                                custom_notes: `${notePrefix} (${sub.slot_title})`,
+                                price: sub.bundle_price,
+                                ...(subDpPercent !== undefined
+                                    ? { preorder_dp_percent: subDpPercent }
+                                    : {}),
+                                ...(sub.slot_id !== undefined
+                                    ? { bundle_slot_id: sub.slot_id }
+                                    : {}),
+                                ...(sub.slot_item_id !== null &&
+                                sub.slot_item_id !== undefined
+                                    ? { bundle_slot_item_id: sub.slot_item_id }
+                                    : {}),
+                            };
+                        });
                     }
 
                     const isPreorder = Boolean(
@@ -884,6 +931,15 @@ export default function CartPage({
                                                     <BundleCartItemDetails
                                                         bundleItems={item.bundleItems}
                                                         packageQty={item.quantity}
+                                                        onChangeSubItemDpPercent={(subIdx, pct) =>
+                                                            updateBundleItemDpPercent(
+                                                                item.variant.id,
+                                                                item.grindOption,
+                                                                item.customNotes,
+                                                                subIdx,
+                                                                pct,
+                                                            )
+                                                        }
                                                     />
 
                                                     <div className="flex items-center justify-between pt-1">
