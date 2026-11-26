@@ -318,11 +318,11 @@
                                 <div class="p-3.5 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800 space-y-1">
                                     <div class="flex items-center justify-between text-xs">
                                         <span class="font-semibold text-gray-700 dark:text-gray-300">{{ $b['label'] }}</span>
-                                        <span class="font-bold text-purple-600 dark:text-purple-400">Rp {{ number_format($b['amount'], 0, ',', '.') }}</span>
+                                        <span class="font-bold text-purple-600 dark:text-purple-400">Rp {{ number_format($b['total'] ?? $b['amount'] ?? 0, 0, ',', '.') }}</span>
                                     </div>
                                     <div class="flex items-center justify-between text-[11px] text-gray-400">
-                                        <span>{{ $b['count'] }} transaksi</span>
-                                        <span>{{ $b['percentage'] }}% dari biaya</span>
+                                        <span>{{ $b['count'] ?? 0 }} transaksi</span>
+                                        <span>{{ $b['pct_of_total'] ?? $b['percentage'] ?? 0 }}% dari biaya</span>
                                     </div>
                                 </div>
                             @endforeach
