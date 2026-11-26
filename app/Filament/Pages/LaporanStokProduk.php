@@ -58,7 +58,9 @@ class LaporanStokProduk extends Page
             ->with(['product' => fn ($q) => $q->select(['id', 'name', 'origin', 'series', 'is_preorder', 'stock_status', 'status'])])
             ->whereHas('product', function ($q) {
                 $q->where(fn ($pq) => $pq->where('is_preorder', false)->orWhereNull('is_preorder'))
-                    ->where(fn ($pq) => $pq->where('stock_status', '!=', 'pre_order')->orWhereNull('stock_status'));
+                    ->where(fn ($pq) => $pq->where('stock_status', '!=', 'pre_order')->orWhereNull('stock_status'))
+                    ->where('slug', '!=', 'byob')
+                    ->where(fn ($pq) => $pq->whereNotIn('series', ['cybr', 'custom-blend'])->orWhereNull('series'));
             })
             ->get()
             ->filter(function (ProductVariant $variant) use ($search) {
