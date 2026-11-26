@@ -125,15 +125,7 @@
                         <button type="button"
                                 @click="open = !open"
                                 class="w-full flex items-center justify-between rounded-lg bg-gray-100 dark:bg-gray-800 px-3 py-2 text-left transition">
-                            <div class="flex items-center gap-3">
-                                <div class="flex items-center -space-x-2">
-                                    <img src="{{ $imgUrl }}" alt="" class="w-7 h-7 rounded-full object-cover border border-white dark:border-gray-900">
-                                    @if($variants->count() > 1)
-                                        <span class="w-7 h-7 rounded-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 flex items-center justify-center text-[11px] font-bold text-gray-700 dark:text-gray-200 shadow-2xs">
-                                            +{{ $variants->count() - 1 }}
-                                        </span>
-                                    @endif
-                                </div>
+                            <div class="flex items-center gap-2">
                                 <span class="text-sm font-medium text-gray-800 dark:text-gray-200">
                                     {{ $variants->count() }} varian
                                 </span>
