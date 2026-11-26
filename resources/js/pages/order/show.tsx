@@ -877,9 +877,7 @@ export default function OrderShowPage({
                                         {item.product_name}
                                     </h3>
                                     <p className="text-xs font-medium text-accent-copper">
-                                        Kemasan: {item.variant_label} ·
-                                        Gilingan:{' '}
-                                        {item.grind_option || 'Biji Utuh'}
+                                        Varian: {item.variant_label}
                                     </p>
                                     {(item.custom_notes ||
                                         (item as any).customNotes) && (

@@ -373,10 +373,7 @@ export default function OrderInvoicePage({ order, settings }: InvoiceProps) {
                                                 {item.product_name}
                                             </div>
                                             <div className="text-[11px] font-medium text-accent-copper">
-                                                Kemasan: {item.variant_label} ·
-                                                Gilingan:{' '}
-                                                {item.grind_option ||
-                                                    'Biji Utuh (Whole Bean)'}
+                                                Varian: {item.variant_label}
                                             </div>
 
                                             {/* Prominent BYOB Blend Ratio Display */}
