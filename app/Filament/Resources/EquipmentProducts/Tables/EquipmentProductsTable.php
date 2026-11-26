@@ -43,10 +43,12 @@ class EquipmentProductsTable
 
                         return ltrim(preg_replace('#^/?(?:(?:storage|public)/)+#', '', trim($raw)), '/');
                     })
-                    ->defaultImageUrl(fn () => asset('brand/logo-circle.png')),
+                    ->defaultImageUrl(fn () => asset('brand/logo-circle.png'))
+                    ->url(fn (Product $record): string => EquipmentProductResource::getUrl('edit', ['record' => $record])),
 
                 TextColumn::make('name')
                     ->label('Nama Produk')
+                    ->url(fn (Product $record): string => EquipmentProductResource::getUrl('edit', ['record' => $record]))
                     ->searchable(query: function (Builder $query, string $search): Builder {
                         return $query->where(function (Builder $q) use ($search) {
                             $q->where('name', 'like', "%{$search}%")
@@ -235,7 +237,7 @@ class EquipmentProductsTable
                     ]),
             ])
             ->filtersLayout(\Filament\Tables\Enums\FiltersLayout::AboveContent)
-            ->recordUrl(fn (Product $record): string => EquipmentProductResource::getUrl('edit', ['record' => $record]))
+            ->recordUrl(null)
             ->recordActions([
                 EditAction::make()->label('Ubah'),
             ])
