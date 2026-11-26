@@ -18,6 +18,28 @@ export const CartDrawer: React.FC = () => {
         removeItem,
     } = useCart();
 
+    const payableSubtotal = items.reduce((sum, item) => {
+        const lineTotal = (Number(item.variant.price) || 0) * item.quantity;
+        const isPreorder = Boolean(
+            item.product.is_preorder ||
+                item.product.stock_status === 'pre_order',
+        );
+        const minDp = item.product.preorder_dp_percent ?? 100;
+        const dpPercent = isPreorder
+            ? Math.max(minDp, item.preorderDpPercent ?? minDp)
+            : 100;
+        return sum + Math.round((lineTotal * dpPercent) / 100);
+    }, 0);
+    const hasPreorderDp = items.some((item) => {
+        const isPreorder = Boolean(
+            item.product.is_preorder ||
+                item.product.stock_status === 'pre_order',
+        );
+        if (!isPreorder) return false;
+        const minDp = item.product.preorder_dp_percent ?? 100;
+        return Math.max(minDp, item.preorderDpPercent ?? minDp) < 100;
+    });
+
     // Lock body scroll when cart drawer is open on mobile
     React.useEffect(() => {
         if (isCartOpen) {
@@ -240,12 +262,24 @@ export const CartDrawer: React.FC = () => {
                             <div className="space-y-3.5 border-t border-sand-200 bg-cream-50 p-5 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] sm:p-6">
                                 <div className="flex items-center justify-between">
                                     <span className="text-sm text-brand-600">
-                                        Subtotal
+                                        {hasPreorderDp
+                                            ? 'Subtotal Produk'
+                                            : 'Subtotal'}
                                     </span>
                                     <span className="text-lg font-extrabold text-brand-950">
                                         {formatRupiah(subtotal)}
                                     </span>
                                 </div>
+                                {hasPreorderDp && (
+                                    <div className="flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs">
+                                        <span className="font-bold text-amber-800">
+                                            Bayar DP Pre-Order
+                                        </span>
+                                        <span className="font-extrabold text-amber-900">
+                                            {formatRupiah(payableSubtotal)}
+                                        </span>
+                                    </div>
+                                )}
                                 <p className="text-[11px] leading-tight text-brand-500">
                                     Checkout langsung di website dengan{' '}
                                     <strong>QRIS Semua Bank & E-Wallet</strong>{' '}

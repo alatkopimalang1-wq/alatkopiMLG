@@ -918,6 +918,38 @@ export default function OrderShowPage({
                                 {formatRupiah(order.subtotal)}
                             </span>
                         </div>
+                        {order.payment_details?.is_preorder &&
+                            Number(
+                                order.payment_details?.remaining_balance ?? 0,
+                            ) > 0 && (
+                                <>
+                                    <div className="flex items-center justify-between text-amber-700">
+                                        <span className="font-semibold">
+                                            Pembayaran DP Pre-Order
+                                        </span>
+                                        <span className="font-bold">
+                                            {formatRupiah(
+                                                Number(
+                                                    order.payment_details
+                                                        .dp_payable_subtotal ??
+                                                        0,
+                                                ),
+                                            )}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between text-brand-500">
+                                        <span>Sisa Pelunasan</span>
+                                        <span>
+                                            {formatRupiah(
+                                                Number(
+                                                    order.payment_details
+                                                        .remaining_balance ?? 0,
+                                                ),
+                                            )}
+                                        </span>
+                                    </div>
+                                </>
+                            )}
                         <div className="flex items-center justify-between text-brand-600">
                             <span>
                                 {isPickup
