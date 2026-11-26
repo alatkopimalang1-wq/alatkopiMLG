@@ -964,13 +964,8 @@ export default function ProductShow({
                         <div className="flex items-center justify-between">
                             <div>
                                 <h2 className="text-xl font-extrabold text-brand-950">
-                                    Biji Kopi Terkait Lainnya
+                                    Produk Terkait
                                 </h2>
-                                <p className="text-xs text-brand-500">
-                                    Eksplorasi rasa lain dari seri{' '}
-                                    {product.series_label ||
-                                        product.series?.replace('-', ' ')}
-                                </p>
                             </div>
                             <Link
                                 href="/shop"
