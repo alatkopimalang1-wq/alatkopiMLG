@@ -5,6 +5,8 @@ import {
     formatRp,
     generateWhatsAppReceiptUrl,
     generatePlainTextReceipt,
+    groupReceiptItemsForDisplay,
+    cleanVariantLabelForReceipt,
 } from '@/lib/thermal-printer';
 import {
     Printer,
@@ -315,24 +317,61 @@ export const ThermalReceiptPreview: React.FC<ThermalReceiptPreviewProps> = ({
 
                 {/* Items List */}
                 <div className="space-y-2">
-                    {receipt.items.map((item, idx) => (
-                        <div key={idx} className="space-y-0.5">
-                            <div className="font-semibold text-stone-900">
-                                {item.product_name}
-                                {item.variant_label
-                                    ? ` (${(item.variant_label || '').replace(/\s*\(1\s*kg\s*custom[^)]*\)/gi, '').trim() || item.variant_label})`
-                                    : ''}
+                    {groupReceiptItemsForDisplay(receipt.items).map((entry, idx) => {
+                        if (entry.type === 'bundle') {
+                            return (
+                                <div key={`bundle-${idx}`} className="space-y-1 rounded border border-dashed border-stone-300 p-1.5">
+                                    <div className="font-bold text-stone-900">
+                                        {entry.bundleName}
+                                    </div>
+                                    <div className="space-y-1 pl-1">
+                                        {entry.items.map((bi, bIdx) => {
+                                            const cleanVar = cleanVariantLabelForReceipt(bi.variant_label);
+                                            const showVar = cleanVar && cleanVar !== 'Standard' && cleanVar !== 'Standar';
+                                            return (
+                                                <div key={bIdx} className="space-y-0.5 text-[10px]">
+                                                    <div className="text-[9px] font-bold text-stone-500 uppercase">
+                                                        ITEM {bIdx + 1}
+                                                    </div>
+                                                    <div className="flex justify-between gap-2">
+                                                        <span className="font-semibold text-stone-800">
+                                                            {bi.product_name}{showVar ? ` (${cleanVar})` : ''}
+                                                        </span>
+                                                        <span className="shrink-0 text-right font-bold text-stone-900">
+                                                            {bi.unit_qty}x Rp {formatRp(bi.discounted_line_price)}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                    <div className="flex justify-between border-t border-dashed border-stone-300 pt-1 text-[10px] font-bold text-stone-900">
+                                        <span>Total Harga Paket ({entry.bundleQty}x)</span>
+                                        <span>Rp {formatRp(entry.totalDiscounted)}</span>
+                                    </div>
+                                </div>
+                            );
+                        }
+                        const item = entry.item;
+                        return (
+                            <div key={idx} className="space-y-0.5">
+                                <div className="font-semibold text-stone-900">
+                                    {item.product_name}
+                                    {item.variant_label
+                                        ? ` (${(item.variant_label || '').replace(/\s*\(1\s*kg\s*custom[^)]*\)/gi, '').trim() || item.variant_label})`
+                                        : ''}
+                                </div>
+                                <div className="flex justify-between pl-2 text-stone-700">
+                                    <span>
+                                        {item.quantity} x Rp {formatRp(item.price)}
+                                    </span>
+                                    <span className="font-bold text-stone-900">
+                                        Rp {formatRp(item.subtotal)}
+                                    </span>
+                                </div>
                             </div>
-                            <div className="flex justify-between pl-2 text-stone-700">
-                                <span>
-                                    {item.quantity} x Rp {formatRp(item.price)}
-                                </span>
-                                <span className="font-bold text-stone-900">
-                                    Rp {formatRp(item.subtotal)}
-                                </span>
-                            </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
 
                 {/* Dashed separator */}

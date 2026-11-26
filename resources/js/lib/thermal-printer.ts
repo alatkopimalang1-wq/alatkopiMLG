@@ -14,6 +14,10 @@ export interface ReceiptItem {
     quantity: number;
     discount_amount?: number;
     subtotal: number;
+    bundle_id?: number;
+    bundle_name?: string;
+    bundle_unit_qty?: number;
+    custom_notes?: string | null;
 }
 
 export interface ReceiptData {
@@ -124,6 +128,10 @@ export interface PreBillData {
         quantity: number;
         discount_amount?: number;
         subtotal: number;
+        bundle_id?: number;
+        bundle_name?: string;
+        bundle_unit_qty?: number;
+        custom_notes?: string | null;
     }>;
     subtotal: number;
     discount_amount: number;
@@ -186,6 +194,95 @@ export function cleanVariantLabelForReceipt(str: string | null | undefined): str
 /**
  * Generate formatted HTML receipt matching the visual graphic preview
  */
+export interface GroupedReceiptBundleItem {
+    product_name: string;
+    variant_label: string;
+    unit_qty: number;
+    normal_line_price: number;
+    discounted_line_price: number;
+}
+
+export type GroupedReceiptEntry =
+    | { type: 'single'; item: ReceiptItem }
+    | {
+          type: 'bundle';
+          bundleName: string;
+          bundleQty: number;
+          totalNormal: number;
+          totalDiscounted: number;
+          items: GroupedReceiptBundleItem[];
+      };
+
+export function extractBundleNameFromItem(item: ReceiptItem): string | null {
+    if (item.bundle_name && item.bundle_name.trim()) {
+        return item.bundle_name.trim();
+    }
+    if (item.custom_notes) {
+        const match = item.custom_notes.match(/^Bundling:\s*(.+?)(?:\s*\(Diskon:.*\))?$/i);
+        if (match && match[1]) {
+            return match[1].trim();
+        }
+    }
+    return null;
+}
+
+export function groupReceiptItemsForDisplay(items: ReceiptItem[]): GroupedReceiptEntry[] {
+    const entries: GroupedReceiptEntry[] = [];
+    const bundleIndexMap = new Map<string, number>();
+
+    for (const item of items) {
+        const bundleName = extractBundleNameFromItem(item);
+        if (!bundleName) {
+            entries.push({ type: 'single', item });
+            continue;
+        }
+
+        const key = item.bundle_id ? `id:${item.bundle_id}` : `name:${bundleName}`;
+        const unitQty = item.bundle_unit_qty && item.bundle_unit_qty > 0 ? item.bundle_unit_qty : 1;
+        const pkgQty = Math.max(1, Math.round(item.quantity / unitQty));
+        const normalTotal = item.price * item.quantity;
+        const discountedTotal = item.subtotal ?? Math.max(0, normalTotal - (item.discount_amount || 0));
+        const unitNormal = item.price * unitQty;
+        const unitDiscounted = Math.round(discountedTotal / pkgQty);
+
+        const existingIdx = bundleIndexMap.get(key);
+        if (existingIdx !== undefined) {
+            const entry = entries[existingIdx];
+            if (entry.type === 'bundle') {
+                entry.totalNormal += normalTotal;
+                entry.totalDiscounted += discountedTotal;
+                entry.items.push({
+                    product_name: item.product_name,
+                    variant_label: item.variant_label,
+                    unit_qty: unitQty,
+                    normal_line_price: unitNormal,
+                    discounted_line_price: unitDiscounted,
+                });
+            }
+        } else {
+            bundleIndexMap.set(key, entries.length);
+            entries.push({
+                type: 'bundle',
+                bundleName,
+                bundleQty: pkgQty,
+                totalNormal: normalTotal,
+                totalDiscounted: discountedTotal,
+                items: [
+                    {
+                        product_name: item.product_name,
+                        variant_label: item.variant_label,
+                        unit_qty: unitQty,
+                        normal_line_price: unitNormal,
+                        discounted_line_price: unitDiscounted,
+                    },
+                ],
+            });
+        }
+    }
+
+    return entries;
+}
+
 export function generateHtmlReceiptBody(
     receipt: ReceiptData,
     opts: ReceiptFormatOptions = {},
@@ -205,8 +302,48 @@ export function generateHtmlReceiptBody(
         fontFamilyCss = "'Roboto Mono', monospace";
     }
 
-    const itemsHtml = receipt.items
-        .map((item) => {
+    const itemsHtml = groupReceiptItemsForDisplay(receipt.items)
+        .map((entry) => {
+            if (entry.type === 'bundle') {
+                const subRows = entry.items
+                    .map((bi, bIdx) => {
+                        const cleanVar = cleanVariantLabelForReceipt(bi.variant_label);
+                        const showVar = cleanVar && cleanVar !== 'Standard' && cleanVar !== 'Standar';
+                        return `
+                            <tr>
+                                <td colspan="2" style="padding-left: 6px; padding-top: 2px; font-size: 9.5px; color: #555; font-weight: 700;">
+                                    ITEM ${bIdx + 1}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding-left: 6px; font-size: ${baseFontSize}; color: #111;">
+                                    ${escapeHtml(bi.product_name)}${showVar ? ` (${escapeHtml(cleanVar)})` : ''}
+                                </td>
+                                <td style="text-align: right; white-space: nowrap; font-weight: 700; font-size: ${baseFontSize}; color: #000;">
+                                    ${bi.unit_qty}x Rp ${formatRp(bi.discounted_line_price)}
+                                </td>
+                            </tr>
+                        `;
+                    })
+                    .join('');
+                return `
+                    <tr>
+                        <td colspan="2" style="font-weight: 800; padding-top: 5px; font-size: ${baseFontSize}; color: #000;">
+                            ${escapeHtml(entry.bundleName)}
+                        </td>
+                    </tr>
+                    ${subRows}
+                    <tr>
+                        <td style="font-weight: 700; padding-top: 3px; padding-bottom: 5px; font-size: ${baseFontSize}; color: #000; border-bottom: 1px dashed #ccc;">
+                            Total Harga Paket (${entry.bundleQty}x)
+                        </td>
+                        <td style="text-align: right; font-weight: 800; padding-top: 3px; padding-bottom: 5px; white-space: nowrap; font-size: ${baseFontSize}; color: #000; border-bottom: 1px dashed #ccc;">
+                            Rp ${formatRp(entry.totalDiscounted)}
+                        </td>
+                    </tr>
+                `;
+            }
+            const item = entry.item;
             const variantText = item.variant_label ? ` (${escapeHtml(cleanVariantLabelForReceipt(item.variant_label))})` : '';
             return `
             <tr>
@@ -459,7 +596,19 @@ export function generatePlainTextReceipt(
     lines.push(divider);
 
     // Items
-    for (const item of receipt.items) {
+    for (const entry of groupReceiptItemsForDisplay(receipt.items)) {
+        if (entry.type === 'bundle') {
+            lines.push(entry.bundleName.substring(0, cols));
+            entry.items.forEach((bi, bIdx) => {
+                const cleanVar = cleanVariantLabelForReceipt(bi.variant_label);
+                const showVar = cleanVar && cleanVar !== 'Standard' && cleanVar !== 'Standar';
+                lines.push(`  ITEM ${bIdx + 1}: ${bi.product_name}${showVar ? ` (${cleanVar})` : ''}`.substring(0, cols));
+                lines.push(padLine(`    ${bi.unit_qty}x`, formatRp(bi.discounted_line_price), cols));
+            });
+            lines.push(padLine(`Total Paket (${entry.bundleQty}x)`, formatRp(entry.totalDiscounted), cols));
+            continue;
+        }
+        const item = entry.item;
         // Line 1: Product name + variant formatted to maxItemLen
         const fullTitle = `${item.product_name} (${cleanVariantLabelForReceipt(item.variant_label)})`;
         const maxLen = Math.min(maxItemLen, cols);
@@ -2882,9 +3031,70 @@ export function buildA4InvoicePdfBytes(preBill: PreBillData): Uint8Array {
     let rowY = tableTopY + 8;
     ops.push(lineOp(marginX, rowY, rightX, rowY, [0.82, 0.835, 0.859], 1.3));
 
-    for (let idx = 0; idx < preBill.items.length; idx++) {
+    const groupedA4Entries = groupReceiptItemsForDisplay(preBill.items);
+    for (let idx = 0; idx < groupedA4Entries.length; idx++) {
         if (rowY > PAGE_H - 190) break;
-        const item = preBill.items[idx];
+        const entry = groupedA4Entries[idx];
+        if (entry.type === 'bundle') {
+            ops.push(
+                textCenterOp(marginX, 28, rowY + 16, String(idx + 1), 'F4', 9.0, [0.42, 0.447, 0.502]),
+            );
+            ops.push(
+                textOp(
+                    colDescX,
+                    rowY + 14,
+                    truncateStr(entry.bundleName, 44),
+                    'F2',
+                    10.0,
+                    [0.067, 0.094, 0.153],
+                ),
+            );
+            let subY = rowY + 27;
+            entry.items.forEach((bi, bIdx) => {
+                const cleanVar = cleanVariantLabelForReceipt(bi.variant_label);
+                const showVar = cleanVar && cleanVar !== 'Standard' && cleanVar !== 'Standar';
+                const label = `ITEM ${bIdx + 1}: ${bi.product_name}${showVar ? ` (${cleanVar})` : ''} (${bi.unit_qty}x @ Rp ${formatRp(bi.discounted_line_price)})`;
+                ops.push(
+                    textOp(colDescX, subY, truncateStr(label, 58), 'F1', 8.0, [0.35, 0.38, 0.44]),
+                );
+                subY += 11;
+            });
+            ops.push(
+                textRightOp(
+                    colPriceRight,
+                    rowY + 18,
+                    `Rp ${formatRp(Math.round(entry.totalDiscounted / entry.bundleQty))}`,
+                    'F1',
+                    9.5,
+                    [0.216, 0.255, 0.318],
+                ),
+            );
+            ops.push(
+                textCenterOp(
+                    colQtyCenter - 20,
+                    40,
+                    rowY + 18,
+                    `${entry.bundleQty}x`,
+                    'F2',
+                    9.5,
+                    [0.067, 0.094, 0.153],
+                ),
+            );
+            ops.push(
+                textRightOp(
+                    colSubRight,
+                    rowY + 18,
+                    `Rp ${formatRp(entry.totalDiscounted)}`,
+                    'F2',
+                    9.5,
+                    [0.067, 0.094, 0.153],
+                ),
+            );
+            rowY = Math.max(rowY + 34, subY + 6);
+            ops.push(lineOp(marginX, rowY, rightX, rowY, [0.898, 0.906, 0.922], 0.7));
+            continue;
+        }
+        const item = entry.item;
         ops.push(
             textCenterOp(marginX, 28, rowY + 16, String(idx + 1), 'F4', 9.0, [0.42, 0.447, 0.502]),
         );

@@ -485,6 +485,7 @@ class PosController extends Controller
                         'price' => (float) $i->price,
                         'quantity' => $i->quantity,
                         'subtotal' => (float) $i->subtotal,
+                        'custom_notes' => $i->custom_notes,
                     ]),
                 ],
             ]);
@@ -1524,6 +1525,7 @@ class PosController extends Controller
                     'price' => (float) $i->price,
                     'quantity' => $i->quantity,
                     'subtotal' => (float) $i->subtotal,
+                    'custom_notes' => $i->custom_notes,
                 ]),
                 'payment_details' => $order->payment_details,
             ],
