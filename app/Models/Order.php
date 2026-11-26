@@ -127,6 +127,43 @@ class Order extends Model
         });
     }
 
+    /**
+     * Get pending/verifying non-preorder variant quantities reserved by a specific customer account.
+     *
+     * @return array<int, int>
+     */
+    public static function getUserPendingReservedStock(?int $userId): array
+    {
+        if (! $userId) {
+            return [];
+        }
+
+        $orders = static::query()
+            ->webOnly()
+            ->where('user_id', $userId)
+            ->whereIn('payment_status', ['pending', 'verifying'])
+            ->where('status', '!=', 'cancelled')
+            ->with('items')
+            ->get(['id', 'payment_details']);
+
+        $reserved = [];
+        foreach ($orders as $order) {
+            $details = is_array($order->payment_details) ? $order->payment_details : [];
+            if (! empty($details['stock_deducted_at'])) {
+                continue;
+            }
+            foreach ($order->items as $item) {
+                if ($item->is_preorder || empty($item->product_variant_id)) {
+                    continue;
+                }
+                $vid = (int) $item->product_variant_id;
+                $reserved[$vid] = ($reserved[$vid] ?? 0) + max(0, (int) $item->quantity);
+            }
+        }
+
+        return $reserved;
+    }
+
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import {
     ArrowLeft,
     CheckCircle2,
@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { PublicLayout } from '@/layouts/public-layout';
 import type { Product, ProductVariant } from '@/types/sanubari';
+import { getEffectiveVariantStock } from '@/lib/stock';
 import { formatRupiah } from '@/lib/trans';
 import { useCart } from '@/context/cart-context';
 import { ProductCard } from '@/components/product-card';
@@ -302,27 +303,32 @@ export default function ProductShow({
         availableDpOptions[0] ?? 100,
     );
 
-    const selectedVariantStock =
-        !isPreorder &&
-        selectedVariant.stock !== undefined &&
-        selectedVariant.stock !== null
-            ? Math.max(0, Number(selectedVariant.stock))
-            : null;
+    const { reservedStockByVariant = {} } = usePage<{
+        reservedStockByVariant?: Record<string, number>;
+    }>().props;
+
+    const selectedVariantStock = getEffectiveVariantStock(
+        product,
+        selectedVariant,
+        reservedStockByVariant,
+    );
 
     const isProductOutOfStock =
         !isPreorder &&
         Boolean(
             product.is_out_of_stock ||
                 product.stock_status === 'out_of_stock' ||
-                (product.stock !== undefined &&
-                    product.stock !== null &&
-                    product.stock <= 0) ||
                 (variants.length > 0 &&
-                    variants.every((v) =>
-                        v.stock !== undefined && v.stock !== null
-                            ? v.stock <= 0
-                            : v.stock_status === 'out_of_stock',
-                    )),
+                    variants.every((v) => {
+                        const vEff = getEffectiveVariantStock(
+                            product,
+                            v,
+                            reservedStockByVariant,
+                        );
+                        return vEff !== null
+                            ? vEff <= 0
+                            : v.stock_status === 'out_of_stock';
+                    })),
         );
     const isCurrentVariantOutOfStock =
         !isPreorder &&
@@ -332,9 +338,13 @@ export default function ProductShow({
 
     const handleAddToCart = () => {
         if (isCurrentVariantOutOfStock) return;
+        const variantForCart =
+            selectedVariantStock !== null
+                ? { ...selectedVariant, stock: selectedVariantStock }
+                : selectedVariant;
         addItem(
             product,
-            selectedVariant,
+            variantForCart,
             quantity,
             isEquipment ? '' : grindOption,
             undefined,
@@ -752,14 +762,19 @@ export default function ProductShow({
                                     {variants.map((v) => {
                                         const active =
                                             selectedVariant.id === v.id;
+                                        const vEffStock =
+                                            getEffectiveVariantStock(
+                                                product,
+                                                v,
+                                                reservedStockByVariant,
+                                            );
                                         const vOutOfStock =
                                             !isPreorder &&
                                             (isProductOutOfStock ||
                                                 v.stock_status ===
                                                     'out_of_stock' ||
-                                                (v.stock !== undefined &&
-                                                    v.stock !== null &&
-                                                    v.stock <= 0));
+                                                (vEffStock !== null &&
+                                                    vEffStock <= 0));
                                         const vImage =
                                             v.image_url ||
                                             (v.image

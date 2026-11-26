@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { getEffectiveVariantStock } from '@/lib/stock';
 import {
     ArrowLeft,
     Building2,
@@ -151,6 +152,9 @@ export default function CartPage({
         longitude: 112.6037,
     },
 }: CartPageProps) {
+    const { reservedStockByVariant = {} } = usePage<{
+        reservedStockByVariant?: Record<string, number>;
+    }>().props;
     const {
         items,
         itemCount,
@@ -507,10 +511,11 @@ export default function CartPage({
                     item.product.stock_status === 'pre_order',
             );
             if (isPre) return false;
-            const vStock =
-                item.variant.stock !== undefined && item.variant.stock !== null
-                    ? Number(item.variant.stock)
-                    : null;
+            const vStock = getEffectiveVariantStock(
+                item.product,
+                item.variant,
+                reservedStockByVariant,
+            );
             return (
                 item.variant.stock_status === 'out_of_stock' ||
                 item.product.stock_status === 'out_of_stock' ||
@@ -518,7 +523,12 @@ export default function CartPage({
             );
         });
         if (outOfStockItem) {
-            const vStock = outOfStockItem.variant.stock ?? 0;
+            const vStock =
+                getEffectiveVariantStock(
+                    outOfStockItem.product,
+                    outOfStockItem.variant,
+                    reservedStockByVariant,
+                ) ?? 0;
             setErrorMessage(
                 vStock <= 0
                     ? `Produk '${outOfStockItem.product.name}' (${outOfStockItem.variant.label}) stoknya sudah habis.`
@@ -964,27 +974,20 @@ export default function CartPage({
                                                             </span>
                                                             <button
                                                                 type="button"
-                                                                disabled={
-                                                                    !(
-                                                                        item
-                                                                            .product
-                                                                            .is_preorder ||
-                                                                        item
-                                                                            .product
-                                                                            .stock_status ===
-                                                                            'pre_order'
-                                                                    ) &&
-                                                                    item.variant
-                                                                        .stock !==
-                                                                        undefined &&
-                                                                    item.variant
-                                                                        .stock !==
-                                                                        null &&
-                                                                    item.quantity >=
-                                                                        item
-                                                                            .variant
-                                                                            .stock
-                                                                }
+                                                                disabled={(() => {
+                                                                    const effStock =
+                                                                        getEffectiveVariantStock(
+                                                                            item.product,
+                                                                            item.variant,
+                                                                            reservedStockByVariant,
+                                                                        );
+                                                                    return (
+                                                                        effStock !==
+                                                                            null &&
+                                                                        item.quantity >=
+                                                                            effStock
+                                                                    );
+                                                                })()}
                                                                 onClick={() =>
                                                                     updateQuantity(
                                                                         item

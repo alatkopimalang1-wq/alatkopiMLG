@@ -1,13 +1,17 @@
 import React from 'react';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'motion/react';
 import { ArrowRight, Minus, Plus, ShoppingBag, Trash2, X } from 'lucide-react';
 import { SlidingNumber } from '@animate-ui/react/primitives/texts/sliding-number';
 import { transition } from '@animate-ui/react/utils/motion';
 import { useCart } from '@/context/cart-context';
 import { formatRupiah } from '@/lib/trans';
+import { getEffectiveVariantStock } from '@/lib/stock';
 
 export const CartDrawer: React.FC = () => {
+    const { reservedStockByVariant = {} } = usePage<{
+        reservedStockByVariant?: Record<string, number>;
+    }>().props;
     const {
         items,
         itemCount,
@@ -237,27 +241,20 @@ export const CartDrawer: React.FC = () => {
                                                             </span>
                                                             <button
                                                                 type="button"
-                                                                disabled={
-                                                                    !(
-                                                                        item
-                                                                            .product
-                                                                            .is_preorder ||
-                                                                        item
-                                                                            .product
-                                                                            .stock_status ===
-                                                                            'pre_order'
-                                                                    ) &&
-                                                                    item.variant
-                                                                        .stock !==
-                                                                        undefined &&
-                                                                    item.variant
-                                                                        .stock !==
-                                                                        null &&
-                                                                    item.quantity >=
-                                                                        item
-                                                                            .variant
-                                                                            .stock
-                                                                }
+                                                                disabled={(() => {
+                                                                    const effStock =
+                                                                        getEffectiveVariantStock(
+                                                                            item.product,
+                                                                            item.variant,
+                                                                            reservedStockByVariant,
+                                                                        );
+                                                                    return (
+                                                                        effStock !==
+                                                                            null &&
+                                                                        item.quantity >=
+                                                                            effStock
+                                                                    );
+                                                                })()}
                                                                 onClick={() =>
                                                                     updateQuantity(
                                                                         item

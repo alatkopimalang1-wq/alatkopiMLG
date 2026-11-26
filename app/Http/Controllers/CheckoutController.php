@@ -70,6 +70,7 @@ class CheckoutController extends Controller
         $dpPercents = [];
         $totalWeightGrams = 0;
         $orderLines = [];
+        $userReservedStock = Order::getUserPendingReservedStock(auth()->id());
 
         foreach ($validated['items'] as $item) {
             $variant = ProductVariant::with('product')->findOrFail($item['variant_id']);
@@ -77,7 +78,8 @@ class CheckoutController extends Controller
                 || $variant->product->stock_status === 'pre_order'
                 || $variant->stock_status === 'pre_order';
 
-            $availableStock = (int) ($variant->stock ?? 0);
+            $rawStock = (int) ($variant->stock ?? 0);
+            $availableStock = max(0, $rawStock - (int) ($userReservedStock[$variant->id] ?? 0));
             if (! $isPreorder && ($variant->stock_status === 'out_of_stock' || $variant->product->stock_status === 'out_of_stock' || $availableStock <= 0)) {
                 return response()->json([
                     'message' => "Maaf, stok untuk produk '{$variant->product->name}' ({$variant->label}) sedang habis (Sold Out) dan tidak dapat dibeli.",
@@ -327,8 +329,6 @@ class CheckoutController extends Controller
             foreach ($orderLines as $line) {
                 $order->items()->create($line);
             }
-
-            $order->deductStockIfNeeded();
 
             return $order;
         });

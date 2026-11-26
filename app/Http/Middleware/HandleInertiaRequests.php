@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Filament\Pages\ManageDesktopMegaMenu;
 use App\Filament\Pages\ManageFooterSettings;
 use App\Models\Category;
+use App\Models\Order;
 use App\Models\Setting;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -58,6 +59,9 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            'reservedStockByVariant' => fn (): array => $request->user()
+                ? Order::getUserPendingReservedStock($request->user()->id)
+                : [],
             'metaPixelId' => config('services.meta_pixel.id'),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];

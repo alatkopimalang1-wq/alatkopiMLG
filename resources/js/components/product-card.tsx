@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { ShoppingBag, Plus } from 'lucide-react';
 import type { Product } from '@/types/sanubari';
 import { formatRupiah } from '@/lib/trans';
+import { getEffectiveProductStock, getEffectiveVariantStock } from '@/lib/stock';
 import { CoffeeBeanIcon } from '@/components/coffee-bean-icon';
 
 interface ProductCardProps {
@@ -45,40 +46,37 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           )
         : null;
 
+    const { reservedStockByVariant = {} } = usePage<{
+        reservedStockByVariant?: Record<string, number>;
+    }>().props;
+
     const isPreorder = Boolean(
         product.is_preorder || product.stock_status === 'pre_order',
     );
 
-    const realStock = isPreorder
-        ? null
-        : product.variants &&
-            product.variants.length > 0 &&
-            product.variants.some(
-                (v) => v.stock !== undefined && v.stock !== null,
-            )
-          ? product.variants.reduce(
-                (sum, v) => sum + Math.max(0, v.stock ?? 0),
-                0,
-            )
-          : product.stock !== undefined && product.stock !== null
-            ? Math.max(0, product.stock)
-            : null;
+    const realStock = getEffectiveProductStock(
+        product,
+        reservedStockByVariant,
+    );
 
     const isOutOfStock =
         !isPreorder &&
         Boolean(
             product.is_out_of_stock ||
-                (product.stock !== undefined &&
-                    product.stock !== null &&
-                    product.stock <= 0) ||
+                (realStock !== null && realStock <= 0) ||
                 product.stock_status === 'out_of_stock' ||
                 (product.variants &&
                     product.variants.length > 0 &&
-                    product.variants.every((v) =>
-                        v.stock !== undefined && v.stock !== null
-                            ? v.stock <= 0
-                            : v.stock_status === 'out_of_stock',
-                    )),
+                    product.variants.every((v) => {
+                        const vEff = getEffectiveVariantStock(
+                            product,
+                            v,
+                            reservedStockByVariant,
+                        );
+                        return vEff !== null
+                            ? vEff <= 0
+                            : v.stock_status === 'out_of_stock';
+                    })),
         );
 
     // Full-Width Mobile Shape matching Otten Coffee reference (Image 2)
