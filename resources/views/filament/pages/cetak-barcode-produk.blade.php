@@ -183,14 +183,25 @@
                         'a4_grid' => 'grid-cols-1 sm:grid-cols-3',
                         default => 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4',
                     };
+                    $cardStyle = match($labelSize) {
+                        '40x20' => 'width: 100%; max-width: 40mm; min-height: 20mm; box-sizing: border-box; overflow: hidden; margin: 0 auto;',
+                        'a4_grid' => 'width: 100%; box-sizing: border-box; overflow: hidden;',
+                        default => 'width: 100%; max-width: 50mm; min-height: 30mm; box-sizing: border-box; overflow: hidden; margin: 0 auto;',
+                    };
+                    $nameFontSize = match($labelSize) {
+                        '40x20' => '9px',
+                        'a4_grid' => '11px',
+                        default => '10.5px',
+                    };
                 @endphp
                 <div class="grid {{ $gridCols }} gap-3">
                     @foreach($queue as $item)
                         @php $svg = $this->renderBarcodeSvg($item['code']); @endphp
                         @for($i = 0; $i < (int) $item['qty']; $i++)
-                            <div class="border border-dashed border-gray-300 rounded-md p-2.5 text-center bg-white text-black flex flex-col justify-between">
+                            <div class="border border-dashed border-gray-300 rounded-md p-2 text-center bg-white text-black flex flex-col justify-between"
+                                 style="{{ $cardStyle }}">
                                 @if($showName)
-                                    <div class="text-[11px] font-bold leading-tight line-clamp-2 mb-1 text-black">
+                                    <div style="font-size: {{ $nameFontSize }}; line-height: 1.25; font-weight: 700; color: #000; word-break: break-word; overflow-wrap: anywhere; white-space: normal; width: 100%; margin-bottom: 4px;">
                                         {{ $item['product_name'] }}
                                     </div>
                                 @endif
