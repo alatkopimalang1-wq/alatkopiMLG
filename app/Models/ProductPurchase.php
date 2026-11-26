@@ -31,11 +31,20 @@ class ProductPurchase extends Model
         self::STATUS_SELESAI,
     ];
 
+    public const PAYMENT_REKENING = 'rekening';
+    public const PAYMENT_TUNAI = 'tunai';
+
+    public const PAYMENT_LABELS = [
+        self::PAYMENT_REKENING => 'Rekening',
+        self::PAYMENT_TUNAI => 'Tunai',
+    ];
+
     protected $fillable = [
         'purchase_number',
         'purchase_date',
         'status',
         'is_paid',
+        'payment_method',
         'paid_at',
         'due_date',
         'supplier_name',

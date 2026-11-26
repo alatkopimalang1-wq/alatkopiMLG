@@ -54,11 +54,18 @@ class ProductPurchaseForm
                                 ->label('Jatuh Tempo (Opsional)'),
                         ]),
 
-                        Grid::make(3)->schema([
+                        Grid::make(4)->schema([
                             Toggle::make('is_paid')
                                 ->label('Status Pembayaran: Sudah Bayar')
                                 ->default(false)
                                 ->inline(false),
+
+                            Select::make('payment_method')
+                                ->label('Metode Pembayaran')
+                                ->options(ProductPurchase::PAYMENT_LABELS)
+                                ->default(ProductPurchase::PAYMENT_REKENING)
+                                ->required()
+                                ->helperText('Otomatis mengurangi Kas Rekening / Tunai jika Sudah Bayar.'),
 
                             TextInput::make('discount_amount')
                                 ->label('Diskon Keseluruhan PO (Rp)')

@@ -53,6 +53,12 @@ class ProductPurchasesTable
                     ->formatStateUsing(fn (bool $state): string => $state ? 'Sudah bayar' : 'Belum bayar')
                     ->color(fn (bool $state): string => $state ? 'success' : 'warning'),
 
+                TextColumn::make('payment_method')
+                    ->label('Kas')
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state): string => ProductPurchase::PAYMENT_LABELS[$state ?? 'rekening'] ?? 'Rekening')
+                    ->color(fn (?string $state): string => ($state ?? 'rekening') === 'tunai' ? 'success' : 'info'),
+
                 TextColumn::make('total_qty')
                     ->label('Qty')
                     ->formatStateUsing(fn ($state) => ((int) $state).' pcs'),

@@ -3,6 +3,7 @@
         $report = $this->reportData;
         $rows = $report['rows'];
         $transfers = $report['transfers'] ?? [];
+        $purchases = $report['purchases'] ?? [];
         $fmt = fn (float|int $val): string => 'Rp ' . number_format((float) $val, 0, ',', '.');
         $fmtSigned = fn (float|int $val): string => ($val >= 0 ? '+' : '-') . 'Rp ' . number_format(abs((float) $val), 0, ',', '.');
     @endphp
@@ -90,9 +91,15 @@
                 <div class="mt-2 text-2xl font-black text-blue-900 dark:text-blue-200">
                     {{ $fmt($report['rekening_total']) }}
                 </div>
-                @if ($report['rekening_transfer_net'] != 0)
-                    <div class="mt-1 text-[11px] font-medium text-blue-700 dark:text-blue-300">
-                        Penjualan: {{ $fmt($report['rekening_sales']) }} · Mutasi Transfer: {{ $fmtSigned($report['rekening_transfer_net']) }}
+                @if ($report['rekening_transfer_net'] != 0 || $report['rekening_purchase_out'] > 0)
+                    <div class="mt-1 space-y-0.5 text-[11px] font-medium text-blue-700 dark:text-blue-300">
+                        <div>Penjualan: {{ $fmt($report['rekening_sales']) }}</div>
+                        @if ($report['rekening_transfer_net'] != 0)
+                            <div>Mutasi Transfer: {{ $fmtSigned($report['rekening_transfer_net']) }}</div>
+                        @endif
+                        @if ($report['rekening_purchase_out'] > 0)
+                            <div class="text-rose-600 dark:text-rose-400">Pembelian Produk (PO): -{{ $fmt($report['rekening_purchase_out']) }}</div>
+                        @endif
                     </div>
                 @endif
                 <div class="mt-3 grid grid-cols-3 gap-2 border-t border-blue-200/70 pt-3 text-[11px] dark:border-blue-900/50">
@@ -124,9 +131,15 @@
                 <div class="mt-2 text-2xl font-black text-emerald-900 dark:text-emerald-200">
                     {{ $fmt($report['tunai_total']) }}
                 </div>
-                @if ($report['tunai_transfer_net'] != 0)
-                    <div class="mt-1 text-[11px] font-medium text-emerald-700 dark:text-emerald-300">
-                        Penjualan: {{ $fmt($report['tunai_sales']) }} · Mutasi Transfer: {{ $fmtSigned($report['tunai_transfer_net']) }}
+                @if ($report['tunai_transfer_net'] != 0 || $report['tunai_purchase_out'] > 0)
+                    <div class="mt-1 space-y-0.5 text-[11px] font-medium text-emerald-700 dark:text-emerald-300">
+                        <div>Penjualan: {{ $fmt($report['tunai_sales']) }}</div>
+                        @if ($report['tunai_transfer_net'] != 0)
+                            <div>Mutasi Transfer: {{ $fmtSigned($report['tunai_transfer_net']) }}</div>
+                        @endif
+                        @if ($report['tunai_purchase_out'] > 0)
+                            <div class="text-rose-600 dark:text-rose-400">Pembelian Produk (PO): -{{ $fmt($report['tunai_purchase_out']) }}</div>
+                        @endif
                     </div>
                 @endif
                 <div class="mt-3 grid grid-cols-3 gap-2 border-t border-emerald-200/70 pt-3 text-[11px] dark:border-emerald-900/50">
@@ -319,5 +332,56 @@
                 </table>
             </div>
         </div>
+
+        {{-- Pengeluaran Pembelian Produk (PO Lunas) --}}
+        @if (count($purchases) > 0)
+            <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs dark:border-gray-800 dark:bg-gray-900">
+                <div class="flex items-center justify-between border-b border-gray-100 px-4 py-3 dark:border-gray-800">
+                    <div>
+                        <h3 class="text-sm font-bold text-gray-900 dark:text-white">Pengeluaran Pembelian Produk (PO Lunas)</h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Otomatis mengurangi Kas Rekening atau Kas Tunai sesuai metode pembayaran PO</p>
+                    </div>
+                    <span class="rounded-full bg-rose-100 px-2.5 py-0.5 text-xs font-semibold text-rose-700 dark:bg-rose-950/60 dark:text-rose-300">
+                        {{ count($purchases) }} PO lunas
+                    </span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 text-sm dark:divide-gray-800">
+                        <thead class="bg-gray-50 dark:bg-gray-800/60">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">Tanggal Bayar</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">No. PO</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">Supplier</th>
+                                <th class="px-4 py-3 text-center text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">Sumber Kas</th>
+                                <th class="px-4 py-3 text-right text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">Nominal</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                            @foreach ($purchases as $po)
+                                <tr class="hover:bg-gray-50/70 dark:hover:bg-gray-800/40">
+                                    <td class="px-4 py-3 whitespace-nowrap text-xs text-gray-600 dark:text-gray-300">{{ $po['date'] }}</td>
+                                    <td class="px-4 py-3 font-mono text-xs font-bold text-gray-900 dark:text-white">{{ $po['purchase_number'] }}</td>
+                                    <td class="px-4 py-3 text-xs text-gray-700 dark:text-gray-300">{{ $po['supplier_name'] }}</td>
+                                    <td class="px-4 py-3 text-center">
+                                        @if ($po['payment_method'] === 'tunai')
+                                            <span class="inline-flex rounded-full bg-emerald-100 px-2.5 py-0.5 text-[11px] font-bold text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                                                Tunai
+                                            </span>
+                                        @else
+                                            <span class="inline-flex rounded-full bg-blue-100 px-2.5 py-0.5 text-[11px] font-bold text-blue-800 dark:bg-blue-950/60 dark:text-blue-300">
+                                                Rekening
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td class="px-4 py-3 text-right font-bold tabular-nums text-rose-600 dark:text-rose-400">
+                                        -{{ $fmt($po['amount']) }}
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        @endif
     </div>
 </x-filament-panels::page>

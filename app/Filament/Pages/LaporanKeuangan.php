@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\CashTransfer;
 use App\Models\Order;
+use App\Models\ProductPurchase;
 use BackedEnum;
 use Carbon\Carbon;
 use Filament\Actions\Action;
@@ -297,16 +298,64 @@ class LaporanKeuangan extends Page
 
         $rekeningTotal = $rekeningSales + $rekeningTransferNet;
         $tunaiTotal = $tunaiSales + $tunaiTransferNet;
+
+        // Paid Product Purchases (PO) deduction
+        $purchaseQuery = ProductPurchase::query()
+            ->where('is_paid', true)
+            ->where('status', '!=', ProductPurchase::STATUS_DIBATALKAN);
+
+        if ($range !== null) {
+            $purchaseQuery->where(function ($q) use ($range) {
+                $q->whereBetween('paid_at', [$range[0]->toDateString(), $range[1]->toDateString()])
+                    ->orWhere(function ($sub) use ($range) {
+                        $sub->whereNull('paid_at')
+                            ->whereBetween('purchase_date', [$range[0]->toDateString(), $range[1]->toDateString()]);
+                    });
+            });
+        }
+
+        $purchases = $purchaseQuery->latest('id')->get();
+        $rekeningPurchaseOut = 0.0;
+        $tunaiPurchaseOut = 0.0;
+        $purchaseRows = [];
+
+        foreach ($purchases as $po) {
+            $amt = max(0.0, (float) ($po->total_amount ?? 0));
+            $pm = ($po->payment_method ?? ProductPurchase::PAYMENT_REKENING) === ProductPurchase::PAYMENT_TUNAI
+                ? 'tunai'
+                : 'rekening';
+
+            if ($pm === 'tunai') {
+                $tunaiPurchaseOut += $amt;
+            } else {
+                $rekeningPurchaseOut += $amt;
+            }
+
+            $purchaseRows[] = [
+                'id' => $po->id,
+                'purchase_number' => $po->purchase_number,
+                'date' => ($po->paid_at ?? $po->purchase_date ?? $po->created_at)?->format('d/m/Y') ?? '-',
+                'supplier_name' => $po->supplier_name ?: '—',
+                'payment_method' => $pm,
+                'payment_method_label' => ProductPurchase::PAYMENT_LABELS[$pm] ?? 'Rekening',
+                'amount' => $amt,
+            ];
+        }
+
+        $rekeningTotal -= $rekeningPurchaseOut;
+        $tunaiTotal -= $tunaiPurchaseOut;
         $filteredTotal = array_sum(array_column($rows, 'amount'));
 
         return [
             'rekening_sales' => $rekeningSales,
             'rekening_transfer_net' => $rekeningTransferNet,
+            'rekening_purchase_out' => $rekeningPurchaseOut,
             'rekening_total' => $rekeningTotal,
             'rekening_count' => $rekeningCount,
             'rekening_by_channel' => $rekeningByChannel,
             'tunai_sales' => $tunaiSales,
             'tunai_transfer_net' => $tunaiTransferNet,
+            'tunai_purchase_out' => $tunaiPurchaseOut,
             'tunai_total' => $tunaiTotal,
             'tunai_count' => $tunaiCount,
             'tunai_by_channel' => $tunaiByChannel,
@@ -315,6 +364,7 @@ class LaporanKeuangan extends Page
             'filtered_total' => $filteredTotal,
             'rows' => $rows,
             'transfers' => $transferRows,
+            'purchases' => $purchaseRows,
         ];
     }
 
