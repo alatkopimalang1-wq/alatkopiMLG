@@ -75,6 +75,7 @@ interface CoverflowSliderProps {
     title?: string;
     subtitle?: string;
     ctaLabel?: string;
+    aspectRatio?: 'portrait' | 'square';
     className?: string;
 }
 
@@ -83,6 +84,7 @@ export const CoverflowSlider: React.FC<CoverflowSliderProps> = ({
     title = 'Disajikan di Kedai Pilihan',
     subtitle = 'Temukan seduhan biji kopi sangrai Sanubari di berbagai kedai kopi dan coffee space terkurasi di Malang',
     ctaLabel = 'Kunjungi',
+    aspectRatio = 'portrait',
     className = '',
 }) => {
     // Start centered on Lafayette (index 3 of 7)
@@ -191,7 +193,11 @@ export const CoverflowSlider: React.FC<CoverflowSliderProps> = ({
 
             {/* 3D Coverflow Container */}
             <div
-                className="relative flex h-[340px] w-full items-center justify-center perspective-[1200px] sm:h-[420px] md:h-[460px]"
+                className={`relative flex w-full items-center justify-center perspective-[1200px] ${
+                    aspectRatio === 'square'
+                        ? 'h-[260px] sm:h-[320px] md:h-[360px]'
+                        : 'h-[340px] sm:h-[420px] md:h-[460px]'
+                }`}
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
@@ -310,7 +316,11 @@ export const CoverflowSlider: React.FC<CoverflowSliderProps> = ({
                                     transition:
                                         'all 500ms cubic-bezier(0.25, 1, 0.5, 1)',
                                 }}
-                                className={`absolute aspect-[9/14] w-[180px] cursor-pointer overflow-hidden rounded-[24px] select-none sm:w-[220px] sm:rounded-[30px] md:w-[260px] ${
+                                className={`absolute cursor-pointer overflow-hidden rounded-[24px] select-none sm:rounded-[30px] ${
+                                    aspectRatio === 'square'
+                                        ? 'aspect-square w-[210px] sm:w-[250px] md:w-[300px]'
+                                        : 'aspect-[9/14] w-[180px] sm:w-[220px] md:w-[260px]'
+                                } ${
                                     isCenter
                                         ? 'shadow-[0_15px_40px_rgba(0,0,0,0.5),0_0_30px_rgba(184,121,74,0.35)] ring-2 ring-accent-copper/90'
                                         : 'shadow-xl hover:opacity-100'

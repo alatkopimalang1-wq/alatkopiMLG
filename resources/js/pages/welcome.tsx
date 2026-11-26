@@ -1209,6 +1209,7 @@ export default function Welcome({
                             settings?.home_brand_pilihan_cta_label ||
                             'Lihat Produk'
                         }
+                        aspectRatio="square"
                         slides={equipmentBrands.map((brand) => ({
                             id: brand.slug,
                             title: brand.name,
