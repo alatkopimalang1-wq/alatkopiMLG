@@ -162,6 +162,7 @@ export interface BundleCartSubItem {
     normal_price: number;
     bundle_price: number;
     weight_grams?: number;
+    is_preorder?: boolean;
 }
 
 export interface CartItem {

@@ -922,9 +922,16 @@ export default function OrderShowPage({
                                             />
                                         </div>
                                         <div className="min-w-0 flex-1 space-y-1">
-                                            <h3 className="text-sm font-bold text-brand-950">
-                                                {item.product_name}
-                                            </h3>
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <h3 className="text-sm font-bold text-brand-950">
+                                                    {item.product_name}
+                                                </h3>
+                                                {item.is_preorder && (
+                                                    <span className="inline-flex items-center rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-bold tracking-wide text-amber-800 uppercase">
+                                                        Pre-Order
+                                                    </span>
+                                                )}
+                                            </div>
                                             <p className="text-xs font-medium text-accent-copper">
                                                 Varian: {item.variant_label}
                                             </p>

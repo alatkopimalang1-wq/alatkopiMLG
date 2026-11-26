@@ -65,6 +65,7 @@ export function groupOrderItems<T extends OrderLikeItem>(
                 quantity: item.quantity,
                 normal_price: item.normal_price ?? item.price,
                 bundle_price: item.price,
+                is_preorder: item.is_preorder,
             };
 
             const existing = bundleMap.get(bundleName);

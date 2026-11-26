@@ -43,6 +43,11 @@ export const BundleCartItemDetails: React.FC<BundleCartItemDetailsProps> = ({
                                 <div className="font-semibold leading-snug text-brand-950">
                                     {sub.product_name}
                                     {showVariant ? ` (${sub.variant_label})` : ''}
+                                    {sub.is_preorder && (
+                                        <span className="ml-1.5 inline-flex items-center rounded border border-amber-200 bg-amber-50 px-1.5 py-0.2 text-[9px] font-bold tracking-wide text-amber-800 uppercase">
+                                            Pre-Order
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                             <div className="flex-shrink-0 text-center font-bold text-brand-800">
