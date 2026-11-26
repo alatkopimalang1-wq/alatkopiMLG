@@ -50,8 +50,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         reservedStockByVariant?: Record<string, number>;
     }>().props;
 
+    const isBundle = Boolean(product.is_bundle);
+    const productHref =
+        isBundle && product.bundle_url
+            ? product.bundle_url
+            : `/shop/${product.slug}`;
+
     const isPreorder = Boolean(
-        product.is_preorder || product.stock_status === 'pre_order',
+        !isBundle && (product.is_preorder || product.stock_status === 'pre_order'),
     );
 
     const realStock = getEffectiveProductStock(
@@ -103,7 +109,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         >
             {/* Top Full-Width Image Container (Edge-to-Edge) */}
             <Link
-                href={`/shop/${product.slug}`}
+                href={productHref}
                 className="group relative block aspect-square w-full overflow-hidden bg-sand-200/30"
             >
                 <img
@@ -141,6 +147,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                             ? ` · DP Mulai ${product.preorder_dp_percent}%`
                             : ''}
                     </span>
+                ) : isBundle ? (
+                    <span className="absolute top-2 left-2 rounded-md bg-accent-copper px-2 py-0.5 text-[10px] font-bold text-white shadow-xs">
+                        {discountPercent
+                            ? `Bundling · Hemat ${discountPercent}%`
+                            : 'Paket Bundling'}
+                    </span>
                 ) : product.is_flash_sale ? (
                     <span className="absolute top-2 left-2 rounded-md bg-[#e03131] px-2 py-0.5 text-[10px] font-bold text-white shadow-xs">
                         Flash Sale
@@ -162,7 +174,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
             {/* Content Body with Compact Padding */}
             <div className="flex flex-1 flex-col justify-between p-2.5 sm:p-3">
-                <Link href={`/shop/${product.slug}`} className="block">
+                <Link href={productHref} className="block">
                     {/* Series / Category */}
                     <span
                         className={`mb-1 block truncate text-[11px] font-semibold tracking-wider uppercase ${
@@ -203,7 +215,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                         >
                             {formatRupiah(primaryVariant.price)}
                         </div>
-                        {!isPreorder && realStock !== null && realStock > 0 && (
+                        {!isBundle && !isPreorder && realStock !== null && realStock > 0 && (
                             <div
                                 className={`text-[11px] font-semibold ${
                                     realStock <= 5
@@ -231,11 +243,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                         </button>
                     ) : (
                         <Link
-                            href={`/shop/${product.slug}`}
+                            href={productHref}
                             className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-brand-700 px-3 py-2 text-[12.5px] font-bold text-white shadow-xs transition-colors hover:bg-brand-800 active:bg-brand-900 sm:text-xs"
                         >
                             <ShoppingBag className="h-4 w-4 stroke-[2.2]" />
-                            <span>+ Keranjang</span>
+                            <span>{isBundle ? 'Atur Paket' : '+ Keranjang'}</span>
                         </Link>
                     )}
                 </div>
@@ -252,7 +264,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                     : 'bg-white hover:bg-sand-200/30'
             }`}
         >
-            <Link href={`/shop/${product.slug}`} className="block">
+            <Link href={productHref} className="block">
                 <div className="relative mb-4 aspect-square w-full overflow-hidden rounded-xl bg-sand-200/40">
                     <img
                         src={imageUrl}
@@ -287,6 +299,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                             {(product.preorder_dp_percent ?? 100) < 100
                                 ? ` · DP Mulai ${product.preorder_dp_percent}%`
                                 : ''}
+                        </span>
+                    ) : isBundle ? (
+                        <span className="absolute top-3 left-3 rounded-full bg-accent-copper px-3 py-1 text-[12px] font-bold text-white shadow-xs">
+                            {discountPercent
+                                ? `Bundling · Hemat ${discountPercent}%`
+                                : 'Paket Bundling'}
                         </span>
                     ) : product.is_flash_sale ? (
                         <span className="absolute top-3 left-3 rounded-full bg-[#e03131] px-3 py-1 text-[13px] font-bold text-white shadow-xs">
@@ -344,7 +362,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                     >
                         {formatRupiah(primaryVariant.price)}
                     </span>
-                    {!isPreorder && realStock !== null && realStock > 0 && (
+                    {!isBundle && !isPreorder && realStock !== null && realStock > 0 && (
                         <span
                             className={`mt-0.5 block text-xs font-semibold ${
                                 realStock <= 5
@@ -367,11 +385,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                     </button>
                 ) : (
                     <Link
-                        href={`/shop/${product.slug}`}
+                        href={productHref}
                         className="flex items-center gap-1.5 rounded-full bg-brand-900 px-4 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-brand-950 active:scale-95"
                     >
                         <ShoppingBag className="h-4 w-4" />
-                        <span>Pilih</span>
+                        <span>{isBundle ? 'Atur Paket' : 'Pilih'}</span>
                     </Link>
                 )}
             </div>

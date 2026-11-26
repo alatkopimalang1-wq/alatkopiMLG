@@ -66,6 +66,10 @@ export interface Product {
     is_preorder?: boolean;
     preorder_dp_percent?: number;
     is_flash_sale?: boolean;
+    is_bundle?: boolean;
+    bundle_url?: string | null;
+    slots_count?: number;
+    max_discount_percent?: number;
     tokopedia_url?: string | null;
     shopee_url?: string | null;
     tiktok_shop_url?: string | null;

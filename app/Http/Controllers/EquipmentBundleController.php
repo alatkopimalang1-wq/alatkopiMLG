@@ -13,18 +13,11 @@ class EquipmentBundleController extends Controller
     public function index(): Response
     {
         $bundles = EquipmentBundle::active()
-            ->withCount('slots')
+            ->with(['slots.category', 'slots.items.variant'])
             ->orderBy('sort_order')
             ->orderByDesc('id')
             ->get()
-            ->map(fn (EquipmentBundle $b) => [
-                'id' => $b->id,
-                'name' => $b->name,
-                'slug' => $b->slug,
-                'description' => $b->description,
-                'banner_image' => $b->banner_image,
-                'slots_count' => $b->slots_count,
-            ]);
+            ->map(fn (EquipmentBundle $b) => $b->toProductCardArray());
 
         return Inertia::render('bundling/index', [
             'bundles' => $bundles,
@@ -160,8 +153,18 @@ class EquipmentBundleController extends Controller
             })->values(),
         ];
 
+        $relatedBundles = EquipmentBundle::active()
+            ->where('id', '!=', $bundle->id)
+            ->with(['slots.category', 'slots.items.variant'])
+            ->orderBy('sort_order')
+            ->orderByDesc('id')
+            ->take(4)
+            ->get()
+            ->map(fn (EquipmentBundle $b) => $b->toProductCardArray());
+
         return Inertia::render('bundling/show', [
             'bundle' => $serialized,
+            'relatedBundles' => $relatedBundles,
             'whatsapp' => $whatsapp,
         ]);
     }

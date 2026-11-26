@@ -6,6 +6,7 @@ use App\Filament\Pages\ManageDesktopMegaMenu;
 use App\Filament\Pages\ManageEquipmentBrands;
 use App\Models\BrewGuide;
 use App\Models\Category;
+use App\Models\EquipmentBundle;
 use App\Models\Product;
 use App\Models\Setting;
 use Illuminate\Http\JsonResponse;
@@ -28,71 +29,116 @@ class ShopController extends Controller
 
     public function index(Request $request): Response
     {
-        $query = Product::active()->forWebsite()->with(['variants', 'images', 'categories']);
+        $catSlug = (string) $request->input('category', '');
+        $search = trim((string) $request->input('q', ''));
+        $series = (string) $request->input('series', '');
+        $brand = trim((string) $request->input('brand', ''));
+        $sort = (string) $request->input('sort', 'featured');
 
-        // Search
-        if ($search = $request->input('q')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('tasting_notes', 'like', "%{$search}%")
-                    ->orWhere('origin', 'like', "%{$search}%");
-            });
-        }
+        $isBundleFilter = $catSlug === 'paket-bundling' || $series === 'paket-bundling';
+        $includeBundles = $isBundleFilter || (empty($catSlug) && empty($series) && (empty($brand) || $brand === 'all'));
 
-        // Filter by category slug (support hierarchy: parent includes children)
-        if ($catSlug = $request->input('category')) {
-            $category = Category::where('slug', $catSlug)->first();
-            if ($category) {
-                $categoryIds = Category::where('id', $category->id)
-                    ->orWhere('parent_id', $category->id)
-                    ->pluck('id');
+        $bundleCards = collect();
+        if ($includeBundles) {
+            $bundleQuery = EquipmentBundle::active()
+                ->with(['slots.category', 'slots.items.variant'])
+                ->orderBy('sort_order')
+                ->orderByDesc('id');
 
-                $query->whereHas('categories', function ($q) use ($categoryIds) {
-                    $q->whereIn('categories.id', $categoryIds);
-                });
-            } else {
-                $query->whereHas('categories', function ($q) use ($catSlug) {
-                    $q->where('slug', $catSlug);
+            if ($search !== '') {
+                $bundleQuery->where(function ($bq) use ($search) {
+                    $bq->where('name', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%");
                 });
             }
+
+            $bundleCards = $bundleQuery->get()->map(fn (EquipmentBundle $b) => $b->toProductCardArray());
         }
 
-        // Filter by series
-        if ($series = $request->input('series')) {
-            $query->where(function ($q) use ($series) {
-                $q->where('series', $series)
-                    ->orWhereHas('categories', function ($cq) use ($series) {
-                        $cq->where('slug', $series);
+        if ($isBundleFilter) {
+            $products = new \Illuminate\Pagination\LengthAwarePaginator(
+                $bundleCards->values(),
+                $bundleCards->count(),
+                24,
+                1,
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+        } else {
+            $query = Product::active()->forWebsite()->with(['variants', 'images', 'categories']);
+
+            // Search
+            if ($search !== '') {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('tasting_notes', 'like', "%{$search}%")
+                        ->orWhere('origin', 'like', "%{$search}%");
+                });
+            }
+
+            // Filter by category slug (support hierarchy: parent includes children)
+            if ($catSlug !== '') {
+                $category = Category::where('slug', $catSlug)->first();
+                if ($category) {
+                    $categoryIds = Category::where('id', $category->id)
+                        ->orWhere('parent_id', $category->id)
+                        ->pluck('id');
+
+                    $query->whereHas('categories', function ($q) use ($categoryIds) {
+                        $q->whereIn('categories.id', $categoryIds);
                     });
-            });
-        }
+                } else {
+                    $query->whereHas('categories', function ($q) use ($catSlug) {
+                        $q->where('slug', $catSlug);
+                    });
+                }
+            }
 
-        // Filter by process
-        if ($process = $request->input('process')) {
-            $query->where('process', 'like', "%{$process}%");
-        }
+            // Filter by series
+            if ($series !== '') {
+                $query->where(function ($q) use ($series) {
+                    $q->where('series', $series)
+                        ->orWhereHas('categories', function ($cq) use ($series) {
+                            $cq->where('slug', $series);
+                        });
+                });
+            }
 
-        // Filter by brand (origin)
-        if ($brand = trim((string) $request->input('brand', ''))) {
-            if ($brand !== 'all') {
+            // Filter by process
+            if ($process = $request->input('process')) {
+                $query->where('process', 'like', "%{$process}%");
+            }
+
+            // Filter by brand (origin)
+            if ($brand !== '' && $brand !== 'all') {
                 $query->where(function ($q) use ($brand) {
                     $q->where('origin', $brand)
                         ->orWhere('name', 'like', "%{$brand}%");
                 });
             }
+
+            // Sort
+            match ($sort) {
+                'price_asc' => $query->orderBy('min_price', 'asc'),
+                'price_desc' => $query->orderBy('min_price', 'desc'),
+                'newest' => $query->orderBy('released_at', 'desc'),
+                'name' => $query->orderBy('name', 'asc'),
+                default => $query->orderBy('is_featured', 'desc')->orderBy('id', 'desc'),
+            };
+
+            $products = $query->paginate(24)->withQueryString();
+
+            if ($products->currentPage() === 1 && $bundleCards->isNotEmpty()) {
+                $merged = $bundleCards->concat($products->getCollection())->values();
+                $products->setCollection($merged);
+                $products = new \Illuminate\Pagination\LengthAwarePaginator(
+                    $merged,
+                    $products->total() + $bundleCards->count(),
+                    $products->perPage(),
+                    $products->currentPage(),
+                    ['path' => $request->url(), 'query' => $request->query()]
+                );
+            }
         }
-
-        // Sort
-        $sort = $request->input('sort', 'featured');
-        match ($sort) {
-            'price_asc' => $query->orderBy('min_price', 'asc'),
-            'price_desc' => $query->orderBy('min_price', 'desc'),
-            'newest' => $query->orderBy('released_at', 'desc'),
-            'name' => $query->orderBy('name', 'asc'),
-            default => $query->orderBy('is_featured', 'desc')->orderBy('id', 'desc'),
-        };
-
-        $products = $query->paginate(24)->withQueryString();
 
         $categories = Category::withCount('products')
             ->orderBy('sort_order')
@@ -192,6 +238,16 @@ class ShopController extends Controller
             ->take(8)
             ->get();
 
+        $bundles = EquipmentBundle::active()
+            ->where(function ($query) use ($q) {
+                $query->where('name', 'like', "%{$q}%")
+                    ->orWhere('description', 'like', "%{$q}%");
+            })
+            ->with(['slots.category', 'slots.items.variant'])
+            ->take(4)
+            ->get()
+            ->map(fn (EquipmentBundle $b) => $b->toProductCardArray());
+
         $guides = BrewGuide::where('title', 'like', "%{$q}%")
             ->orWhere('brew_method', 'like', "%{$q}%")
             ->take(3)
@@ -199,7 +255,7 @@ class ShopController extends Controller
 
         return response()->json([
             'query' => $q,
-            'products' => $products,
+            'products' => $bundles->concat($products)->take(10)->values(),
             'guides' => $guides,
         ]);
     }

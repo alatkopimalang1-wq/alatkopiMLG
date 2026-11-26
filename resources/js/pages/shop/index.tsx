@@ -321,6 +321,27 @@ export default function ShopIndex({
                                 Semua Alat Kopi
                             </button>
 
+                            {/* Paket Bundling Custom */}
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setSelectedCategory('paket-bundling');
+                                    setSelectedSeries('');
+                                    applyFilters({
+                                        category: 'paket-bundling',
+                                        series: '',
+                                    });
+                                }}
+                                className={`flex-shrink-0 cursor-pointer rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${
+                                    selectedCategory === 'paket-bundling' ||
+                                    selectedSeries === 'paket-bundling'
+                                        ? 'bg-accent-copper text-white shadow-xs'
+                                        : 'border border-amber-300/80 bg-amber-50/90 text-amber-900 hover:bg-amber-100'
+                                }`}
+                            >
+                                Paket Bundling
+                            </button>
+
                             {/* Dynamic Categories from Admin Dashboard */}
                             {categories.map((cat) => {
                                 const catName =
