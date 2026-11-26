@@ -67,6 +67,10 @@ export interface CartItem {
     discount_type?: 'fixed' | 'percent';
     discount_value?: number;
     discount_amount?: number;
+    bundle_id?: number;
+    bundle_name?: string;
+    bundle_image?: string;
+    bundle_unit_qty?: number;
 }
 
 export interface PosRecentOrder {

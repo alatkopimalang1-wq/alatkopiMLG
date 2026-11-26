@@ -2592,6 +2592,10 @@ function PosContent({
                             image: bItem.image || product.image,
                             cost_price: bItem.cost_price,
                             notes: `Bundling: ${product.name}`,
+                            bundle_id: product.id,
+                            bundle_name: product.name,
+                            bundle_image: product.image,
+                            bundle_unit_qty: bItem.quantity,
                             ...(discountPct > 0
                                 ? {
                                       discount_type: 'percent' as const,
@@ -2660,6 +2664,62 @@ function PosContent({
                 })
                 .filter(Boolean) as CartItem[];
         });
+    };
+
+    const updateBundleQuantity = (bundleId: number, delta: number) => {
+        const bundleItems = cart.filter((c) => c.bundle_id === bundleId);
+        if (bundleItems.length === 0) return;
+
+        if (delta > 0) {
+            const bundleProd = products.find((p) => p.id === bundleId);
+            for (const bItem of bundleItems) {
+                const unitQty = bItem.bundle_unit_qty || 1;
+                const prod = products.find((p) => p.id === bItem.product_id);
+                const isPre = Boolean(prod?.is_preorder || prod?.stock_status === 'pre_order');
+                const vari = prod?.variants?.find((v) => v.id === bItem.variant_id) as any;
+                const maxStock = vari && vari.stock !== undefined ? Number(vari.stock) : null;
+                if (!isPre && maxStock !== null) {
+                    const totalInCartForVariant = cart
+                        .filter((c) => c.product_id === bItem.product_id && c.variant_id === bItem.variant_id)
+                        .reduce((sum, c) => sum + c.quantity, 0);
+                    if (totalInCartForVariant + delta * unitQty > maxStock) {
+                        showToast(
+                            `Stok ${bItem.product_name} (${bItem.variant_label}) tidak mencukupi (tersisa ${maxStock} pcs)`,
+                        );
+                        return;
+                    }
+                }
+            }
+            if (bundleProd?.stock !== undefined) {
+                const firstItem = bundleItems[0];
+                const currentPkgQty = Math.max(1, Math.round(firstItem.quantity / (firstItem.bundle_unit_qty || 1)));
+                if (currentPkgQty + delta > bundleProd.stock) {
+                    showToast(`Stok paket ${bundleProd.name} maksimal ${bundleProd.stock} paket`);
+                    return;
+                }
+            }
+        }
+
+        setCart((prev) =>
+            prev
+                .map((item) => {
+                    if (item.bundle_id !== bundleId) return item;
+                    const unitQty = item.bundle_unit_qty || 1;
+                    const newQty = item.quantity + delta * unitQty;
+                    if (newQty <= 0) return null;
+                    const newDisc = recalculateItemDiscount(item, newQty);
+                    return {
+                        ...item,
+                        quantity: newQty,
+                        discount_amount: newDisc > 0 ? newDisc : undefined,
+                    };
+                })
+                .filter(Boolean) as CartItem[],
+        );
+    };
+
+    const removeBundle = (bundleId: number) => {
+        setCart((prev) => prev.filter((item) => item.bundle_id !== bundleId));
     };
 
     const clearCart = () => {
@@ -5504,7 +5564,163 @@ function PosContent({
                                     </p>
                                 </div>
                             ) : (
-                                cart.map((item) => (
+                                (() => {
+                                    const renderedBundleIds = new Set<number>();
+                                    return cart.map((item) => {
+                                        if (item.bundle_id) {
+                                            if (renderedBundleIds.has(item.bundle_id)) {
+                                                return null;
+                                            }
+                                            renderedBundleIds.add(item.bundle_id);
+                                            const bItems = cart.filter((c) => c.bundle_id === item.bundle_id);
+                                            const first = bItems[0];
+                                            const pkgQty = Math.max(
+                                                1,
+                                                Math.round(first.quantity / (first.bundle_unit_qty || 1)),
+                                            );
+                                            const totalNormal = bItems.reduce(
+                                                (sum, bi) => sum + bi.price * bi.quantity,
+                                                0,
+                                            );
+                                            const totalDiscounted = bItems.reduce(
+                                                (sum, bi) =>
+                                                    sum + Math.max(0, bi.price * bi.quantity - (bi.discount_amount || 0)),
+                                                0,
+                                            );
+                                            const hasDisc = totalNormal > totalDiscounted;
+
+                                            return (
+                                                <div
+                                                    key={`bundle-group-${item.bundle_id}`}
+                                                    className="rounded-2xl border border-stone-200/90 bg-white p-3.5 shadow-2xs transition hover:border-brand-300 dark:border-stone-800 dark:bg-stone-900 dark:hover:border-stone-700"
+                                                >
+                                                    <div className="flex items-center justify-between gap-3">
+                                                        <div className="flex min-w-0 items-center gap-3">
+                                                            <img
+                                                                src={item.bundle_image || item.image || '/brand/logo-circle.png'}
+                                                                alt={item.bundle_name || 'Paket Bundling'}
+                                                                onError={(e) => {
+                                                                    const target = e.currentTarget;
+                                                                    if (!target.src.endsWith('/brand/logo-circle.png')) {
+                                                                        target.src = '/brand/logo-circle.png';
+                                                                    }
+                                                                }}
+                                                                className="h-12 w-12 shrink-0 rounded-xl border border-stone-200 bg-stone-100 object-cover dark:border-stone-700 dark:bg-stone-800"
+                                                            />
+                                                            <h4 className="truncate text-sm font-bold text-stone-900 dark:text-white">
+                                                                {item.bundle_name || 'Paket Bundling'}
+                                                            </h4>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => removeBundle(item.bundle_id!)}
+                                                            className="shrink-0 cursor-pointer rounded-lg p-1.5 text-stone-400 transition hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/50 dark:hover:text-rose-400"
+                                                            title="Hapus paket"
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </button>
+                                                    </div>
+
+                                                    <div className="mt-3 space-y-2.5">
+                                                        {bItems.map((bi, idx) => {
+                                                            const unitQty = bi.bundle_unit_qty || 1;
+                                                            const lineNormal = bi.price * unitQty;
+                                                            const perPkgDisc = Math.round(
+                                                                (bi.discount_amount || 0) / pkgQty,
+                                                            );
+                                                            const lineDiscounted = Math.max(0, lineNormal - perPkgDisc);
+                                                            const showVariant =
+                                                                bi.variant_label &&
+                                                                bi.variant_label !== 'Standard' &&
+                                                                bi.variant_label !== 'Standar';
+
+                                                            return (
+                                                                <div
+                                                                    key={bi.id}
+                                                                    className="flex items-start justify-between gap-2 text-xs"
+                                                                >
+                                                                    <div className="min-w-0 flex-1">
+                                                                        <div className="text-[10px] font-bold tracking-wide text-brand-700 uppercase dark:text-emerald-400">
+                                                                            ITEM {idx + 1}
+                                                                        </div>
+                                                                        <div className="font-semibold text-stone-800 dark:text-stone-200">
+                                                                            {bi.product_name}
+                                                                            {showVariant ? ` (${bi.variant_label})` : ''}
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="flex shrink-0 items-center gap-2 text-right">
+                                                                        <span className="font-bold text-stone-700 dark:text-stone-300">
+                                                                            {unitQty}x
+                                                                        </span>
+                                                                        <div>
+                                                                            {lineNormal > lineDiscounted && (
+                                                                                <div className="text-[10px] text-rose-500 line-through">
+                                                                                    Rp {formatRp(lineNormal)}
+                                                                                </div>
+                                                                            )}
+                                                                            <div className="font-bold text-stone-900 dark:text-white">
+                                                                                Rp {formatRp(lineDiscounted)}
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+
+                                                    <div className="mt-3 flex items-center justify-between border-t border-stone-100 pt-2.5 text-xs dark:border-stone-800">
+                                                        <span className="font-bold text-stone-900 dark:text-white">
+                                                            Total Harga Paket ({pkgQty}x)
+                                                        </span>
+                                                        <div className="flex items-center gap-2">
+                                                            {hasDisc && (
+                                                                <s className="text-[11px] text-stone-400">
+                                                                    Rp {formatRp(totalNormal)}
+                                                                </s>
+                                                            )}
+                                                            <span className="font-black text-stone-900 dark:text-white">
+                                                                Rp {formatRp(totalDiscounted)}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="mt-2.5 flex items-center justify-between gap-2">
+                                                        <div className="inline-flex items-center rounded-full border border-stone-200 bg-white px-1 py-0.5 shadow-2xs dark:border-stone-700 dark:bg-stone-800">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => updateBundleQuantity(item.bundle_id!, -1)}
+                                                                className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-stone-600 transition hover:bg-stone-100 dark:text-stone-300 dark:hover:bg-stone-700"
+                                                            >
+                                                                −
+                                                            </button>
+                                                            <span className="min-w-[24px] text-center text-xs font-bold text-stone-900 dark:text-white">
+                                                                {pkgQty}
+                                                            </span>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => updateBundleQuantity(item.bundle_id!, 1)}
+                                                                className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-stone-600 transition hover:bg-stone-100 dark:text-stone-300 dark:hover:bg-stone-700"
+                                                            >
+                                                                +
+                                                            </button>
+                                                        </div>
+
+                                                        <div className="text-right">
+                                                            {hasDisc && (
+                                                                <div className="text-[11px] text-rose-500 line-through">
+                                                                    Rp {formatRp(totalNormal)}
+                                                                </div>
+                                                            )}
+                                                            <div className="text-sm font-black text-stone-900 dark:text-emerald-400">
+                                                                Rp {formatRp(totalDiscounted)}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        }
+
+                                        return (
                                     <div
                                         key={item.id}
                                         className="dark:bg-stone-850 flex items-center gap-3 rounded-2xl border border-stone-200/90 bg-white p-3 shadow-2xs transition hover:border-brand-300 sm:p-3.5 dark:border-stone-800 dark:bg-stone-900 dark:hover:border-stone-700"
@@ -5729,7 +5945,9 @@ function PosContent({
                                             </button>
                                         </div>
                                     </div>
-                                ))
+                                        );
+                                    });
+                                })()
                             )}
                         </div>
 
