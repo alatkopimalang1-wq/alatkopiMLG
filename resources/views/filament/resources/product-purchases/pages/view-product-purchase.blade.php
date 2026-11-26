@@ -5,6 +5,7 @@
         $listUrl = \App\Filament\Resources\ProductPurchases\ProductPurchaseResource::getUrl('index');
         $printUrl = route('admin.product-purchases.print', $po);
         $fmt = fn ($val) => 'IDR ' . number_format((float) $val, 0, ',', '.');
+        $isCompleted = $po->status === \App\Models\ProductPurchase::STATUS_SELESAI;
     @endphp
 
     <div class="space-y-4">
@@ -70,8 +71,9 @@
                         type="button"
                         wire:click="togglePaid"
                         wire:loading.attr="disabled"
-                        title="Klik untuk ubah status pembayaran"
-                        class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out {{ $po->is_paid ? 'bg-sky-500' : 'bg-gray-700/50' }}"
+                        @disabled($isCompleted)
+                        title="{{ $isCompleted ? 'Terkunci (PO Selesai)' : 'Klik untuk ubah status pembayaran' }}"
+                        class="relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out {{ $isCompleted ? 'cursor-not-allowed opacity-60' : 'cursor-pointer' }} {{ $po->is_paid ? 'bg-sky-500' : 'bg-gray-700/50' }}"
                     >
                         <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition duration-200 ease-in-out {{ $po->is_paid ? 'translate-x-5' : 'translate-x-0' }}"></span>
                     </button>
@@ -106,7 +108,8 @@
                         <select
                             id="po-status-select"
                             wire:model.live="selectedStatus"
-                            class="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-medium text-gray-800 dark:text-gray-200 px-3 py-1.5 focus:ring-2 focus:ring-primary-500"
+                            @disabled($isCompleted)
+                            class="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-medium text-gray-800 dark:text-gray-200 px-3 py-1.5 focus:ring-2 focus:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-70"
                         >
                             @foreach(\App\Models\ProductPurchase::STATUS_LABELS as $statusKey => $statusLabel)
                                 @php
@@ -148,7 +151,8 @@
                     <input
                         type="date"
                         wire:model.live="purchaseDateInput"
-                        class="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm text-gray-800 dark:text-gray-200 px-3 py-1.5 focus:ring-2 focus:ring-primary-500"
+                        @disabled($isCompleted)
+                        class="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm text-gray-800 dark:text-gray-200 px-3 py-1.5 focus:ring-2 focus:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-70"
                     />
                 </div>
             </div>
@@ -161,12 +165,19 @@
                 <div>
                     <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3 mb-3">
                         <h3 class="text-sm font-bold text-gray-900 dark:text-white">Supplier</h3>
-                        <button type="button"
-                                wire:click="mountAction('editSupplier')"
-                                class="inline-flex items-center gap-1 rounded-md bg-sky-600 hover:bg-sky-700 px-2.5 py-1 text-xs font-semibold text-white transition">
-                            <x-heroicon-m-pencil-square class="w-3.5 h-3.5" />
-                            Ubah
-                        </button>
+                        @if(! $isCompleted)
+                            <button type="button"
+                                    wire:click="mountAction('editSupplier')"
+                                    class="inline-flex items-center gap-1 rounded-md bg-sky-600 hover:bg-sky-700 px-2.5 py-1 text-xs font-semibold text-white transition">
+                                <x-heroicon-m-pencil-square class="w-3.5 h-3.5" />
+                                Ubah
+                            </button>
+                        @else
+                            <span class="inline-flex items-center gap-1 rounded-md bg-gray-100 dark:bg-gray-800 px-2.5 py-1 text-xs font-medium text-gray-500 dark:text-gray-400">
+                                <x-heroicon-m-lock-closed class="w-3.5 h-3.5" />
+                                Terkunci
+                            </span>
+                        @endif
                     </div>
                     <dl class="space-y-2.5 text-xs">
                         <div>
@@ -189,14 +200,21 @@
             <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-xs">
                 <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3 mb-3">
                     <h3 class="text-sm font-bold text-gray-900 dark:text-white">Info Penerimaan</h3>
-                    <button type="button"
-                            wire:click="mountAction('editReceiving')"
-                            @disabled(! $po->is_paid && ! $po->hasStockApplied())
-                            title="{{ ! $po->is_paid && ! $po->hasStockApplied() ? 'Lunasi pembayaran terlebih dahulu sebelum menerima barang' : '' }}"
-                            class="inline-flex items-center gap-1 rounded-md {{ $po->hasStockApplied() ? 'bg-sky-600 hover:bg-sky-700' : 'bg-emerald-600 hover:bg-emerald-700' }} px-2.5 py-1 text-xs font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-50">
-                        <x-heroicon-m-pencil-square class="w-3.5 h-3.5" />
-                        {{ $po->hasStockApplied() ? 'Ubah' : 'Terima Barang' }}
-                    </button>
+                    @if(! $isCompleted)
+                        <button type="button"
+                                wire:click="mountAction('editReceiving')"
+                                @disabled(! $po->is_paid && ! $po->hasStockApplied())
+                                title="{{ ! $po->is_paid && ! $po->hasStockApplied() ? 'Lunasi pembayaran terlebih dahulu sebelum menerima barang' : '' }}"
+                                class="inline-flex items-center gap-1 rounded-md {{ $po->hasStockApplied() ? 'bg-sky-600 hover:bg-sky-700' : 'bg-emerald-600 hover:bg-emerald-700' }} px-2.5 py-1 text-xs font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-50">
+                            <x-heroicon-m-pencil-square class="w-3.5 h-3.5" />
+                            {{ $po->hasStockApplied() ? 'Ubah' : 'Terima Barang' }}
+                        </button>
+                    @else
+                        <span class="inline-flex items-center gap-1 rounded-md bg-gray-100 dark:bg-gray-800 px-2.5 py-1 text-xs font-medium text-gray-500 dark:text-gray-400">
+                            <x-heroicon-m-lock-closed class="w-3.5 h-3.5" />
+                            Terkunci
+                        </span>
+                    @endif
                 </div>
                 <dl class="space-y-3 text-xs">
                     <div>
@@ -221,7 +239,7 @@
         <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-xs overflow-hidden">
             <div class="flex items-center justify-between px-4 py-3.5 border-b border-gray-100 dark:border-gray-800">
                 <h3 class="text-sm sm:text-base font-bold text-gray-900 dark:text-white">Produk Pesanan</h3>
-                @if(! $po->is_paid)
+                @if(! $po->is_paid && ! $isCompleted)
                     <button type="button"
                             wire:click="mountAction('addItem')"
                             class="inline-flex items-center gap-1.5 rounded-lg bg-primary-600 hover:bg-primary-700 px-3 py-1.5 text-xs font-semibold text-white transition">
@@ -231,7 +249,7 @@
                 @else
                     <span class="inline-flex items-center gap-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 px-3 py-1.5 text-xs font-medium text-gray-500 dark:text-gray-400">
                         <x-heroicon-m-lock-closed class="w-3.5 h-3.5" />
-                        Terkunci (Sudah Bayar)
+                        {{ $isCompleted ? 'Terkunci (PO Selesai)' : 'Terkunci (Sudah Bayar)' }}
                     </span>
                 @endif
             </div>
@@ -295,7 +313,7 @@
                                     {{ $fmt($item->subtotal) }}
                                 </td>
                                 <td class="py-3 px-4 text-center">
-                                    @if(! $po->is_paid)
+                                    @if(! $po->is_paid && ! $isCompleted)
                                         <div class="inline-flex items-center gap-2">
                                             <button type="button"
                                                     wire:click="mountAction('editItem', { itemId: {{ $item->id }} })"
@@ -335,7 +353,7 @@
                             <td colspan="5" class="py-2 px-4 text-right font-medium text-gray-600 dark:text-gray-400">Diskon</td>
                             <td class="py-2 px-4 text-right font-semibold text-gray-900 dark:text-white">{{ $fmt($po->discount_amount) }}</td>
                             <td class="py-2 px-4 text-center">
-                                @if(! $po->is_paid)
+                                @if(! $po->is_paid && ! $isCompleted)
                                     <button type="button"
                                             wire:click="mountAction('editDiscount')"
                                             class="inline-flex items-center gap-1 text-xs font-semibold text-sky-600 hover:text-sky-700 dark:text-sky-400">

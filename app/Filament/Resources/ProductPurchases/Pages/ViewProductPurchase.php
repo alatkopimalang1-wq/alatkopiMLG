@@ -55,8 +55,31 @@ class ViewProductPurchase extends ViewRecord
         return 'full';
     }
 
+    protected function isLockedCompleted(): bool
+    {
+        /** @var ProductPurchase $po */
+        $po = $this->getRecord();
+
+        return $po->status === ProductPurchase::STATUS_SELESAI;
+    }
+
+    protected function notifyLockedCompleted(): void
+    {
+        Notification::make()
+            ->title('PO Sudah Selesai')
+            ->body('Purchase Order dengan status Selesai telah dikunci dan tidak dapat diubah lagi.')
+            ->danger()
+            ->send();
+    }
+
     public function togglePaid(): void
     {
+        if ($this->isLockedCompleted()) {
+            $this->notifyLockedCompleted();
+
+            return;
+        }
+
         /** @var ProductPurchase $po */
         $po = $this->getRecord();
         $po->is_paid = ! $po->is_paid;
@@ -78,6 +101,13 @@ class ViewProductPurchase extends ViewRecord
 
         /** @var ProductPurchase $po */
         $po = $this->getRecord();
+
+        if ($this->isLockedCompleted()) {
+            $this->selectedStatus = (string) $po->status;
+            $this->notifyLockedCompleted();
+
+            return;
+        }
 
         if ($value === ProductPurchase::STATUS_DITERIMA && $po->status !== ProductPurchase::STATUS_DITERIMA) {
             $this->selectedStatus = (string) $po->status;
@@ -150,12 +180,20 @@ class ViewProductPurchase extends ViewRecord
 
     public function updatedPurchaseDateInput(string $value): void
     {
+        /** @var ProductPurchase $po */
+        $po = $this->getRecord();
+
+        if ($this->isLockedCompleted()) {
+            $this->purchaseDateInput = $po->purchase_date?->format('Y-m-d') ?? now()->format('Y-m-d');
+            $this->notifyLockedCompleted();
+
+            return;
+        }
+
         if (empty($value)) {
             return;
         }
 
-        /** @var ProductPurchase $po */
-        $po = $this->getRecord();
         $po->purchase_date = $value;
         $po->save();
         $po->refresh();
@@ -173,6 +211,7 @@ class ViewProductPurchase extends ViewRecord
 
         return Action::make('editSupplier')
             ->label('Ubah')
+            ->disabled(fn (): bool => $this->isLockedCompleted())
             ->modalHeading('Ubah Informasi Supplier')
             ->modalSubmitActionLabel('Simpan')
             ->fillForm([
@@ -186,6 +225,12 @@ class ViewProductPurchase extends ViewRecord
                 Textarea::make('supplier_address')->label('Alamat')->rows(2),
             ])
             ->action(function (array $data) use ($po) {
+                if ($this->isLockedCompleted()) {
+                    $this->notifyLockedCompleted();
+
+                    return;
+                }
+
                 $po->update($data);
                 $po->refresh();
 
@@ -203,6 +248,7 @@ class ViewProductPurchase extends ViewRecord
 
         return Action::make('editReceiving')
             ->label('Ubah')
+            ->disabled(fn (): bool => $this->isLockedCompleted())
             ->modalHeading('Info Penerimaan Produk')
             ->modalSubmitActionLabel('Simpan')
             ->fillForm([
@@ -231,6 +277,12 @@ class ViewProductPurchase extends ViewRecord
                     ->disabled(fn (): bool => $po->hasStockApplied()),
             ])
             ->action(function (array $data) use ($po) {
+                if ($this->isLockedCompleted()) {
+                    $this->notifyLockedCompleted();
+
+                    return;
+                }
+
                 $hadStock = $po->hasStockApplied();
                 $postStock = (bool) ($data['post_stock'] ?? false);
 
@@ -280,6 +332,7 @@ class ViewProductPurchase extends ViewRecord
 
         return Action::make('editNotes')
             ->label('Ubah')
+            ->disabled(fn (): bool => $this->isLockedCompleted())
             ->modalHeading('Ubah Catatan PO')
             ->modalSubmitActionLabel('Simpan')
             ->fillForm([
@@ -289,6 +342,12 @@ class ViewProductPurchase extends ViewRecord
                 Textarea::make('notes')->label('Catatan')->rows(3),
             ])
             ->action(function (array $data) use ($po) {
+                if ($this->isLockedCompleted()) {
+                    $this->notifyLockedCompleted();
+
+                    return;
+                }
+
                 $po->update(['notes' => $data['notes'] ?? null]);
                 $po->refresh();
 
@@ -306,6 +365,7 @@ class ViewProductPurchase extends ViewRecord
 
         return Action::make('editDueDate')
             ->label('Ubah')
+            ->disabled(fn (): bool => $this->isLockedCompleted())
             ->modalHeading('Ubah Jatuh Tempo')
             ->modalSubmitActionLabel('Simpan')
             ->fillForm([
@@ -315,6 +375,12 @@ class ViewProductPurchase extends ViewRecord
                 DatePicker::make('due_date')->label('Tanggal Jatuh Tempo'),
             ])
             ->action(function (array $data) use ($po) {
+                if ($this->isLockedCompleted()) {
+                    $this->notifyLockedCompleted();
+
+                    return;
+                }
+
                 $po->update(['due_date' => $data['due_date'] ?? null]);
                 $po->refresh();
 
@@ -332,6 +398,7 @@ class ViewProductPurchase extends ViewRecord
 
         return Action::make('editDiscount')
             ->label('Diskon')
+            ->disabled(fn (): bool => $this->isLockedCompleted())
             ->modalHeading('Ubah Diskon PO')
             ->modalSubmitActionLabel('Simpan')
             ->fillForm([
@@ -346,6 +413,11 @@ class ViewProductPurchase extends ViewRecord
                     ->required(),
             ])
             ->action(function (array $data) use ($po) {
+                if ($this->isLockedCompleted()) {
+                    $this->notifyLockedCompleted();
+
+                    return;
+                }
                 if ($po->is_paid) {
                     Notification::make()->title('PO Sudah Dibayar')->body('Item dan diskon tidak dapat diubah setelah status Sudah Bayar.')->warning()->send();
 
@@ -370,6 +442,7 @@ class ViewProductPurchase extends ViewRecord
 
         return Action::make('addItem')
             ->label('Tambah Produk')
+            ->disabled(fn (): bool => $this->isLockedCompleted())
             ->modalHeading('Tambah Produk ke PO')
             ->modalSubmitActionLabel('Tambahkan')
             ->schema([
@@ -453,6 +526,11 @@ class ViewProductPurchase extends ViewRecord
                 ]),
             ])
             ->action(function (array $data) use ($po) {
+                if ($this->isLockedCompleted()) {
+                    $this->notifyLockedCompleted();
+
+                    return;
+                }
                 if ($po->is_paid) {
                     Notification::make()->title('PO Sudah Dibayar')->body('Produk tidak dapat ditambahkan setelah status Sudah Bayar.')->warning()->send();
 
@@ -500,6 +578,7 @@ class ViewProductPurchase extends ViewRecord
 
         return Action::make('editItem')
             ->label('Ubah')
+            ->disabled(fn (): bool => $this->isLockedCompleted())
             ->modalHeading('Ubah Item Pesanan')
             ->modalSubmitActionLabel('Simpan')
             ->fillForm(function (array $arguments): array {
@@ -533,6 +612,11 @@ class ViewProductPurchase extends ViewRecord
                 ]),
             ])
             ->action(function (array $data, array $arguments) use ($po) {
+                if ($this->isLockedCompleted()) {
+                    $this->notifyLockedCompleted();
+
+                    return;
+                }
                 if ($po->is_paid) {
                     Notification::make()->title('PO Sudah Dibayar')->body('Produk yang sudah dimasukkan tidak dapat diedit setelah status Sudah Bayar.')->warning()->send();
 
@@ -588,10 +672,16 @@ class ViewProductPurchase extends ViewRecord
 
         return Action::make('deleteItem')
             ->label('Hapus')
+            ->disabled(fn (): bool => $this->isLockedCompleted())
             ->requiresConfirmation()
             ->modalHeading('Hapus Item dari PO?')
             ->modalDescription('Item ini akan dihapus dari daftar produk pesanan.')
             ->action(function (array $arguments) use ($po) {
+                if ($this->isLockedCompleted()) {
+                    $this->notifyLockedCompleted();
+
+                    return;
+                }
                 if ($po->is_paid) {
                     Notification::make()->title('PO Sudah Dibayar')->body('Produk tidak dapat dihapus setelah status Sudah Bayar.')->warning()->send();
 
