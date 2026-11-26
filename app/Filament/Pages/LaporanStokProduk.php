@@ -53,8 +53,19 @@ class LaporanStokProduk extends Page
     public function getCategoriesProperty(): Collection
     {
         return Category::query()
-            ->orderBy('name')
-            ->get(['id', 'name']);
+            ->get(['id', 'name'])
+            ->map(function (Category $cat): array {
+                $name = is_array($cat->name)
+                    ? ($cat->name['id'] ?? $cat->name['en'] ?? (string) (reset($cat->name) ?: ''))
+                    : (string) $cat->name;
+
+                return [
+                    'id' => $cat->id,
+                    'name' => $name,
+                ];
+            })
+            ->sortBy('name', SORT_NATURAL | SORT_FLAG_CASE)
+            ->values();
     }
 
     /**
