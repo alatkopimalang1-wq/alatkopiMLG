@@ -437,8 +437,28 @@ export default function CartPage({
     const isFreeShipping = subtotal >= freeShippingMin;
     const shortageForFreeShipping = Math.max(0, freeShippingMin - subtotal);
 
+    // Pre-order DP calculation
+    const payableSubtotal = items.reduce((sum, item) => {
+        const lineTotal = (Number(item.variant.price) || 0) * item.quantity;
+        const isPreorder = Boolean(
+            item.product.is_preorder ||
+                item.product.stock_status === 'pre_order',
+        );
+        const dpPercent = isPreorder
+            ? (item.product.preorder_dp_percent ?? 100)
+            : 100;
+        return sum + Math.round((lineTotal * dpPercent) / 100);
+    }, 0);
+    const hasPreorderDp = items.some(
+        (item) =>
+            (item.product.is_preorder ||
+                item.product.stock_status === 'pre_order') &&
+            (item.product.preorder_dp_percent ?? 100) < 100,
+    );
+    const remainingBalance = Math.max(0, subtotal - payableSubtotal);
+
     // Grand total
-    const grandTotal = subtotal + shippingCost;
+    const grandTotal = payableSubtotal + shippingCost;
 
     // Names of selected province and city
     const currentProvince = provinces.find((p) => p.id === selectedProvinceId);
@@ -1697,6 +1717,28 @@ export default function CartPage({
                                             {formatRupiah(subtotal)}
                                         </span>
                                     </div>
+                                    {hasPreorderDp && (
+                                        <>
+                                            <div className="flex items-center justify-between text-xs text-amber-700">
+                                                <span className="font-semibold">
+                                                    Pembayaran DP Pre-Order
+                                                </span>
+                                                <span className="font-bold">
+                                                    {formatRupiah(
+                                                        payableSubtotal,
+                                                    )}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center justify-between text-[11px] text-brand-500">
+                                                <span>Sisa Pelunasan</span>
+                                                <span>
+                                                    {formatRupiah(
+                                                        remainingBalance,
+                                                    )}
+                                                </span>
+                                            </div>
+                                        </>
+                                    )}
                                     <div className="flex items-center justify-between text-xs text-brand-600">
                                         <span>
                                             {isPickup

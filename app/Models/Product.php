@@ -44,6 +44,8 @@ class Product extends Model
         'tiktok_shop_url',
         'is_featured',
         'is_new',
+        'is_preorder',
+        'preorder_dp_percent',
         'status',
         'channel',
         'stock',
@@ -57,6 +59,8 @@ class Product extends Model
         'brew_methods' => 'array',
         'is_featured' => 'boolean',
         'is_new' => 'boolean',
+        'is_preorder' => 'boolean',
+        'preorder_dp_percent' => 'integer',
         'min_price' => 'float',
         'max_price' => 'float',
         'price_per_10g' => 'float',
@@ -77,6 +81,10 @@ class Product extends Model
 
     public function getIsOutOfStockAttribute(): bool
     {
+        if (! empty($this->attributes['is_preorder']) || ($this->attributes['stock_status'] ?? 'in_stock') === 'pre_order') {
+            return false;
+        }
+
         if (isset($this->attributes['stock']) && (int) $this->attributes['stock'] <= 0) {
             return true;
         }

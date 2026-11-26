@@ -45,14 +45,26 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           )
         : null;
 
-    const isOutOfStock = Boolean(
-        product.is_out_of_stock ||
-        (product.stock !== undefined && product.stock !== null && product.stock <= 0) ||
-        product.stock_status === 'out_of_stock' ||
-        (product.variants &&
-            product.variants.length > 0 &&
-            product.variants.every((v) => (v.stock !== undefined && v.stock !== null ? v.stock <= 0 : v.stock_status === 'out_of_stock'))),
+    const isPreorder = Boolean(
+        product.is_preorder || product.stock_status === 'pre_order',
     );
+
+    const isOutOfStock =
+        !isPreorder &&
+        Boolean(
+            product.is_out_of_stock ||
+                (product.stock !== undefined &&
+                    product.stock !== null &&
+                    product.stock <= 0) ||
+                product.stock_status === 'out_of_stock' ||
+                (product.variants &&
+                    product.variants.length > 0 &&
+                    product.variants.every((v) =>
+                        v.stock !== undefined && v.stock !== null
+                            ? v.stock <= 0
+                            : v.stock_status === 'out_of_stock',
+                    )),
+        );
 
     // Full-Width Mobile Shape matching Otten Coffee reference (Image 2)
     const renderMobileShape = () => (
@@ -91,10 +103,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                     </div>
                 )}
 
-                {/* Top-Left Badge (SOLD OUT / Discount / Flash Sale / Best Seller) */}
+                {/* Top-Left Badge (SOLD OUT / Pre-Order / Discount / Flash Sale / Best Seller) */}
                 {isOutOfStock ? (
                     <span className="absolute top-2 left-2 z-20 rounded-md border border-white/20 bg-black px-2 py-0.5 text-[10px] font-black tracking-wider text-white shadow-xs">
                         SOLD OUT
+                    </span>
+                ) : isPreorder ? (
+                    <span className="absolute top-2 left-2 z-20 rounded-md bg-amber-600 px-2 py-0.5 text-[10px] font-bold text-white shadow-xs">
+                        Pre-Order
+                        {(product.preorder_dp_percent ?? 100) < 100
+                            ? ` · DP ${product.preorder_dp_percent}%`
+                            : ''}
                     </span>
                 ) : product.is_flash_sale ? (
                     <span className="absolute top-2 left-2 rounded-md bg-[#e03131] px-2 py-0.5 text-[10px] font-bold text-white shadow-xs">
@@ -229,6 +248,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                     {isOutOfStock ? (
                         <span className="absolute top-3 left-3 z-20 rounded-full border border-white/20 bg-black px-3 py-1 text-[12px] font-black tracking-wider text-white shadow-xs">
                             SOLD OUT
+                        </span>
+                    ) : isPreorder ? (
+                        <span className="absolute top-3 left-3 z-20 rounded-full bg-amber-600 px-3 py-1 text-[12px] font-bold text-white shadow-xs">
+                            Pre-Order
+                            {(product.preorder_dp_percent ?? 100) < 100
+                                ? ` · DP ${product.preorder_dp_percent}%`
+                                : ''}
                         </span>
                     ) : product.is_flash_sale ? (
                         <span className="absolute top-3 left-3 rounded-full bg-[#e03131] px-3 py-1 text-[13px] font-bold text-white shadow-xs">

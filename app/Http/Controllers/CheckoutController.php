@@ -62,13 +62,18 @@ class CheckoutController extends Controller
         $storeAddress = $settings['pickup_store_address'] ?? ($settings['address'] ?? 'Ruko Tlogomas Square Kav. 34, Jl. Raya Tlogomas, Lowokwaru, Kota Malang, Jawa Timur 65144');
 
         $subtotal = 0;
+        $payableSubtotal = 0;
+        $hasPreorder = false;
         $totalWeightGrams = 0;
         $orderLines = [];
 
         foreach ($validated['items'] as $item) {
             $variant = ProductVariant::with('product')->findOrFail($item['variant_id']);
+            $isPreorder = (bool) ($variant->product->is_preorder ?? false)
+                || $variant->product->stock_status === 'pre_order'
+                || $variant->stock_status === 'pre_order';
 
-            if ($variant->stock_status === 'out_of_stock' || $variant->product->stock_status === 'out_of_stock') {
+            if (! $isPreorder && ($variant->stock_status === 'out_of_stock' || $variant->product->stock_status === 'out_of_stock')) {
                 return response()->json([
                     'message' => "Maaf, stok untuk produk '{$variant->product->name}' ({$variant->label}) sedang habis (Sold Out) dan tidak dapat dibeli.",
                     'errors' => [
@@ -83,6 +88,14 @@ class CheckoutController extends Controller
                 : (float) $variant->price;
             $lineTotal = $unitPrice * $qty;
             $subtotal += $lineTotal;
+
+            $dpPercent = $isPreorder ? (int) ($variant->product->preorder_dp_percent ?? 100) : 100;
+            if (! in_array($dpPercent, [30, 50, 70, 100], true)) {
+                $dpPercent = 100;
+            }
+            $payableSubtotal += round($lineTotal * ($dpPercent / 100));
+            $hasPreorder = $hasPreorder || $isPreorder;
+
             $totalWeightGrams += ($variant->weight_grams ?: 200) * $qty;
 
             $itemCostPrice = $variant->cost_price ? (float) $variant->cost_price : null;
@@ -169,7 +182,7 @@ class CheckoutController extends Controller
             $uniqueCode = rand(101, 899);
         }
 
-        $totalAmount = $subtotal + $shippingCost + $uniqueCode;
+        $totalAmount = $payableSubtotal + $shippingCost + $uniqueCode;
 
         // Payment Channel Info Snapshot
         $channel = $validated['payment_channel'] ?? ($validated['payment_method'] === 'qris' ? 'qris' : 'bca');
@@ -231,6 +244,9 @@ class CheckoutController extends Controller
             'bank_info' => $matchedBankInfo,
             'customer_latitude' => $validated['customer']['latitude'] ?? null,
             'customer_longitude' => $validated['customer']['longitude'] ?? null,
+            'is_preorder' => $hasPreorder,
+            'dp_payable_subtotal' => $payableSubtotal,
+            'remaining_balance' => max(0, $subtotal - $payableSubtotal),
         ];
 
         $order = DB::transaction(function () use (

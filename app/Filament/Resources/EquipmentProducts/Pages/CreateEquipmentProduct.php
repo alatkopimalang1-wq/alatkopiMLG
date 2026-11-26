@@ -17,6 +17,11 @@ class CreateEquipmentProduct extends CreateRecord
     {
         $data['series'] = 'alat-kopi';
         $data['freshness_days'] = (int) ($data['freshness_days'] ?? 365);
+        $isPreorder = (bool) ($data['is_preorder'] ?? false);
+        if (! $isPreorder) {
+            $data['preorder_dp_percent'] = 100;
+        }
+        $data['stock_status'] = $isPreorder ? 'pre_order' : ((int) ($data['stock'] ?? 0) > 0 ? 'in_stock' : 'out_of_stock');
 
         $raw = $this->form->getRawState();
         $hasVariants = (bool) ($raw['has_variants'] ?? false);

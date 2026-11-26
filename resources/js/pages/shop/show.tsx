@@ -291,14 +291,23 @@ export default function ProductShow({
 
     const [isAdded, setIsAdded] = useState(false);
 
-    const isProductOutOfStock = Boolean(
-        product.is_out_of_stock ||
-        product.stock_status === 'out_of_stock' ||
-        (variants.length > 0 &&
-            variants.every((v) => v.stock_status === 'out_of_stock')),
+    const isPreorder = Boolean(
+        product.is_preorder || product.stock_status === 'pre_order',
     );
+    const preorderDpPercent = product.preorder_dp_percent ?? 100;
+
+    const isProductOutOfStock =
+        !isPreorder &&
+        Boolean(
+            product.is_out_of_stock ||
+                product.stock_status === 'out_of_stock' ||
+                (variants.length > 0 &&
+                    variants.every((v) => v.stock_status === 'out_of_stock')),
+        );
     const isCurrentVariantOutOfStock =
-        isProductOutOfStock || selectedVariant.stock_status === 'out_of_stock';
+        !isPreorder &&
+        (isProductOutOfStock ||
+            selectedVariant.stock_status === 'out_of_stock');
 
     const handleAddToCart = () => {
         if (isCurrentVariantOutOfStock) return;
@@ -544,14 +553,25 @@ export default function ProductShow({
                     {/* Right Column: Product Info & Purchase Options (7 cols) */}
                     <div className="space-y-6 lg:col-span-6">
                         <div>
-                            {isProductOutOfStock && (
+                            {isProductOutOfStock ? (
                                 <div className="mb-2.5">
                                     <span className="inline-flex items-center gap-1.5 rounded-md border border-white/20 bg-black px-3 py-1 text-xs font-black tracking-widest text-white uppercase shadow-xs">
                                         <span className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
                                         <span>STOK HABIS (SOLD OUT)</span>
                                     </span>
                                 </div>
-                            )}
+                            ) : isPreorder ? (
+                                <div className="mb-2.5 flex flex-wrap items-center gap-2">
+                                    <span className="inline-flex items-center gap-1.5 rounded-md bg-amber-600 px-3 py-1 text-xs font-black tracking-widest text-white uppercase shadow-xs">
+                                        <span>PRE-ORDER</span>
+                                        {preorderDpPercent < 100 && (
+                                            <span>
+                                                · DP {preorderDpPercent}%
+                                            </span>
+                                        )}
+                                    </span>
+                                </div>
+                            ) : null}
                             <h1 className="text-2xl leading-tight font-extrabold tracking-tight text-brand-950 sm:text-3xl">
                                 {product.name}
                             </h1>
@@ -593,6 +613,25 @@ export default function ProductShow({
                                     {formatRupiah(selectedVariant.price)}
                                 </span>
                             </div>
+                            {isPreorder && (
+                                <div className="mt-2 rounded-xl border border-amber-200 bg-amber-50/90 px-3.5 py-2.5 text-xs text-amber-900">
+                                    <span className="font-bold">
+                                        Produk Pre-Order
+                                    </span>{' '}
+                                    · Down Payment (DP):{' '}
+                                    <span className="font-extrabold">
+                                        {preorderDpPercent === 100
+                                            ? '100% (Lunas)'
+                                            : `${preorderDpPercent}% (${formatRupiah(
+                                                  Math.round(
+                                                      (selectedVariant.price *
+                                                          preorderDpPercent) /
+                                                          100,
+                                                  ),
+                                              )})`}
+                                    </span>
+                                </div>
+                            )}
                         </div>
 
                         {/* Variant Selection (disembunyikan untuk alat kopi tanpa varian) */}

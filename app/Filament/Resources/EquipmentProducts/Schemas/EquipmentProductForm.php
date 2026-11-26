@@ -108,12 +108,28 @@ class EquipmentProductForm
                                 ->default('Tidak ada')
                                 ->native(false),
                         ]),
-                        Grid::make(2)->schema([
+                        Grid::make(3)->schema([
                             Toggle::make('is_featured')
                                 ->label('Produk Unggulan (Best Seller)'),
                             Toggle::make('is_new')
                                 ->label('Tandai Sebagai Baru (New Arrival)'),
+                            Toggle::make('is_preorder')
+                                ->label('Produk Pre-Order')
+                                ->live(),
                         ]),
+                        Select::make('preorder_dp_percent')
+                            ->label('Pengaturan Down Payment (DP) Pre-Order')
+                            ->options([
+                                30 => '30%',
+                                50 => '50%',
+                                70 => '70%',
+                                100 => '100% (Lunas)',
+                            ])
+                            ->default(100)
+                            ->native(false)
+                            ->visible(fn (callable $get): bool => (bool) $get('is_preorder'))
+                            ->required(fn (callable $get): bool => (bool) $get('is_preorder'))
+                            ->helperText('Tentukan persentase Down Payment (DP) yang berlaku untuk produk Pre-Order ini.'),
                     ]),
 
                 Section::make('Harga, Stok & Varian Produk')

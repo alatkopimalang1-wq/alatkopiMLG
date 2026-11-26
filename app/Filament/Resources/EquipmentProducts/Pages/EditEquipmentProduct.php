@@ -49,6 +49,11 @@ class EditEquipmentProduct extends EditRecord
     protected function mutateFormDataBeforeSave(array $data): array
     {
         $data['series'] = 'alat-kopi';
+        $isPreorder = (bool) ($data['is_preorder'] ?? false);
+        if (! $isPreorder) {
+            $data['preorder_dp_percent'] = 100;
+        }
+        $data['stock_status'] = $isPreorder ? 'pre_order' : ((int) ($data['stock'] ?? 0) > 0 ? 'in_stock' : 'out_of_stock');
 
         $raw = $this->form->getRawState();
         $hasVariants = (bool) ($raw['has_variants'] ?? false);
