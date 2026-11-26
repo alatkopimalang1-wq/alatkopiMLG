@@ -24,8 +24,8 @@ export const BundleCartItemDetails: React.FC<BundleCartItemDetailsProps> = ({
     const totalDiscounted = unitBundleTotal * packageQty;
 
     return (
-        <div className="mt-2 overflow-hidden rounded-xl border border-sand-200 bg-white">
-            <div className="divide-y divide-sand-100 text-[11px] sm:text-xs">
+        <div className="mt-2">
+            <div className="space-y-1.5 text-[11px] sm:text-xs">
                 {bundleItems.map((sub, i) => {
                     const showVariant =
                         sub.variant_label && sub.variant_label !== 'Standard';
@@ -34,7 +34,7 @@ export const BundleCartItemDetails: React.FC<BundleCartItemDetailsProps> = ({
                     return (
                         <div
                             key={`${sub.slot_id}-${sub.variant_id}-${i}`}
-                            className="flex items-center justify-between gap-2 px-3 py-2"
+                            className="flex items-center justify-between gap-2 py-0.5"
                         >
                             <div className="min-w-0 flex-1">
                                 <span className="block text-[9px] font-semibold tracking-wide text-brand-500 uppercase sm:text-[10px]">
@@ -68,7 +68,7 @@ export const BundleCartItemDetails: React.FC<BundleCartItemDetailsProps> = ({
                     );
                 })}
 
-                <div className="flex items-center justify-between gap-2 bg-sand-50 px-3 py-2 font-bold">
+                <div className="flex items-center justify-between gap-2 pt-1.5 font-bold">
                     <span className="text-brand-950">
                         Total Harga Paket ({packageQty}x)
                     </span>
