@@ -16,27 +16,17 @@
                 height: auto !important;
                 min-height: 0 !important;
             }
-            .fi-sidebar,
-            .fi-topbar,
-            .fi-header,
-            .fi-breadcrumbs,
-            .no-print {
+            body.is-printing-barcode > *:not(#print-only-root) {
                 display: none !important;
             }
-            .fi-layout,
-            .fi-main,
-            .fi-main-ctn,
-            .fi-page,
-            .fi-page-main,
-            main {
-                padding: 0 !important;
-                margin: 0 !important;
-                min-height: 0 !important;
-                height: auto !important;
-                max-width: none !important;
+            #print-only-root {
+                display: block !important;
                 width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: #fff !important;
             }
-            #barcode-print-area {
+            #print-only-root #barcode-print-area {
                 width: 100% !important;
                 background: #fff !important;
                 border: none !important;
@@ -296,7 +286,7 @@
                         </button>
                         <button
                             type="button"
-                            onclick="window.print()"
+                            onclick="window.printBarcodeLabels()"
                             class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 px-4 py-1.5 text-xs font-semibold text-white shadow-xs cursor-pointer"
                         >
                             <x-heroicon-o-printer class="w-4 h-4" />
@@ -382,4 +372,32 @@
             </div>
         @endif
     </div>
+
+    <script>
+        window.printBarcodeLabels = function () {
+            const area = document.getElementById('barcode-print-area');
+            if (!area) return;
+
+            const existing = document.getElementById('print-only-root');
+            if (existing) existing.remove();
+
+            const root = document.createElement('div');
+            root.id = 'print-only-root';
+            root.style.display = 'none';
+            root.appendChild(area.cloneNode(true));
+            document.body.appendChild(root);
+            document.body.classList.add('is-printing-barcode');
+
+            const cleanup = () => {
+                document.body.classList.remove('is-printing-barcode');
+                const el = document.getElementById('print-only-root');
+                if (el) el.remove();
+                window.removeEventListener('afterprint', cleanup);
+            };
+            window.addEventListener('afterprint', cleanup);
+
+            window.print();
+            setTimeout(cleanup, 1000);
+        };
+    </script>
 </x-filament-panels::page>
