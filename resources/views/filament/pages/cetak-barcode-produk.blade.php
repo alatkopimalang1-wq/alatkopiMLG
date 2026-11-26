@@ -1,6 +1,19 @@
 <x-filament-panels::page>
     <style>
+        @if($labelSize === '40x20')
+            @page { size: 40mm 20mm; margin: 0; }
+        @elseif($labelSize === '50x30')
+            @page { size: 50mm 30mm; margin: 0; }
+        @else
+            @page { size: A4; margin: 8mm; }
+        @endif
+
         @media print {
+            html, body {
+                margin: 0 !important;
+                padding: 0 !important;
+                background: #fff !important;
+            }
             body * {
                 visibility: hidden !important;
             }
@@ -14,7 +27,136 @@
                 top: 0 !important;
                 width: 100% !important;
                 background: #fff !important;
-                padding: 4mm !important;
+                border: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                box-shadow: none !important;
+            }
+            .barcode-grid {
+                @if($labelSize === 'a4_grid')
+                    display: grid !important;
+                    grid-template-columns: repeat(3, 1fr) !important;
+                    gap: 4mm !important;
+                @else
+                    display: block !important;
+                @endif
+            }
+            .barcode-label-card {
+                border: none !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+                margin: 0 !important;
+                box-sizing: border-box !important;
+                overflow: hidden !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: center !important;
+                align-items: center !important;
+                text-align: center !important;
+                @if($labelSize === '40x20')
+                    width: 40mm !important;
+                    height: 20mm !important;
+                    padding: 1mm 1.5mm !important;
+                    page-break-after: always !important;
+                    break-after: page !important;
+                @elseif($labelSize === '50x30')
+                    width: 50mm !important;
+                    height: 30mm !important;
+                    padding: 1.5mm 2mm !important;
+                    page-break-after: always !important;
+                    break-after: page !important;
+                @else
+                    width: 100% !important;
+                    min-height: 35mm !important;
+                    padding: 3mm !important;
+                    border: 1px dashed #d1d5db !important;
+                    break-inside: avoid !important;
+                    page-break-inside: avoid !important;
+                @endif
+            }
+            .barcode-label-card:last-child {
+                page-break-after: auto !important;
+                break-after: auto !important;
+            }
+            .barcode-label-name {
+                font-weight: 700 !important;
+                color: #000 !important;
+                white-space: normal !important;
+                word-break: normal !important;
+                overflow-wrap: break-word !important;
+                width: 100% !important;
+                overflow: hidden !important;
+                @if($labelSize === '40x20')
+                    font-size: 6.5pt !important;
+                    line-height: 1.1 !important;
+                    max-height: 14.5pt !important;
+                    margin-bottom: 1pt !important;
+                @elseif($labelSize === '50x30')
+                    font-size: 7.5pt !important;
+                    line-height: 1.15 !important;
+                    max-height: 17.5pt !important;
+                    margin-bottom: 1.5pt !important;
+                @else
+                    font-size: 9pt !important;
+                    line-height: 1.2 !important;
+                    margin-bottom: 3pt !important;
+                @endif
+            }
+            .barcode-label-svg svg {
+                @if($barcodeType === 'qrcode')
+                    @if($labelSize === '40x20')
+                        width: 26px !important;
+                        height: 26px !important;
+                    @elseif($labelSize === '50x30')
+                        width: 38px !important;
+                        height: 38px !important;
+                    @else
+                        width: 64px !important;
+                        height: 64px !important;
+                    @endif
+                @else
+                    width: 100% !important;
+                    @if($labelSize === '40x20')
+                        height: 18px !important;
+                    @elseif($labelSize === '50x30')
+                        height: 26px !important;
+                    @else
+                        height: 38px !important;
+                    @endif
+                @endif
+            }
+            .barcode-label-code {
+                color: #000 !important;
+                @if($labelSize === '40x20')
+                    font-size: 5.5pt !important;
+                    line-height: 1.05 !important;
+                    margin-top: 1pt !important;
+                @elseif($labelSize === '50x30')
+                    font-size: 6.5pt !important;
+                    line-height: 1.1 !important;
+                    margin-top: 1pt !important;
+                @else
+                    font-size: 8pt !important;
+                    line-height: 1.2 !important;
+                    margin-top: 2pt !important;
+                @endif
+            }
+            .barcode-label-price {
+                color: #000 !important;
+                font-weight: 800 !important;
+                @if($labelSize === '40x20')
+                    font-size: 7pt !important;
+                    line-height: 1.1 !important;
+                    margin-top: 1pt !important;
+                @elseif($labelSize === '50x30')
+                    font-size: 8pt !important;
+                    line-height: 1.15 !important;
+                    margin-top: 1pt !important;
+                @else
+                    font-size: 10pt !important;
+                    line-height: 1.2 !important;
+                    margin-top: 2pt !important;
+                @endif
             }
             .no-print {
                 display: none !important;
@@ -194,30 +336,30 @@
                         default => '10.5px',
                     };
                 @endphp
-                <div class="grid {{ $gridCols }} gap-3">
+                <div class="barcode-grid grid {{ $gridCols }} gap-3">
                     @foreach($queue as $item)
                         @php $svg = $this->renderBarcodeSvg($item['code']); @endphp
                         @for($i = 0; $i < (int) $item['qty']; $i++)
-                            <div class="border border-dashed border-gray-300 rounded-md p-2 text-center bg-white text-black flex flex-col justify-between"
+                            <div class="barcode-label-card border border-dashed border-gray-300 rounded-md p-2 text-center bg-white text-black flex flex-col justify-between"
                                  style="{{ $cardStyle }}">
                                 @if($showName)
-                                    <div style="font-size: {{ $nameFontSize }}; line-height: 1.25; font-weight: 700; color: #000; word-break: break-word; overflow-wrap: anywhere; white-space: normal; width: 100%; margin-bottom: 4px;">
+                                    <div class="barcode-label-name" style="font-size: {{ $nameFontSize }}; line-height: 1.25; font-weight: 700; color: #000; word-break: normal; overflow-wrap: break-word; white-space: normal; width: 100%; margin-bottom: 4px;">
                                         {{ $item['product_name'] }}
                                     </div>
                                 @endif
 
-                                <div style="{{ $barcodeType === 'qrcode' ? 'padding: 4px 0;' : 'padding: 0 4px;' }}">
+                                <div class="barcode-label-svg" style="{{ $barcodeType === 'qrcode' ? 'padding: 2px 0;' : 'padding: 0 4px; width: 100%;' }}">
                                     {!! $svg !!}
                                 </div>
 
                                 @if($showCode)
-                                    <div class="text-[10px] font-mono tracking-wider text-gray-800 mt-0.5">
+                                    <div class="barcode-label-code text-[10px] font-mono tracking-wider text-gray-800 mt-0.5">
                                         {{ $item['code'] }}
                                     </div>
                                 @endif
 
                                 @if($showPrice)
-                                    <div class="text-xs font-extrabold text-black mt-0.5">
+                                    <div class="barcode-label-price text-xs font-extrabold text-black mt-0.5">
                                         Rp {{ number_format((float) $item['price'], 0, ',', '.') }}
                                     </div>
                                 @endif
