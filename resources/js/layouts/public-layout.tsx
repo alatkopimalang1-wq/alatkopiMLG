@@ -316,7 +316,7 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({
                 title={
                     title
                         ? `${title} — Alat Kopi Malang`
-                        : 'Alat Kopi Malang — Close to Every Brew'
+                        : 'Alat Kopi Malang — All Your Brewing Essentials in One Place'
                 }
             >
                 <link
@@ -1124,7 +1124,8 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({
                 const brandTitle =
                     footerSettings.brand_title || 'Alat Kopi Malang';
                 const brandTagline =
-                    footerSettings.brand_tagline || 'Close to Every Brew';
+                    footerSettings.brand_tagline ||
+                    'All Your Brewing Essentials in One Place';
                 const brandDescription =
                     footerSettings.brand_description ||
                     'Roastery kopi artisan yang berfokus pada eksplorasi biji kopi Gunung Kawi, proses klasik, eksperimental, dan co-fermentasi presisi di Malang, Jawa Timur.';

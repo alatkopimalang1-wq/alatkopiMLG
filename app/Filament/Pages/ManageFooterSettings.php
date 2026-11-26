@@ -43,7 +43,7 @@ class ManageFooterSettings extends Page
         return [
             // Kolom 1: Brand Info & Showroom
             'brand_title' => 'Alat Kopi Malang',
-            'brand_tagline' => 'Close to Every Brew',
+            'brand_tagline' => 'All Your Brewing Essentials in One Place',
             'brand_description' => 'Roastery kopi artisan yang berfokus pada eksplorasi biji kopi Gunung Kawi, proses klasik, eksperimental, dan co-fermentasi presisi di Malang, Jawa Timur.',
             'brand_logo' => null,
             'showroom_label' => 'Roastery & Showroom:',
@@ -175,7 +175,7 @@ class ManageFooterSettings extends Page
                                 ->placeholder('Alat Kopi Malang'),
                             TextInput::make('brand_tagline')
                                 ->label('Slogan / Tagline')
-                                ->placeholder('Close to Every Brew'),
+                                ->placeholder('All Your Brewing Essentials in One Place'),
                             FileUpload::make('brand_logo')
                                 ->label('Logo Khusus Footer (Opsional)')
                                 ->disk('public')
