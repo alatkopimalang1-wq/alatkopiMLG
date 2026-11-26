@@ -592,11 +592,6 @@ export default function ProductShow({
                                 >
                                     {formatRupiah(selectedVariant.price)}
                                 </span>
-                                {hasSelectableVariants && (
-                                    <span className="text-sm font-medium text-brand-600 sm:text-sm md:text-base">
-                                        / {selectedVariant.label}
-                                    </span>
-                                )}
                             </div>
                         </div>
 
