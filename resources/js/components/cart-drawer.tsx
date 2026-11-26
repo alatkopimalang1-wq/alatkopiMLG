@@ -18,18 +18,30 @@ export const CartDrawer: React.FC = () => {
         removeItem,
     } = useCart();
 
-    const payableSubtotal = items.reduce((sum, item) => {
-        const lineTotal = (Number(item.variant.price) || 0) * item.quantity;
-        const isPreorder = Boolean(
-            item.product.is_preorder ||
-                item.product.stock_status === 'pre_order',
-        );
-        const minDp = item.product.preorder_dp_percent ?? 100;
-        const dpPercent = isPreorder
-            ? Math.max(minDp, item.preorderDpPercent ?? minDp)
-            : 100;
-        return sum + Math.round((lineTotal * dpPercent) / 100);
-    }, 0);
+    const { regularSubtotal, preorderDpSubtotal } = items.reduce(
+        (acc, item) => {
+            const lineTotal = (Number(item.variant.price) || 0) * item.quantity;
+            const isPreorder = Boolean(
+                item.product.is_preorder ||
+                    item.product.stock_status === 'pre_order',
+            );
+            if (isPreorder) {
+                const minDp = item.product.preorder_dp_percent ?? 100;
+                const dpPercent = Math.max(
+                    minDp,
+                    item.preorderDpPercent ?? minDp,
+                );
+                acc.preorderDpSubtotal += Math.round(
+                    (lineTotal * dpPercent) / 100,
+                );
+            } else {
+                acc.regularSubtotal += lineTotal;
+            }
+            return acc;
+        },
+        { regularSubtotal: 0, preorderDpSubtotal: 0 },
+    );
+    const payableSubtotal = regularSubtotal + preorderDpSubtotal;
     const hasPreorderDp = items.some((item) => {
         const isPreorder = Boolean(
             item.product.is_preorder ||
@@ -318,13 +330,39 @@ export const CartDrawer: React.FC = () => {
                                     </span>
                                 </div>
                                 {hasPreorderDp && (
-                                    <div className="flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs">
-                                        <span className="font-bold text-amber-800">
-                                            Bayar DP Pre-Order
-                                        </span>
-                                        <span className="font-extrabold text-amber-900">
-                                            {formatRupiah(payableSubtotal)}
-                                        </span>
+                                    <div className="space-y-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs">
+                                        {regularSubtotal > 0 && (
+                                            <div className="flex items-center justify-between text-brand-700">
+                                                <span>Produk Reguler</span>
+                                                <span className="font-semibold">
+                                                    {formatRupiah(
+                                                        regularSubtotal,
+                                                    )}
+                                                </span>
+                                            </div>
+                                        )}
+                                        <div className="flex items-center justify-between">
+                                            <span className="font-bold text-amber-800">
+                                                Bayar DP Pre-Order
+                                            </span>
+                                            <span className="font-extrabold text-amber-900">
+                                                {formatRupiah(
+                                                    preorderDpSubtotal,
+                                                )}
+                                            </span>
+                                        </div>
+                                        {regularSubtotal > 0 && (
+                                            <div className="flex items-center justify-between border-t border-amber-200/80 pt-1 text-brand-950">
+                                                <span className="font-bold">
+                                                    Total Bayar Sekarang
+                                                </span>
+                                                <span className="font-extrabold">
+                                                    {formatRupiah(
+                                                        payableSubtotal,
+                                                    )}
+                                                </span>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                                 <p className="text-[11px] leading-tight text-brand-500">

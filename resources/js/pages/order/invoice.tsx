@@ -421,6 +421,9 @@ export default function OrderInvoicePage({ order, settings }: InvoiceProps) {
                             Number(
                                 order.payment_details?.remaining_balance ?? 0,
                             ) > 0 && (() => {
+                                const regularSub = Number(
+                                    order.payment_details.regular_subtotal ?? 0,
+                                );
                                 const dpPayable = Number(
                                     order.payment_details.dp_payable_subtotal ??
                                         0,
@@ -429,17 +432,28 @@ export default function OrderInvoicePage({ order, settings }: InvoiceProps) {
                                     order.payment_details.remaining_balance ??
                                         0,
                                 );
+                                const preorderFull = Number(
+                                    order.payment_details
+                                        .preorder_full_subtotal ??
+                                        dpPayable + remaining,
+                                );
                                 const dpPct =
                                     order.payment_details?.dp_percent ??
-                                    (order.subtotal > 0
+                                    (preorderFull > 0
                                         ? Math.round(
-                                              (dpPayable /
-                                                  Number(order.subtotal)) *
-                                                  100,
+                                              (dpPayable / preorderFull) * 100,
                                           )
                                         : null);
                                 return (
                                     <>
+                                        {regularSub > 0 && (
+                                            <div className="flex justify-between text-brand-600">
+                                                <span>Produk Reguler</span>
+                                                <span className="font-semibold text-brand-950">
+                                                    {formatRupiah(regularSub)}
+                                                </span>
+                                            </div>
+                                        )}
                                         <div className="flex justify-between text-amber-700">
                                             <span className="font-semibold">
                                                 Pembayaran DP Pre-Order

@@ -63,7 +63,9 @@ class CheckoutController extends Controller
         $storeAddress = $settings['pickup_store_address'] ?? ($settings['address'] ?? 'Ruko Tlogomas Square Kav. 34, Jl. Raya Tlogomas, Lowokwaru, Kota Malang, Jawa Timur 65144');
 
         $subtotal = 0;
-        $payableSubtotal = 0;
+        $regularSubtotal = 0;
+        $preorderFullSubtotal = 0;
+        $preorderDpSubtotal = 0;
         $hasPreorder = false;
         $dpPercents = [];
         $totalWeightGrams = 0;
@@ -101,8 +103,11 @@ class CheckoutController extends Controller
             $dpPercent = $isPreorder ? max($minDpPercent, $requestedDpPercent) : 100;
             if ($isPreorder) {
                 $dpPercents[] = $dpPercent;
+                $preorderFullSubtotal += $lineTotal;
+                $preorderDpSubtotal += round($lineTotal * ($dpPercent / 100));
+            } else {
+                $regularSubtotal += $lineTotal;
             }
-            $payableSubtotal += round($lineTotal * ($dpPercent / 100));
             $hasPreorder = $hasPreorder || $isPreorder;
 
             $totalWeightGrams += ($variant->weight_grams ?: 200) * $qty;
@@ -191,6 +196,7 @@ class CheckoutController extends Controller
             $uniqueCode = rand(101, 899);
         }
 
+        $payableSubtotal = $regularSubtotal + $preorderDpSubtotal;
         $totalAmount = $payableSubtotal + $shippingCost + $uniqueCode;
 
         // Payment Channel Info Snapshot
@@ -254,10 +260,12 @@ class CheckoutController extends Controller
             'customer_latitude' => $validated['customer']['latitude'] ?? null,
             'customer_longitude' => $validated['customer']['longitude'] ?? null,
             'is_preorder' => $hasPreorder,
+            'regular_subtotal' => $regularSubtotal,
+            'preorder_full_subtotal' => $preorderFullSubtotal,
             'dp_percent' => count(array_unique($dpPercents)) === 1 ? $dpPercents[0] : null,
             'dp_percents' => array_values(array_unique($dpPercents)),
-            'dp_payable_subtotal' => $payableSubtotal,
-            'remaining_balance' => max(0, $subtotal - $payableSubtotal),
+            'dp_payable_subtotal' => $preorderDpSubtotal,
+            'remaining_balance' => max(0, $preorderFullSubtotal - $preorderDpSubtotal),
         ];
 
         $order = DB::transaction(function () use (

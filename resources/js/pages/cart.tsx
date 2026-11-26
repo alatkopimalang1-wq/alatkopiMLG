@@ -438,19 +438,38 @@ export default function CartPage({
     const isFreeShipping = subtotal >= freeShippingMin;
     const shortageForFreeShipping = Math.max(0, freeShippingMin - subtotal);
 
-    // Pre-order DP calculation
-    const payableSubtotal = items.reduce((sum, item) => {
-        const lineTotal = (Number(item.variant.price) || 0) * item.quantity;
-        const isPreorder = Boolean(
-            item.product.is_preorder ||
-                item.product.stock_status === 'pre_order',
+    // Pre-order DP calculation (potongan DP hanya untuk produk Pre-Order)
+    const { regularSubtotal, preorderFullSubtotal, preorderDpSubtotal } =
+        items.reduce(
+            (acc, item) => {
+                const lineTotal =
+                    (Number(item.variant.price) || 0) * item.quantity;
+                const isPreorder = Boolean(
+                    item.product.is_preorder ||
+                        item.product.stock_status === 'pre_order',
+                );
+                if (isPreorder) {
+                    const minDp = item.product.preorder_dp_percent ?? 100;
+                    const dpPercent = Math.max(
+                        minDp,
+                        item.preorderDpPercent ?? minDp,
+                    );
+                    acc.preorderFullSubtotal += lineTotal;
+                    acc.preorderDpSubtotal += Math.round(
+                        (lineTotal * dpPercent) / 100,
+                    );
+                } else {
+                    acc.regularSubtotal += lineTotal;
+                }
+                return acc;
+            },
+            {
+                regularSubtotal: 0,
+                preorderFullSubtotal: 0,
+                preorderDpSubtotal: 0,
+            },
         );
-        const minDp = item.product.preorder_dp_percent ?? 100;
-        const dpPercent = isPreorder
-            ? Math.max(minDp, item.preorderDpPercent ?? minDp)
-            : 100;
-        return sum + Math.round((lineTotal * dpPercent) / 100);
-    }, 0);
+    const payableSubtotal = regularSubtotal + preorderDpSubtotal;
     const hasPreorderDp = items.some((item) => {
         const isPreorder = Boolean(
             item.product.is_preorder ||
@@ -461,7 +480,10 @@ export default function CartPage({
         const chosenDp = Math.max(minDp, item.preorderDpPercent ?? minDp);
         return chosenDp < 100;
     });
-    const remainingBalance = Math.max(0, subtotal - payableSubtotal);
+    const remainingBalance = Math.max(
+        0,
+        preorderFullSubtotal - preorderDpSubtotal,
+    );
 
     // Grand total
     const grandTotal = payableSubtotal + shippingCost;
@@ -1873,13 +1895,23 @@ export default function CartPage({
                                     </div>
                                     {hasPreorderDp && (
                                         <>
+                                            {regularSubtotal > 0 && (
+                                                <div className="flex items-center justify-between text-xs text-brand-600">
+                                                    <span>Produk Reguler</span>
+                                                    <span className="font-semibold text-brand-950">
+                                                        {formatRupiah(
+                                                            regularSubtotal,
+                                                        )}
+                                                    </span>
+                                                </div>
+                                            )}
                                             <div className="flex items-center justify-between text-xs text-amber-700">
                                                 <span className="font-semibold">
                                                     Pembayaran DP Pre-Order
                                                 </span>
                                                 <span className="font-bold">
                                                     {formatRupiah(
-                                                        payableSubtotal,
+                                                        preorderDpSubtotal,
                                                     )}
                                                 </span>
                                             </div>
