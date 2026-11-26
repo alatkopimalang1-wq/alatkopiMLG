@@ -710,6 +710,17 @@ export default function ProductShow({
                                             </span>
                                         )}
                                     </div>
+                                    <div className="pt-0.5">
+                                        <Link
+                                            href="/syarat-ketentuan-preorder"
+                                            className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-800 underline hover:text-amber-950"
+                                        >
+                                            <span>
+                                                Baca Syarat &amp; Ketentuan
+                                                Pre-Order
+                                            </span>
+                                        </Link>
+                                    </div>
                                 </div>
                             )}
                         </div>

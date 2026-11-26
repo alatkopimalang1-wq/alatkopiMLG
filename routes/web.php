@@ -85,6 +85,7 @@ Route::post('/api/shipping/pickup', [ShippingController::class, 'requestPickup']
 Route::post('/api/webhooks/biteship', [ShippingController::class, 'webhook'])->name('api.shipping.webhook.biteship');
 
 Route::get('/legal/{type?}', [ContentController::class, 'legal'])->name('legal');
+Route::get('/syarat-ketentuan-preorder', [ContentController::class, 'preorderTerms'])->name('preorder-terms');
 
 // Public English Routes (Prefix: /en)
 Route::prefix('en')->as('en.')->group(function () {
@@ -125,11 +126,12 @@ Route::prefix('en')->as('en.')->group(function () {
     Route::post('/order/{orderNumber}/cancel', [CheckoutController::class, 'cancel'])->name('orders.cancel.en');
     Route::get('/track-order', [CheckoutController::class, 'track'])->name('orders.track');
     Route::get('/legal/{type?}', [ContentController::class, 'legal'])->name('legal');
+    Route::get('/preorder-terms', [ContentController::class, 'preorderTerms'])->name('preorder-terms.en');
 });
 
 // Dynamic Custom Pages (Format /kunjungi) via Direct Slug
 Route::get('/{slug}', [ContentController::class, 'customVisit'])
-    ->where('slug', '^(?!admin|pos|api|auth|akun|account|dashboard|settings|storage|build|en|shop|cybr|byob|kategori|categories|tentang|wholesale|jasa-roasting|roasting|training-barista|kursus-barista|barista-training|kunjungi|halaman|booking-tempat|booking|sewa-tempat|coffee-catering|catering|catering-kopi|panduan-seduh|resep-seduh-v60-japanese-ice|blog|acara|video|reels|keranjang|checkout|pesanan|lacak-pesanan|legal|sitemap\.xml)[a-zA-Z0-9\-_]+$')
+    ->where('slug', '^(?!admin|pos|api|auth|akun|account|dashboard|settings|storage|build|en|shop|cybr|byob|kategori|categories|tentang|wholesale|jasa-roasting|roasting|training-barista|kursus-barista|barista-training|kunjungi|halaman|booking-tempat|booking|sewa-tempat|coffee-catering|catering|catering-kopi|panduan-seduh|resep-seduh-v60-japanese-ice|blog|acara|video|reels|keranjang|checkout|pesanan|lacak-pesanan|legal|syarat-ketentuan-preorder|sitemap\.xml)[a-zA-Z0-9\-_]+$')
     ->name('visit.direct');
 
 // XML Sitemap

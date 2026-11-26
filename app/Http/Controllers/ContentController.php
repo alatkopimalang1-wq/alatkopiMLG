@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Filament\Pages\ManagePreorderTerms;
 use App\Models\BrewGuide;
 use App\Models\Event;
 use App\Models\Post;
@@ -17,6 +18,21 @@ class ContentController extends Controller
     {
         return Inertia::render('about', [
             'page' => Setting::get('page_about', []),
+        ]);
+    }
+
+    public function preorderTerms(): Response
+    {
+        $defaults = ManagePreorderTerms::defaultSettings();
+        $saved = Setting::get('page_preorder_terms', []);
+        $page = array_merge($defaults, is_array($saved) ? $saved : []);
+
+        if (($page['is_active'] ?? true) === false) {
+            abort(404);
+        }
+
+        return Inertia::render('preorder-terms', [
+            'page' => $page,
         ]);
     }
 

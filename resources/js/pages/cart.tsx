@@ -1923,6 +1923,15 @@ export default function CartPage({
                                                     )}
                                                 </span>
                                             </div>
+                                            <div className="text-[11px]">
+                                                <Link
+                                                    href="/syarat-ketentuan-preorder"
+                                                    className="font-semibold text-amber-800 underline hover:text-amber-950"
+                                                >
+                                                    Syarat &amp; Ketentuan
+                                                    Pre-Order
+                                                </Link>
+                                            </div>
                                         </>
                                     )}
                                     <div className="flex items-center justify-between text-xs text-brand-600">
