@@ -143,7 +143,7 @@ export default function OrderTrackPage({ error }: TrackPageProps) {
                                         onChange={(e) =>
                                             setOrderNumber(e.target.value)
                                         }
-                                        placeholder="Contoh: SNB-261030-9A8B"
+                                        placeholder="Contoh: AKM-261030-9A8B"
                                         className="w-full rounded-xl border border-sand-200 bg-cream-50 px-4 py-3 font-mono text-sm font-bold tracking-wider text-brand-950 uppercase transition-colors focus:border-brand-700 focus:bg-white focus:outline-hidden"
                                     />
                                     <Search className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 text-brand-400" />
