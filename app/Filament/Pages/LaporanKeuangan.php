@@ -2,9 +2,16 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\CashTransfer;
 use App\Models\Order;
 use BackedEnum;
 use Carbon\Carbon;
+use Filament\Actions\Action;
+use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Collection;
@@ -67,6 +74,76 @@ class LaporanKeuangan extends Page
         $this->period = $period;
     }
 
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('transferKas')
+                ->label('Transfer Kas')
+                ->icon(Heroicon::ArrowsRightLeft)
+                ->color('primary')
+                ->modalHeading('Transfer Kas (Tunai ↔ Rekening)')
+                ->modalDescription('Catat perpindahan dana antara Kas Tunai dan Kas Rekening tanpa mengubah total seluruh kas.')
+                ->modalSubmitActionLabel('Simpan Transfer')
+                ->form([
+                    Select::make('direction')
+                        ->label('Arah Transfer')
+                        ->options([
+                            'tunai_to_rekening' => 'Kas Tunai → Kas Rekening (Setor Tunai)',
+                            'rekening_to_tunai' => 'Kas Rekening → Kas Tunai (Tarik Tunai)',
+                        ])
+                        ->default('tunai_to_rekening')
+                        ->required(),
+                    TextInput::make('amount')
+                        ->label('Nominal Transfer (Rp)')
+                        ->numeric()
+                        ->minValue(1)
+                        ->prefix('Rp')
+                        ->required(),
+                    DateTimePicker::make('transferred_at')
+                        ->label('Tanggal & Waktu Transfer')
+                        ->default(now())
+                        ->required(),
+                    Textarea::make('notes')
+                        ->label('Catatan (Opsional)')
+                        ->placeholder('Contoh: Setor uang tunai kasir ke BCA')
+                        ->rows(2)
+                        ->maxLength(255),
+                ])
+                ->action(function (array $data): void {
+                    $direction = (string) ($data['direction'] ?? 'tunai_to_rekening');
+                    $from = $direction === 'rekening_to_tunai' ? 'rekening' : 'tunai';
+                    $to = $from === 'tunai' ? 'rekening' : 'tunai';
+
+                    CashTransfer::create([
+                        'from_account' => $from,
+                        'to_account' => $to,
+                        'amount' => max(0, (float) ($data['amount'] ?? 0)),
+                        'notes' => ! empty($data['notes']) ? trim((string) $data['notes']) : null,
+                        'transferred_at' => $data['transferred_at'] ?? now(),
+                        'user_id' => auth()->id(),
+                    ]);
+
+                    Notification::make()
+                        ->title('Transfer kas berhasil dicatat')
+                        ->success()
+                        ->send();
+                }),
+        ];
+    }
+
+    public function deleteTransfer(int $id): void
+    {
+        $transfer = CashTransfer::find($id);
+        if ($transfer) {
+            $transfer->delete();
+
+            Notification::make()
+                ->title('Riwayat transfer kas dihapus')
+                ->success()
+                ->send();
+        }
+    }
+
     /**
      * Resolve period date range, or null for all-time.
      *
@@ -99,7 +176,7 @@ class LaporanKeuangan extends Page
         /** @var Collection<int, Order> $orders */
         $orders = $query->latest('created_at')->get();
 
-        $rekeningTotal = 0.0;
+        $rekeningSales = 0.0;
         $rekeningCount = 0;
         $rekeningByChannel = [
             'pos' => 0.0,
@@ -107,7 +184,7 @@ class LaporanKeuangan extends Page
             'marketplace' => 0.0,
         ];
 
-        $tunaiTotal = 0.0;
+        $tunaiSales = 0.0;
         $tunaiCount = 0;
         $tunaiByChannel = [
             'pos' => 0.0,
@@ -142,11 +219,11 @@ class LaporanKeuangan extends Page
             }
 
             if ($isCash) {
-                $tunaiTotal += $amount;
+                $tunaiSales += $amount;
                 $tunaiCount++;
                 $tunaiByChannel[$channelKey] += $amount;
             } else {
-                $rekeningTotal += $amount;
+                $rekeningSales += $amount;
                 $rekeningCount++;
                 $rekeningByChannel[$channelKey] += $amount;
             }
@@ -183,12 +260,53 @@ class LaporanKeuangan extends Page
             ];
         }
 
+        // Cash Transfers between Tunai & Rekening
+        $transferQuery = CashTransfer::query()->with('user:id,name');
+        if ($range !== null) {
+            $transferQuery->whereBetween('transferred_at', $range);
+        }
+        $transfers = $transferQuery->latest('transferred_at')->get();
+
+        $rekeningTransferNet = 0.0;
+        $tunaiTransferNet = 0.0;
+        $transferRows = [];
+
+        foreach ($transfers as $t) {
+            $amt = (float) $t->amount;
+            if ($t->from_account === 'tunai' && $t->to_account === 'rekening') {
+                $tunaiTransferNet -= $amt;
+                $rekeningTransferNet += $amt;
+                $dirLabel = 'Tunai → Rekening';
+            } else {
+                $rekeningTransferNet -= $amt;
+                $tunaiTransferNet += $amt;
+                $dirLabel = 'Rekening → Tunai';
+            }
+
+            $transferRows[] = [
+                'id' => $t->id,
+                'transferred_at' => $t->transferred_at?->format('d/m/Y H:i') ?? '-',
+                'from_account' => $t->from_account,
+                'to_account' => $t->to_account,
+                'direction_label' => $dirLabel,
+                'amount' => $amt,
+                'notes' => $t->notes ?: '-',
+                'user_name' => $t->user?->name ?? 'Admin',
+            ];
+        }
+
+        $rekeningTotal = $rekeningSales + $rekeningTransferNet;
+        $tunaiTotal = $tunaiSales + $tunaiTransferNet;
         $filteredTotal = array_sum(array_column($rows, 'amount'));
 
         return [
+            'rekening_sales' => $rekeningSales,
+            'rekening_transfer_net' => $rekeningTransferNet,
             'rekening_total' => $rekeningTotal,
             'rekening_count' => $rekeningCount,
             'rekening_by_channel' => $rekeningByChannel,
+            'tunai_sales' => $tunaiSales,
+            'tunai_transfer_net' => $tunaiTransferNet,
             'tunai_total' => $tunaiTotal,
             'tunai_count' => $tunaiCount,
             'tunai_by_channel' => $tunaiByChannel,
@@ -196,6 +314,7 @@ class LaporanKeuangan extends Page
             'total_count' => $rekeningCount + $tunaiCount,
             'filtered_total' => $filteredTotal,
             'rows' => $rows,
+            'transfers' => $transferRows,
         ];
     }
 
