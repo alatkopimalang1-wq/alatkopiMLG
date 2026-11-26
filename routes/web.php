@@ -242,6 +242,13 @@ Route::middleware(['auth'])->group(function () {
     // Quick stock edit per variant for Admin Dashboard
     Route::post('/admin/products/variants/{variant}/quick-stock', [\App\Http\Controllers\Admin\ProductVariantStockController::class, 'update'])
         ->name('admin.products.variants.quick-stock');
+
+    // Printable Purchase Order (PO) view
+    Route::get('/admin/product-purchases/{productPurchase}/print', function (\App\Models\ProductPurchase $productPurchase) {
+        $productPurchase->load(['items.product', 'items.variant', 'user']);
+
+        return view('admin.product-purchases.print', ['po' => $productPurchase]);
+    })->name('admin.product-purchases.print');
 });
 
 // TikTok Shop & Tokopedia Marketplace Omnichannel Routes

@@ -2,6 +2,10 @@
 
 namespace App\Filament\Resources\ProductPurchases\Tables;
 
+use App\Filament\Resources\ProductPurchases\ProductPurchaseResource;
+use App\Models\ProductPurchase;
+use Filament\Actions\Action;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -11,12 +15,14 @@ class ProductPurchasesTable
     {
         return $table
             ->defaultSort('id', 'desc')
+            ->recordUrl(fn (ProductPurchase $record): string => ProductPurchaseResource::getUrl('view', ['record' => $record]))
             ->columns([
                 TextColumn::make('purchase_number')
-                    ->label('No. Pembelian')
+                    ->label('No. PO')
                     ->searchable()
                     ->sortable()
-                    ->weight('bold'),
+                    ->weight('bold')
+                    ->color('primary'),
 
                 TextColumn::make('purchase_date')
                     ->label('Tanggal')
@@ -28,31 +34,51 @@ class ProductPurchasesTable
                     ->placeholder('—')
                     ->searchable(),
 
-                TextColumn::make('items_count')
-                    ->counts('items')
-                    ->label('Item'),
+                TextColumn::make('status')
+                    ->label('Status')
+                    ->badge()
+                    ->formatStateUsing(fn (string $state): string => ProductPurchase::STATUS_LABELS[$state] ?? ucfirst($state))
+                    ->color(fn (string $state): string => match ($state) {
+                        ProductPurchase::STATUS_DIPESAN => 'warning',
+                        ProductPurchase::STATUS_DIKIRIM => 'info',
+                        ProductPurchase::STATUS_DITERIMA, ProductPurchase::STATUS_SELESAI => 'success',
+                        ProductPurchase::STATUS_RETUR => 'gray',
+                        ProductPurchase::STATUS_DIBATALKAN => 'danger',
+                        default => 'gray',
+                    }),
+
+                TextColumn::make('is_paid')
+                    ->label('Pembayaran')
+                    ->badge()
+                    ->formatStateUsing(fn (bool $state): string => $state ? 'Sudah bayar' : 'Belum bayar')
+                    ->color(fn (bool $state): string => $state ? 'success' : 'warning'),
 
                 TextColumn::make('total_qty')
-                    ->label('Total Qty')
-                    ->badge()
-                    ->color('success')
-                    ->formatStateUsing(fn ($state) => '+'.((int) $state).' pcs'),
+                    ->label('Qty')
+                    ->formatStateUsing(fn ($state) => ((int) $state).' pcs'),
 
                 TextColumn::make('total_amount')
-                    ->label('Total Pembelian')
+                    ->label('Total Tagihan')
                     ->money('IDR', locale: 'id')
-                    ->sortable(),
+                    ->sortable()
+                    ->weight('semibold'),
 
                 TextColumn::make('user.name')
-                    ->label('Dicatat Oleh')
-                    ->placeholder('Admin'),
-
-                TextColumn::make('created_at')
-                    ->label('Waktu Input')
-                    ->dateTime('d M Y, H:i')
+                    ->label('Pembelian Oleh')
+                    ->placeholder('Admin')
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([])
-            ->recordActions([]);
+            ->recordActions([
+                Action::make('lihat')
+                    ->label('Buka PO')
+                    ->icon(Heroicon::Eye)
+                    ->url(fn (ProductPurchase $record): string => ProductPurchaseResource::getUrl('view', ['record' => $record])),
+                Action::make('cetak')
+                    ->label('Cetak')
+                    ->icon(Heroicon::Printer)
+                    ->color('gray')
+                    ->url(fn (ProductPurchase $record): string => route('admin.product-purchases.print', $record), shouldOpenInNewTab: true),
+            ]);
     }
 }

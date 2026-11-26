@@ -4,6 +4,7 @@ namespace App\Filament\Resources\ProductPurchases;
 
 use App\Filament\Resources\ProductPurchases\Pages\CreateProductPurchase;
 use App\Filament\Resources\ProductPurchases\Pages\ListProductPurchases;
+use App\Filament\Resources\ProductPurchases\Pages\ViewProductPurchase;
 use App\Filament\Resources\ProductPurchases\Schemas\ProductPurchaseForm;
 use App\Filament\Resources\ProductPurchases\Tables\ProductPurchasesTable;
 use App\Models\ProductPurchase;
@@ -57,6 +58,7 @@ class ProductPurchaseResource extends Resource
         return [
             'index' => ListProductPurchases::route('/'),
             'create' => CreateProductPurchase::route('/create'),
+            'view' => ViewProductPurchase::route('/{record}'),
         ];
     }
 }

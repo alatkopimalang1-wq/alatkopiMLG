@@ -11,6 +11,7 @@ use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -22,36 +23,90 @@ class ProductPurchaseForm
         return $schema
             ->columns(1)
             ->components([
-                Section::make('Informasi Pembelian Produk')
-                    ->description('Catat pembelian stok masuk untuk produk Alat Kopi. Stok varian & produk akan otomatis bertambah saat pembelian disimpan.')
+                Section::make('Informasi Purchase Order (PO)')
+                    ->description('Buat PO pembelian produk Alat Kopi. Jika status dipilih Diterima / Selesai, stok produk akan langsung bertambah.')
                     ->columnSpanFull()
                     ->schema([
-                        Grid::make(3)->schema([
+                        Grid::make(4)->schema([
                             TextInput::make('purchase_number')
-                                ->label('Nomor Pembelian')
+                                ->label('Nomor PO')
                                 ->default(fn (): string => ProductPurchase::generatePurchaseNumber())
                                 ->readOnly()
                                 ->required(),
+
                             DatePicker::make('purchase_date')
-                                ->label('Tanggal Pembelian')
+                                ->label('Tanggal PO')
                                 ->default(now())
                                 ->required(),
-                            TextInput::make('supplier_name')
-                                ->label('Nama Supplier / Distributor (Opsional)')
-                                ->placeholder('e.g. PT Sukses Jaya / Distributor Hario'),
+
+                            Select::make('status')
+                                ->label('Status PO')
+                                ->options([
+                                    ProductPurchase::STATUS_DIPESAN => 'Dipesan (Butuh Diproses)',
+                                    ProductPurchase::STATUS_DIKIRIM => 'Dikirim (Butuh Diproses)',
+                                    ProductPurchase::STATUS_DITERIMA => 'Diterima (Tambah Stok Sekarang)',
+                                    ProductPurchase::STATUS_SELESAI => 'Selesai (Tambah Stok Sekarang)',
+                                ])
+                                ->default(ProductPurchase::STATUS_DITERIMA)
+                                ->required(),
+
+                            DatePicker::make('due_date')
+                                ->label('Jatuh Tempo (Opsional)'),
                         ]),
-                        Textarea::make('notes')
-                            ->label('Catatan Pembelian (Opsional)')
-                            ->rows(2)
-                            ->placeholder('Catatan nomor faktur supplier atau keterangan tambahan...'),
+
+                        Grid::make(3)->schema([
+                            Toggle::make('is_paid')
+                                ->label('Status Pembayaran: Sudah Bayar')
+                                ->default(false)
+                                ->inline(false),
+
+                            TextInput::make('discount_amount')
+                                ->label('Diskon Keseluruhan PO (Rp)')
+                                ->numeric()
+                                ->prefix('Rp')
+                                ->default(0)
+                                ->minValue(0),
+
+                            Textarea::make('notes')
+                                ->label('Catatan PO (Opsional)')
+                                ->rows(1)
+                                ->placeholder('Catatan internal atau nomor referensi...'),
+                        ]),
                     ]),
 
-                Section::make('Daftar Produk Alat Kopi yang Dibeli')
+                Section::make('Informasi Supplier')
+                    ->collapsible()
+                    ->columnSpanFull()
+                    ->schema([
+                        Grid::make(3)->schema([
+                            TextInput::make('supplier_name')
+                                ->label('Nama Supplier')
+                                ->placeholder('e.g. GUERERRO / PT Sukses Jaya'),
+                            TextInput::make('supplier_phone')
+                                ->label('Telpon')
+                                ->placeholder('08xxx'),
+                            TextInput::make('supplier_contact')
+                                ->label('Personal Yg Dihubungi')
+                                ->placeholder('Nama PIC supplier'),
+                        ]),
+                        Grid::make(2)->schema([
+                            TextInput::make('supplier_email')
+                                ->label('Email Supplier')
+                                ->email(),
+                            TextInput::make('supplier_address')
+                                ->label('Alamat Supplier'),
+                        ]),
+                        Textarea::make('supplier_notes')
+                            ->label('Catatan Supplier')
+                            ->rows(2),
+                    ]),
+
+                Section::make('Produk Pesanan (Alat Kopi)')
                     ->columnSpanFull()
                     ->schema([
                         Repeater::make('items')
                             ->relationship('items')
-                            ->label('Item Pembelian')
+                            ->label('Daftar Produk')
                             ->minItems(1)
                             ->defaultItems(1)
                             ->reorderable(false)
@@ -124,9 +179,9 @@ class ProductPurchaseForm
                                         ->columnSpan(2),
                                 ]),
 
-                                Grid::make(3)->schema([
+                                Grid::make(4)->schema([
                                     TextInput::make('quantity')
-                                        ->label('Jumlah Tambah Qty (Pcs)')
+                                        ->label('Qty (Pcs)')
                                         ->numeric()
                                         ->minValue(1)
                                         ->default(1)
@@ -134,12 +189,13 @@ class ProductPurchaseForm
                                         ->afterStateUpdated(function ($state, callable $get, callable $set) {
                                             $qty = max(0, (int) $state);
                                             $cost = max(0, (float) ($get('unit_cost') ?? 0));
-                                            $set('subtotal', $qty * $cost);
+                                            $disc = max(0, (float) ($get('discount_amount') ?? 0));
+                                            $set('subtotal', max(0, ($qty * $cost) - $disc));
                                         })
                                         ->required(),
 
                                     TextInput::make('unit_cost')
-                                        ->label('Harga Beli / HPP Satuan (Rp)')
+                                        ->label('Harga Beli / HPP (Rp)')
                                         ->numeric()
                                         ->prefix('Rp')
                                         ->default(0)
@@ -147,21 +203,37 @@ class ProductPurchaseForm
                                         ->afterStateUpdated(function ($state, callable $get, callable $set) {
                                             $qty = max(0, (int) ($get('quantity') ?? 0));
                                             $cost = max(0, (float) $state);
-                                            $set('subtotal', $qty * $cost);
+                                            $disc = max(0, (float) ($get('discount_amount') ?? 0));
+                                            $set('subtotal', max(0, ($qty * $cost) - $disc));
+                                        }),
+
+                                    TextInput::make('discount_amount')
+                                        ->label('Diskon Item (Rp)')
+                                        ->numeric()
+                                        ->prefix('Rp')
+                                        ->default(0)
+                                        ->minValue(0)
+                                        ->live(onBlur: true)
+                                        ->afterStateUpdated(function ($state, callable $get, callable $set) {
+                                            $qty = max(0, (int) ($get('quantity') ?? 0));
+                                            $cost = max(0, (float) ($get('unit_cost') ?? 0));
+                                            $disc = max(0, (float) $state);
+                                            $set('subtotal', max(0, ($qty * $cost) - $disc));
                                         }),
 
                                     TextInput::make('subtotal')
-                                        ->label('Subtotal Pembelian (Rp)')
+                                        ->label('Total Harga (Rp)')
                                         ->numeric()
                                         ->prefix('Rp')
                                         ->readOnly()
                                         ->default(0),
                                 ]),
                             ])
-                            ->addActionLabel('+ Tambah Produk Dibeli')
+                            ->addActionLabel('+ Tambah Produk Pesanan')
                             ->columnSpanFull(),
 
                         Hidden::make('total_qty')->default(0),
+                        Hidden::make('subtotal')->default(0),
                         Hidden::make('total_amount')->default(0),
                     ]),
             ]);

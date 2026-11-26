@@ -13,12 +13,14 @@ class ProductPurchaseItem extends Model
         'product_variant_id',
         'quantity',
         'unit_cost',
+        'discount_amount',
         'subtotal',
     ];
 
     protected $casts = [
         'quantity' => 'integer',
         'unit_cost' => 'float',
+        'discount_amount' => 'float',
         'subtotal' => 'float',
     ];
 
