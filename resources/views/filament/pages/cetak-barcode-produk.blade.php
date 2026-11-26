@@ -147,17 +147,17 @@
                 color: #000 !important;
                 font-weight: 800 !important;
                 @if($labelSize === '40x20')
-                    font-size: 7pt !important;
+                    font-size: 9pt !important;
                     line-height: 1.1 !important;
-                    margin-top: 1pt !important;
+                    margin-top: 1.5pt !important;
                 @elseif($labelSize === '50x30')
-                    font-size: 8pt !important;
+                    font-size: 11.5pt !important;
                     line-height: 1.15 !important;
-                    margin-top: 1pt !important;
-                @else
-                    font-size: 10pt !important;
-                    line-height: 1.2 !important;
                     margin-top: 2pt !important;
+                @else
+                    font-size: 13pt !important;
+                    line-height: 1.2 !important;
+                    margin-top: 3pt !important;
                 @endif
             }
             .no-print {
@@ -361,7 +361,7 @@
                                 @endif
 
                                 @if($showPrice)
-                                    <div class="barcode-label-price text-xs font-extrabold text-black mt-0.5">
+                                    <div class="barcode-label-price text-base font-extrabold text-black mt-1" style="font-size: 15px; font-weight: 800;">
                                         Rp {{ number_format((float) $item['price'], 0, ',', '.') }}
                                     </div>
                                 @endif
