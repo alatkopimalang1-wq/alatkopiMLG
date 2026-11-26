@@ -328,6 +328,8 @@ class CheckoutController extends Controller
                 $order->items()->create($line);
             }
 
+            $order->deductStockIfNeeded();
+
             return $order;
         });
 

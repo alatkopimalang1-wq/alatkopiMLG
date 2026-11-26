@@ -41,7 +41,7 @@ class Order extends Model
 
             if ($order->payment_status === 'paid' && empty($details['stock_deducted_at'])) {
                 $order->deductStockIfNeeded();
-            } elseif (in_array($order->payment_status, ['refunded', 'cancelled'], true) && ! empty($details['stock_deducted_at'])) {
+            } elseif ((in_array($order->payment_status, ['refunded', 'cancelled'], true) || $order->status === 'cancelled') && ! empty($details['stock_deducted_at'])) {
                 $order->restoreStockIfDeducted();
             }
         });
