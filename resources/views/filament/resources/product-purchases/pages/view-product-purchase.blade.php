@@ -112,15 +112,25 @@
                                 @php
                                     $isDiterimaLocked = $statusKey === \App\Models\ProductPurchase::STATUS_DITERIMA
                                         && $po->status !== \App\Models\ProductPurchase::STATUS_DITERIMA;
-                                    $isDisabledOption = $isDiterimaLocked || (! $po->is_paid && in_array($statusKey, [
+                                    $isAlreadyReceived = $po->hasStockApplied() || in_array($po->status, [
+                                        \App\Models\ProductPurchase::STATUS_DITERIMA,
+                                        \App\Models\ProductPurchase::STATUS_SELESAI,
+                                        \App\Models\ProductPurchase::STATUS_RETUR,
+                                    ], true);
+                                    $isRevertingAfterReceive = $isAlreadyReceived && in_array($statusKey, [
+                                        \App\Models\ProductPurchase::STATUS_DIPESAN,
+                                        \App\Models\ProductPurchase::STATUS_DIKIRIM,
+                                    ], true);
+                                    $isUnpaidBlocked = ! $po->is_paid && in_array($statusKey, [
                                         \App\Models\ProductPurchase::STATUS_DIKIRIM,
                                         \App\Models\ProductPurchase::STATUS_DITERIMA,
                                         \App\Models\ProductPurchase::STATUS_SELESAI,
                                         \App\Models\ProductPurchase::STATUS_RETUR,
-                                    ], true));
+                                    ], true);
+                                    $isDisabledOption = $isDiterimaLocked || $isRevertingAfterReceive || $isUnpaidBlocked;
                                 @endphp
                                 <option value="{{ $statusKey }}" @disabled($isDisabledOption)>
-                                    {{ $statusLabel }}{{ $isDiterimaLocked ? ' (Via Terima Barang)' : ($isDisabledOption ? ' (Perlu Bayar)' : '') }}
+                                    {{ $statusLabel }}{{ $isDiterimaLocked ? ' (Via Terima Barang)' : ($isRevertingAfterReceive ? ' (Sudah Diterima)' : ($isUnpaidBlocked ? ' (Perlu Bayar)' : '')) }}
                                 </option>
                             @endforeach
                         </select>

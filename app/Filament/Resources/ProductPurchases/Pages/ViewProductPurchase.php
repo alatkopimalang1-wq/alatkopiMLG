@@ -91,6 +91,21 @@ class ViewProductPurchase extends ViewRecord
             return;
         }
 
+        if (
+            ($po->hasStockApplied() || in_array($po->status, [ProductPurchase::STATUS_DITERIMA, ProductPurchase::STATUS_SELESAI, ProductPurchase::STATUS_RETUR], true))
+            && in_array($value, [ProductPurchase::STATUS_DIPESAN, ProductPurchase::STATUS_DIKIRIM], true)
+        ) {
+            $this->selectedStatus = (string) $po->status;
+
+            Notification::make()
+                ->title('Tidak Dapat Mundur Status')
+                ->body('Barang sudah diterima, status tidak dapat dikembalikan ke Dipesan atau Dikirim.')
+                ->danger()
+                ->send();
+
+            return;
+        }
+
         $restrictedWhenUnpaid = [
             ProductPurchase::STATUS_DIKIRIM,
             ProductPurchase::STATUS_DITERIMA,
