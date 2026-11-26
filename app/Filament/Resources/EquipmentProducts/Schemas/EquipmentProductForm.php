@@ -203,14 +203,23 @@ class EquipmentProductForm
                 Section::make('Tautan Marketplace (Opsional)')
                     ->columnSpanFull()
                     ->schema([
-                        Grid::make(2)->schema([
-                            TextInput::make('tokopedia_url')
-                                ->label('Link Tokopedia (Opsional)')
-                                ->url(),
-                            TextInput::make('shopee_url')
-                                ->label('Link Shopee (Opsional)')
-                                ->url(),
-                        ]),
+                        Toggle::make('show_marketplace_links')
+                            ->label('Aktifkan Tautan Marketplace di Halaman Produk')
+                            ->default(true)
+                            ->live()
+                            ->inline(false)
+                            ->helperText('Jika dimatikan, tombol Tokopedia & Shopee tidak akan tampil di halaman detail produk.'),
+
+                        Grid::make(2)
+                            ->visible(fn (callable $get): bool => (bool) ($get('show_marketplace_links') ?? true))
+                            ->schema([
+                                TextInput::make('tokopedia_url')
+                                    ->label('Link Tokopedia (Opsional)')
+                                    ->url(),
+                                TextInput::make('shopee_url')
+                                    ->label('Link Shopee (Opsional)')
+                                    ->url(),
+                            ]),
                     ]),
 
                 Section::make('Varian Produk (Warna / Ukuran / Tipe)')

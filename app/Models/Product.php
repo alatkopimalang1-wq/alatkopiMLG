@@ -42,6 +42,7 @@ class Product extends Model
         'tokopedia_url',
         'shopee_url',
         'tiktok_shop_url',
+        'show_marketplace_links',
         'is_featured',
         'is_new',
         'is_preorder',
@@ -69,6 +70,7 @@ class Product extends Model
         'freshness_days' => 'integer',
         'released_at' => 'datetime',
         'is_flash_sale' => 'boolean',
+        'show_marketplace_links' => 'boolean',
     ];
 
     protected $appends = [

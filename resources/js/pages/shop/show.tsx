@@ -1031,7 +1031,8 @@ export default function ProductShow({
                         </div>
 
                         {/* Marketplace Availability Box */}
-                        <div className="rounded-2xl border border-sand-200/90 bg-[#f8f9fa] p-3.5 sm:p-5">
+                        {product.show_marketplace_links !== false && (
+                            <div className="rounded-2xl border border-sand-200/90 bg-[#f8f9fa] p-3.5 sm:p-5">
                             <div className="mb-3 flex items-center justify-between sm:mb-3.5">
                                 <div className="flex items-center gap-1.5 sm:gap-2">
                                     <svg
@@ -1085,6 +1086,7 @@ export default function ProductShow({
                                 </a>
                             </div>
                         </div>
+                        )}
 
                         {/* Technical Spec Tiles */}
                         {isEquipment ? (

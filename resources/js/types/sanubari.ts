@@ -73,6 +73,7 @@ export interface Product {
     tokopedia_url?: string | null;
     shopee_url?: string | null;
     tiktok_shop_url?: string | null;
+    show_marketplace_links?: boolean;
     status: string;
     stock?: number;
     stock_status?: 'in_stock' | 'out_of_stock' | 'pre_order' | string;
