@@ -2,6 +2,7 @@
     @php
         $stats = $this->stats;
         $variants = $this->variants;
+        $movements = $this->activeTab === 'pergerakan' ? $this->movements : collect();
         $adjustments = $this->activeTab === 'riwayat' ? $this->adjustments : collect();
         $fmt = fn ($val) => 'Rp ' . number_format((float) $val, 0, ',', '.');
     @endphp
@@ -27,18 +28,23 @@
             </div>
         </div>
 
-        {{-- Tabs: Cek Data Stok vs Riwayat Penyesuaian --}}
+        {{-- Tabs: Cek Data Stok, Riwayat Pergerakan Stok, Riwayat Penyesuaian --}}
         <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-4 py-2.5 shadow-xs">
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2">
                 <button type="button"
                         wire:click="$set('activeTab', 'stok')"
                         class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition cursor-pointer {{ $activeTab === 'stok' ? 'bg-primary-600 text-white' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800' }}">
                     Cek & Kelola Stok
                 </button>
                 <button type="button"
+                        wire:click="$set('activeTab', 'pergerakan')"
+                        class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition cursor-pointer {{ $activeTab === 'pergerakan' ? 'bg-primary-600 text-white' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800' }}">
+                    Riwayat Pergerakan Stok
+                </button>
+                <button type="button"
                         wire:click="$set('activeTab', 'riwayat')"
                         class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition cursor-pointer {{ $activeTab === 'riwayat' ? 'bg-primary-600 text-white' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800' }}">
-                    Riwayat Penyesuaian Stok
+                    Riwayat Penyesuaian Manual
                 </button>
             </div>
         </div>
@@ -173,6 +179,86 @@
                                 <tr>
                                     <td colspan="6" class="py-8 text-center text-sm text-gray-500">
                                         Tidak ada data stok produk ditemukan.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        @elseif($activeTab === 'pergerakan')
+            {{-- Riwayat Pergerakan Stok (PO Masuk, Penjualan Website, Penjualan POS, Penyesuaian Manual) --}}
+            <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-xs space-y-3">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <input
+                        type="text"
+                        wire:model.live.debounce.300ms="movementSearch"
+                        placeholder="Cari produk, varian, SKU, atau nomor referensi (PO/AKM/POS/ADJ)..."
+                        class="w-full md:max-w-md rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500"
+                    />
+
+                    <div class="flex flex-wrap items-center gap-1.5 text-xs">
+                        @foreach([
+                            'all' => 'Semua Pergerakan',
+                            'purchase' => 'Pembelian (PO)',
+                            'web_order' => 'Penjualan Website',
+                            'pos_order' => 'Penjualan POS',
+                            'adjustment' => 'Penyesuaian Manual',
+                        ] as $mKey => $mLabel)
+                            <button type="button"
+                                    wire:click="$set('movementSource', '{{ $mKey }}')"
+                                    class="px-2.5 py-1.5 rounded-lg font-medium transition cursor-pointer {{ $movementSource === $mKey ? 'bg-sky-600 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' }}">
+                                {{ $mLabel }}
+                            </button>
+                        @endforeach
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-800">
+                    <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                        <thead>
+                            <tr class="border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/60 text-gray-600 dark:text-gray-300 font-semibold">
+                                <th class="py-3 px-4">Waktu</th>
+                                <th class="py-3 px-4">No. Referensi</th>
+                                <th class="py-3 px-4">Sumber</th>
+                                <th class="py-3 px-4">Produk & Varian</th>
+                                <th class="py-3 px-4">SKU</th>
+                                <th class="py-3 px-4 text-center">Pergerakan</th>
+                                <th class="py-3 px-4">Keterangan</th>
+                                <th class="py-3 px-4">Oleh</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                            @forelse($movements as $mov)
+                                <tr class="hover:bg-gray-50/70 dark:hover:bg-gray-800/30">
+                                    <td class="py-3 px-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">{{ $mov['date'] }}</td>
+                                    <td class="py-3 px-4 font-mono font-semibold text-gray-900 dark:text-white whitespace-nowrap">{{ $mov['ref'] }}</td>
+                                    <td class="py-3 px-4 whitespace-nowrap">
+                                        @if($mov['source'] === 'purchase')
+                                            <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 text-xs font-semibold">{{ $mov['source_label'] }}</span>
+                                        @elseif($mov['source'] === 'web_order')
+                                            <span class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 text-xs font-semibold">{{ $mov['source_label'] }}</span>
+                                        @elseif($mov['source'] === 'pos_order')
+                                            <span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 text-xs font-semibold">{{ $mov['source_label'] }}</span>
+                                        @else
+                                            <span class="px-2 py-0.5 rounded bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300 text-xs font-semibold">{{ $mov['source_label'] }}</span>
+                                        @endif
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <div class="font-semibold text-gray-900 dark:text-white">{{ $mov['product_name'] }}</div>
+                                        <div class="text-xs text-gray-500">{{ $mov['variant_label'] }}</div>
+                                    </td>
+                                    <td class="py-3 px-4 font-mono text-xs text-gray-600 dark:text-gray-300">{{ $mov['sku'] }}</td>
+                                    <td class="py-3 px-4 text-center font-bold {{ $mov['qty_change'] >= 0 ? 'text-emerald-600' : 'text-rose-600' }}">
+                                        {{ $mov['qty_change'] >= 0 ? '+' . $mov['qty_change'] : $mov['qty_change'] }} pcs
+                                    </td>
+                                    <td class="py-3 px-4 text-xs text-gray-600 dark:text-gray-300">{{ $mov['notes'] }}</td>
+                                    <td class="py-3 px-4 text-gray-700 dark:text-gray-300">{{ $mov['actor'] }}</td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="8" class="py-8 text-center text-sm text-gray-500">
+                                        Belum ada riwayat pergerakan stok.
                                     </td>
                                 </tr>
                             @endforelse

@@ -2,7 +2,9 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\ProductPurchaseItem;
 use App\Models\ProductVariant;
 use App\Models\StockAdjustment;
 use BackedEnum;
@@ -31,11 +33,15 @@ class InventoriStok extends Page
 
     protected string $view = 'filament.pages.inventori-stok';
 
-    public string $activeTab = 'stok'; // stok, riwayat
+    public string $activeTab = 'stok'; // stok, pergerakan, riwayat
 
     public string $search = '';
 
     public string $stockFilter = 'all'; // all, in_stock, low_stock, out_of_stock, preorder
+
+    public string $movementSource = 'all'; // all, purchase, web_order, pos_order, adjustment
+
+    public string $movementSearch = '';
 
     public function getMaxContentWidth(): ?string
     {
@@ -103,6 +109,118 @@ class InventoriStok extends Page
             ->orderByDesc('id')
             ->limit(100)
             ->get();
+    }
+
+    public function getMovementsProperty()
+    {
+        $movements = collect();
+
+        if (in_array($this->movementSource, ['all', 'purchase'], true)) {
+            $purchaseItems = ProductPurchaseItem::query()
+                ->with(['purchase.user', 'product', 'variant'])
+                ->whereHas('purchase', fn ($q) => $q->whereNotNull('stock_applied_at'))
+                ->whereHas('product', fn ($q) => $q->where('series', 'alat-kopi'))
+                ->orderByDesc('id')
+                ->limit(100)
+                ->get();
+
+            foreach ($purchaseItems as $pi) {
+                $po = $pi->purchase;
+                $dt = $po?->stock_applied_at ?? $pi->created_at;
+                $movements->push([
+                    'timestamp' => $dt?->timestamp ?? 0,
+                    'date' => $dt?->format('d M Y, H:i') ?? '—',
+                    'ref' => $po?->purchase_number ?? 'PO',
+                    'source' => 'purchase',
+                    'source_label' => 'Pembelian (PO)',
+                    'product_name' => $pi->product?->name ?? 'Produk',
+                    'variant_label' => $pi->variant?->label ?? 'Default',
+                    'sku' => $pi->variant?->sku ?? '—',
+                    'qty_change' => abs((int) $pi->quantity),
+                    'actor' => $po?->user?->name ?? 'Admin',
+                    'notes' => $po?->supplier_name ? "Supplier: {$po->supplier_name}" : ($po?->notes ?: 'Stok masuk PO'),
+                ]);
+            }
+        }
+
+        if (in_array($this->movementSource, ['all', 'web_order', 'pos_order'], true)) {
+            $orderItems = OrderItem::query()
+                ->with(['order', 'product', 'variant'])
+                ->where(fn ($q) => $q->where('is_preorder', false)->orWhereNull('is_preorder'))
+                ->whereHas('product', fn ($q) => $q->where('series', 'alat-kopi'))
+                ->whereHas('order', fn ($q) => $q->where('payment_status', 'paid')->where('status', '!=', 'cancelled'))
+                ->orderByDesc('id')
+                ->limit(150)
+                ->get();
+
+            foreach ($orderItems as $oi) {
+                $order = $oi->order;
+                if (! $order) {
+                    continue;
+                }
+                $details = is_array($order->payment_details) ? $order->payment_details : [];
+                if (empty($details['stock_deducted_at']) && ! $order->is_pos) {
+                    continue;
+                }
+
+                $isPos = $order->is_pos;
+                $src = $isPos ? 'pos_order' : 'web_order';
+                if ($this->movementSource !== 'all' && $this->movementSource !== $src) {
+                    continue;
+                }
+
+                $dt = $order->paid_at ?? $order->created_at;
+                $movements->push([
+                    'timestamp' => $dt?->timestamp ?? 0,
+                    'date' => $dt?->format('d M Y, H:i') ?? '—',
+                    'ref' => $order->order_number,
+                    'source' => $src,
+                    'source_label' => $isPos ? 'Penjualan POS' : 'Penjualan Website',
+                    'product_name' => $oi->product_name ?: ($oi->product?->name ?? 'Produk'),
+                    'variant_label' => $oi->variant_label ?: ($oi->variant?->label ?? 'Default'),
+                    'sku' => $oi->variant?->sku ?? '—',
+                    'qty_change' => -abs((int) $oi->quantity),
+                    'actor' => $isPos ? ($details['cashier_name'] ?? 'Kasir') : ($order->customer_name ?? 'Pelanggan'),
+                    'notes' => $isPos ? 'Transaksi Kasir POS' : 'Order Website Lunas',
+                ]);
+            }
+        }
+
+        if (in_array($this->movementSource, ['all', 'adjustment'], true)) {
+            $adjs = StockAdjustment::query()
+                ->with(['product', 'variant', 'user'])
+                ->orderByDesc('id')
+                ->limit(100)
+                ->get();
+
+            foreach ($adjs as $adj) {
+                $movements->push([
+                    'timestamp' => $adj->created_at?->timestamp ?? 0,
+                    'date' => $adj->created_at?->format('d M Y, H:i') ?? '—',
+                    'ref' => $adj->adjustment_number,
+                    'source' => 'adjustment',
+                    'source_label' => 'Penyesuaian Manual',
+                    'product_name' => $adj->product?->name ?? 'Produk',
+                    'variant_label' => $adj->variant?->label ?? 'Default',
+                    'sku' => $adj->variant?->sku ?? '—',
+                    'qty_change' => (int) $adj->qty_change,
+                    'actor' => $adj->user?->name ?? 'Admin',
+                    'notes' => trim(($adj->reason ?? '').($adj->notes ? " — {$adj->notes}" : '')),
+                ]);
+            }
+        }
+
+        $q = strtolower(trim($this->movementSearch));
+        if ($q !== '') {
+            $movements = $movements->filter(function (array $m) use ($q) {
+                return str_contains(strtolower($m['product_name']), $q)
+                    || str_contains(strtolower($m['variant_label']), $q)
+                    || str_contains(strtolower($m['sku']), $q)
+                    || str_contains(strtolower($m['ref']), $q);
+            });
+        }
+
+        return $movements->sortByDesc('timestamp')->take(150)->values();
     }
 
     public function adjustStockAction(): Action
