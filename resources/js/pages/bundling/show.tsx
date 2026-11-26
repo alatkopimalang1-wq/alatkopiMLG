@@ -36,6 +36,7 @@ interface BundleSlotItemData {
     normal_price: number;
     bundle_price: number;
     is_preorder: boolean;
+    preorder_dp_percent?: number;
     stock: number;
     is_out_of_stock: boolean;
     product: Product;
@@ -138,6 +139,32 @@ export default function BundlingShow({
             return init;
         },
     );
+    const [slotDpBySlot, setSlotDpBySlot] = useState<Record<number, number>>(
+        () => {
+            const init: Record<number, number> = {};
+            bundle.slots.forEach((slot) => {
+                if (editingCartItem?.bundleItems) {
+                    const sub = editingCartItem.bundleItems.find(
+                        (b) => b.slot_id === slot.id,
+                    );
+                    if (sub && sub.selected_dp_percent) {
+                        init[slot.id] = sub.selected_dp_percent;
+                    }
+                }
+            });
+            return init;
+        },
+    );
+    const getSlotMinDp = (item?: BundleSlotItemData | null): number =>
+        item?.preorder_dp_percent ?? item?.product?.preorder_dp_percent ?? 100;
+    const getSlotChosenDp = (
+        slotId: number,
+        item?: BundleSlotItemData | null,
+    ): number => {
+        if (!item?.is_preorder) return 100;
+        const minDp = getSlotMinDp(item);
+        return Math.max(minDp, slotDpBySlot[slotId] ?? minDp);
+    };
     const [activeModalSlot, setActiveModalSlot] =
         useState<BundleSlotData | null>(null);
     const [activeProductGroup, setActiveProductGroup] = useState<{
@@ -346,14 +373,8 @@ export default function BundlingShow({
                         item.product?.is_preorder ||
                         item.product?.stock_status === 'pre_order',
                 ),
-                preorder_dp_percent:
-                    item.preorder_dp_percent ??
-                    item.product?.preorder_dp_percent ??
-                    100,
-                selected_dp_percent:
-                    item.preorder_dp_percent ??
-                    item.product?.preorder_dp_percent ??
-                    100,
+                preorder_dp_percent: getSlotMinDp(item),
+                selected_dp_percent: getSlotChosenDp(slot.id, item),
             }),
         );
 
@@ -769,6 +790,64 @@ export default function BundlingShow({
                                                             <Plus className="h-2.5 w-2.5" />
                                                         </button>
                                                     </div>
+
+                                                    {chosen.is_preorder && (
+                                                        <div
+                                                            className="mt-1.5 w-full rounded-lg border border-amber-200 bg-amber-50/90 p-1.5 text-left"
+                                                            onClick={(e) =>
+                                                                e.stopPropagation()
+                                                            }
+                                                        >
+                                                            <div className="mb-1 flex items-center justify-between text-[9px] font-bold text-amber-800">
+                                                                <span>Pre-Order · DP:</span>
+                                                                <span>Min {getSlotMinDp(chosen)}%</span>
+                                                            </div>
+                                                            <div className="grid grid-cols-2 gap-1">
+                                                                {[30, 50, 70, 100]
+                                                                    .filter(
+                                                                        (pct) =>
+                                                                            pct >=
+                                                                            getSlotMinDp(
+                                                                                chosen,
+                                                                            ),
+                                                                    )
+                                                                    .map((pct) => {
+                                                                        const active =
+                                                                            getSlotChosenDp(
+                                                                                slot.id,
+                                                                                chosen,
+                                                                            ) ===
+                                                                            pct;
+                                                                        return (
+                                                                            <button
+                                                                                key={pct}
+                                                                                type="button"
+                                                                                onClick={() =>
+                                                                                    setSlotDpBySlot(
+                                                                                        (
+                                                                                            prev,
+                                                                                        ) => ({
+                                                                                            ...prev,
+                                                                                            [slot.id]:
+                                                                                                pct,
+                                                                                        }),
+                                                                                    )
+                                                                                }
+                                                                                className={`cursor-pointer rounded px-1 py-0.5 text-[9px] font-bold transition ${
+                                                                                    active
+                                                                                        ? 'bg-amber-700 text-white'
+                                                                                        : 'border border-amber-300 bg-white text-amber-900 hover:bg-amber-100'
+                                                                                }`}
+                                                                            >
+                                                                                {pct === 100
+                                                                                    ? '100%'
+                                                                                    : `DP ${pct}%`}
+                                                                            </button>
+                                                                        );
+                                                                    })}
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                 </>
                                             ) : (
                                                 <div className="flex w-full flex-1 flex-col items-center justify-between">
@@ -912,6 +991,20 @@ export default function BundlingShow({
                                                     {chosen
                                                         ? `${chosen.product_name}${chosen.variant_label && chosen.variant_label !== 'Standard' ? ` (${chosen.variant_label})` : ''}`
                                                         : 'Belum dipilih'}
+                                                    {chosen?.is_preorder && (
+                                                        <span className="ml-1.5 inline-flex items-center rounded border border-amber-200 bg-amber-50 px-1.5 py-0.2 text-[9px] font-bold tracking-wide text-amber-800 uppercase">
+                                                            Pre-Order ·{' '}
+                                                            {getSlotChosenDp(
+                                                                slot.id,
+                                                                chosen,
+                                                            ) === 100
+                                                                ? 'Lunas 100%'
+                                                                : `DP ${getSlotChosenDp(
+                                                                      slot.id,
+                                                                      chosen,
+                                                                  )}%`}
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </div>
                                             <div className="w-16 text-center font-bold text-brand-800">
@@ -964,6 +1057,56 @@ export default function BundlingShow({
                                         </span>
                                     </div>
                                 </div>
+
+                                {(() => {
+                                    let payableNow = 0;
+                                    let hasDp = false;
+                                    bundle.slots.forEach((slot) => {
+                                        const chosen = selectedBySlot[slot.id];
+                                        if (!chosen) return;
+                                        const qtyTotal =
+                                            (slotQtyBySlot[slot.id] ?? 1) *
+                                            bundleQty;
+                                        const lineTotal =
+                                            chosen.bundle_price * qtyTotal;
+                                        if (chosen.is_preorder) {
+                                            const dpPct = getSlotChosenDp(
+                                                slot.id,
+                                                chosen,
+                                            );
+                                            payableNow += Math.round(
+                                                (lineTotal * dpPct) / 100,
+                                            );
+                                            if (dpPct < 100) hasDp = true;
+                                        } else {
+                                            payableNow += lineTotal;
+                                        }
+                                    });
+                                    if (!hasDp) return null;
+                                    return (
+                                        <div className="bg-amber-50/70 px-4 py-3 text-xs text-amber-950">
+                                            <div className="flex items-center justify-between font-bold">
+                                                <span>
+                                                    Dibayar Sekarang (Produk Ready 100% + DP Pre-Order)
+                                                </span>
+                                                <span className="text-sm font-black">
+                                                    {formatRupiah(payableNow)}
+                                                </span>
+                                            </div>
+                                            <div className="mt-0.5 flex items-center justify-between text-[11px] text-amber-800">
+                                                <span>Sisa Pelunasan Pre-Order</span>
+                                                <span className="font-semibold">
+                                                    {formatRupiah(
+                                                        Math.max(
+                                                            0,
+                                                            bundleTotal - payableNow,
+                                                        ),
+                                                    )}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
                             </div>
                         </div>
                     </div>
