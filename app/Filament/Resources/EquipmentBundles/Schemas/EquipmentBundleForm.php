@@ -7,6 +7,7 @@ use App\Models\EquipmentBundle;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -87,7 +88,7 @@ class EquipmentBundleForm
                                 .' — '.(($state['slot_type'] ?? 'selectable') === 'free' ? 'GRATIS (Bonus)' : 'Pilihan Pelanggan')
                                 .(! empty($state['is_optional']) ? ' [OPTIONAL]' : ''))
                             ->schema([
-                                Grid::make(4)->schema([
+                                Grid::make(3)->schema([
                                     TextInput::make('title')
                                         ->label('Nama Slot')
                                         ->placeholder('e.g. Pilih Mesin Espresso / Bonus Tamper')
@@ -104,12 +105,7 @@ class EquipmentBundleForm
                                         ->live()
                                         ->required(),
 
-                                    TextInput::make('quantity')
-                                        ->label('Qty')
-                                        ->numeric()
-                                        ->minValue(1)
-                                        ->default(1)
-                                        ->required(),
+                                    Hidden::make('quantity')->default(1),
                                 ]),
 
                                 Grid::make(2)->schema([

@@ -72,6 +72,15 @@ export default function BundlingShow({
         });
         return init;
     });
+    const [slotQtyBySlot, setSlotQtyBySlot] = useState<Record<number, number>>(
+        () => {
+            const init: Record<number, number> = {};
+            bundle.slots.forEach((slot) => {
+                init[slot.id] = Math.max(1, slot.quantity || 1);
+            });
+            return init;
+        },
+    );
     const [activeModalSlot, setActiveModalSlot] =
         useState<BundleSlotData | null>(null);
     const [errorMsg, setErrorMsg] = useState('');
@@ -91,9 +100,10 @@ export default function BundlingShow({
 
         bundle.slots.forEach((slot) => {
             const chosen = selectedBySlot[slot.id];
+            const sQty = slotQtyBySlot[slot.id] ?? 1;
             if (chosen) {
-                normal += chosen.normal_price * slot.quantity;
-                bundled += chosen.bundle_price * slot.quantity;
+                normal += chosen.normal_price * sQty;
+                bundled += chosen.bundle_price * sQty;
             } else if (slot.slot_type === 'selectable' && !slot.is_optional) {
                 missing.push(slot);
             }
@@ -104,7 +114,7 @@ export default function BundlingShow({
             bundleTotal: bundled * bundleQty,
             missingRequiredSlots: missing,
         };
-    }, [bundle.slots, selectedBySlot, bundleQty]);
+    }, [bundle.slots, selectedBySlot, slotQtyBySlot, bundleQty]);
 
     const handleSelectOption = (
         slot: BundleSlotData,
@@ -142,6 +152,7 @@ export default function BundlingShow({
         }
 
         chosenEntries.forEach(({ slot, item }) => {
+            const sQty = slotQtyBySlot[slot.id] ?? 1;
             const variantWithBundlePrice: ProductVariant = {
                 ...item.variant,
                 price: item.bundle_price,
@@ -153,7 +164,7 @@ export default function BundlingShow({
             addItem(
                 item.product,
                 variantWithBundlePrice,
-                slot.quantity * bundleQty,
+                sQty * bundleQty,
                 '',
                 `Paket Bundling: ${bundle.name} (${slot.title})`,
                 undefined,
@@ -174,14 +185,15 @@ export default function BundlingShow({
             .map((slot) => {
                 const chosen = selectedBySlot[slot.id];
                 if (!chosen) return null;
-                return `- ${slot.title}: ${chosen.product_name} (${chosen.variant_label}) x${slot.quantity * bundleQty} = ${chosen.bundle_price === 0 ? 'GRATIS' : formatRupiah(chosen.bundle_price * slot.quantity * bundleQty)}`;
+                const sQty = slotQtyBySlot[slot.id] ?? 1;
+                return `- ${slot.title}: ${chosen.product_name} (${chosen.variant_label}) x${sQty * bundleQty} = ${chosen.bundle_price === 0 ? 'GRATIS' : formatRupiah(chosen.bundle_price * sQty * bundleQty)}`;
             })
             .filter(Boolean)
             .join('\n');
 
         const msg = `Halo Alat Kopi Malang!\nSaya tertarik memesan paket bundling:\n*${bundle.name}* (${bundleQty}x paket)\n\nRincian pilihan:\n${lines || '(Belum dipilih)'}\n\nTotal Paket: *${formatRupiah(bundleTotal)}*`;
         return `https://wa.me/${whatsapp}?text=${encodeURIComponent(msg)}`;
-    }, [bundle, selectedBySlot, bundleQty, bundleTotal, whatsapp]);
+    }, [bundle, selectedBySlot, slotQtyBySlot, bundleQty, bundleTotal, whatsapp]);
 
     return (
         <PublicLayout title={bundle.name}>
@@ -433,10 +445,69 @@ export default function BundlingShow({
                                         )}
                                     </div>
 
-                                    <div className="w-12 text-center font-semibold text-gray-700">
-                                        {chosen
-                                            ? slot.quantity * bundleQty
-                                            : '---'}
+                                    <div
+                                        className="flex items-center justify-center"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        {chosen ? (
+                                            <div className="inline-flex items-center rounded-lg border border-sand-300 bg-white">
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        setSlotQtyBySlot(
+                                                            (prev) => ({
+                                                                ...prev,
+                                                                [slot.id]:
+                                                                    Math.max(
+                                                                        1,
+                                                                        (prev[
+                                                                            slot
+                                                                                .id
+                                                                        ] ??
+                                                                            1) -
+                                                                            1,
+                                                                    ),
+                                                            }),
+                                                        )
+                                                    }
+                                                    className="px-1.5 py-1 text-brand-700 hover:bg-sand-100"
+                                                >
+                                                    <Minus className="h-3 w-3" />
+                                                </button>
+                                                <span className="w-7 text-center text-xs font-bold text-brand-950">
+                                                    {(slotQtyBySlot[slot.id] ??
+                                                        1) * bundleQty}
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    disabled={
+                                                        !chosen.is_preorder &&
+                                                        chosen.stock > 0 &&
+                                                        (slotQtyBySlot[
+                                                            slot.id
+                                                        ] ?? 1) >= chosen.stock
+                                                    }
+                                                    onClick={() =>
+                                                        setSlotQtyBySlot(
+                                                            (prev) => ({
+                                                                ...prev,
+                                                                [slot.id]:
+                                                                    (prev[
+                                                                        slot.id
+                                                                    ] ?? 1) + 1,
+                                                            }),
+                                                        )
+                                                    }
+                                                    className="px-1.5 py-1 text-brand-700 hover:bg-sand-100 disabled:opacity-40"
+                                                >
+                                                    <Plus className="h-3 w-3" />
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <span className="font-semibold text-gray-400">
+                                                ---
+                                            </span>
+                                        )}
                                     </div>
 
                                     <div className="w-32 text-right">
@@ -447,7 +518,9 @@ export default function BundlingShow({
                                                     <span className="block text-[10px] text-rose-500 line-through">
                                                         {formatRupiah(
                                                             chosen.normal_price *
-                                                                slot.quantity *
+                                                                (slotQtyBySlot[
+                                                                    slot.id
+                                                                ] ?? 1) *
                                                                 bundleQty,
                                                         )}
                                                     </span>
@@ -455,7 +528,9 @@ export default function BundlingShow({
                                                 <span className="font-bold text-brand-950">
                                                     {formatRupiah(
                                                         chosen.bundle_price *
-                                                            slot.quantity *
+                                                            (slotQtyBySlot[
+                                                                slot.id
+                                                            ] ?? 1) *
                                                             bundleQty,
                                                     )}
                                                 </span>
