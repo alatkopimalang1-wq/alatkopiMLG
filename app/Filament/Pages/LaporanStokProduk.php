@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\Category;
 use App\Models\ProductVariant;
 use BackedEnum;
 use Filament\Pages\Page;
@@ -25,6 +26,8 @@ class LaporanStokProduk extends Page
 
     public string $search = '';
 
+    public string $categoryFilter = 'all';
+
     public string $stockFilter = 'all'; // all, in_stock, low_stock, out_of_stock
 
     protected string $view = 'filament.pages.laporan-stok-produk';
@@ -47,20 +50,35 @@ class LaporanStokProduk extends Page
         return 'full';
     }
 
+    public function getCategoriesProperty(): Collection
+    {
+        return Category::query()
+            ->orderBy('name')
+            ->get(['id', 'name']);
+    }
+
     /**
      * All non-preorder product variants with product & stock valuation.
      */
     public function getRowsProperty(): Collection
     {
         $search = trim(mb_strtolower($this->search));
+        $categoryId = $this->categoryFilter !== 'all' ? (int) $this->categoryFilter : null;
 
         return ProductVariant::query()
-            ->with(['product' => fn ($q) => $q->select(['id', 'name', 'origin', 'series', 'is_preorder', 'stock_status', 'status'])])
-            ->whereHas('product', function ($q) {
+            ->with([
+                'product' => fn ($q) => $q->select(['id', 'name', 'origin', 'series', 'is_preorder', 'stock_status', 'status'])
+                    ->with(['categories:id,name']),
+            ])
+            ->whereHas('product', function ($q) use ($categoryId) {
                 $q->where(fn ($pq) => $pq->where('is_preorder', false)->orWhereNull('is_preorder'))
                     ->where(fn ($pq) => $pq->where('stock_status', '!=', 'pre_order')->orWhereNull('stock_status'))
                     ->where('slug', '!=', 'byob')
                     ->where(fn ($pq) => $pq->whereNotIn('series', ['cybr', 'custom-blend'])->orWhereNull('series'));
+
+                if ($categoryId) {
+                    $q->whereHas('categories', fn ($cq) => $cq->where('categories.id', $categoryId));
+                }
             })
             ->get()
             ->filter(function (ProductVariant $variant) use ($search) {

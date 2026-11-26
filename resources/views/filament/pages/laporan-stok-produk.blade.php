@@ -2,6 +2,7 @@
     @php
         $rows = $this->rows;
         $summary = $this->summary;
+        $categories = $this->categories;
         $fmt = fn (float|int $val): string => 'Rp ' . number_format((float) $val, 0, ',', '.');
     @endphp
 
@@ -59,6 +60,17 @@
                         placeholder="Cari nama produk, brand, variasi, atau SKU..."
                         class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-2xs focus:border-primary-500 focus:ring-1 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
                     />
+                </div>
+                <div class="w-full sm:w-52">
+                    <select
+                        wire:model.live="categoryFilter"
+                        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-2xs focus:border-primary-500 focus:ring-1 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                    >
+                        <option value="all">Semua Kategori</option>
+                        @foreach ($categories as $cat)
+                            <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                        @endforeach
+                    </select>
                 </div>
                 <div class="w-full sm:w-52">
                     <select
