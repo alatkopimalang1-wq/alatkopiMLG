@@ -492,7 +492,7 @@ export default function BundlingShow({
 
                                             {chosen ? (
                                                 <>
-                                                    <div className="mt-4 flex h-12 w-full items-center justify-center overflow-hidden rounded-lg bg-sand-50 sm:h-14">
+                                                    <div className="aspect-square w-full overflow-hidden rounded-lg bg-sand-50">
                                                         <img
                                                             src={resolveImg(
                                                                 chosen.image,
@@ -500,7 +500,7 @@ export default function BundlingShow({
                                                             alt={
                                                                 chosen.product_name
                                                             }
-                                                            className="h-full w-full object-contain p-0.5"
+                                                            className="h-full w-full object-cover"
                                                         />
                                                     </div>
 
