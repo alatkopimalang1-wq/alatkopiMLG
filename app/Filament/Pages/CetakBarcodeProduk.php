@@ -64,6 +64,18 @@ class CetakBarcodeProduk extends Page
             ->get();
     }
 
+    public function selectVariant(int $variantId, string $label): void
+    {
+        $this->selectedVariantId = $variantId;
+        $this->search = $label;
+    }
+
+    public function clearSelectedVariant(): void
+    {
+        $this->selectedVariantId = null;
+        $this->search = '';
+    }
+
     public function applyItem(): void
     {
         if (! $this->selectedVariantId) {

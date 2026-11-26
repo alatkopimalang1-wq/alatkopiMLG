@@ -174,31 +174,60 @@
             </div>
 
             <div class="p-5 space-y-4">
-                {{-- Cari & Pilih Produk --}}
-                <div>
+                {{-- Cari & Pilih Produk (1 input combobox) --}}
+                <div class="relative" x-data="{ open: false }" @click.outside="open = false">
                     <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Produk</label>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                    <div class="relative">
                         <input
                             type="text"
-                            wire:model.live.debounce.300ms="search"
+                            wire:model.live.debounce.250ms="search"
+                            @focus="open = true"
+                            @input="open = true"
                             placeholder="Cari nama produk / varian / SKU..."
-                            class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500"
+                            class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 pr-9 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500"
                         />
-                        <select
-                            wire:model="selectedVariantId"
-                            class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500"
-                        >
-                            <option value="">-- Pilih Produk / Varian --</option>
-                            @foreach($this->variantOptions as $v)
-                                <option value="{{ $v->id }}">
-                                    {{ $v->product?->name }}
-                                    @if(strcasecmp((string) $v->label, 'Standard') !== 0)
-                                        — {{ $v->label }}
-                                    @endif
-                                    ({{ $v->sku ?: 'AKM-'.$v->product_id.'-'.$v->id }})
-                                </option>
-                            @endforeach
-                        </select>
+                        @if($search !== '' || $selectedVariantId)
+                            <button
+                                type="button"
+                                wire:click="clearSelectedVariant"
+                                @click="open = true"
+                                class="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer"
+                                title="Bersihkan"
+                            >
+                                <x-heroicon-m-x-mark class="w-4 h-4" />
+                            </button>
+                        @endif
+                    </div>
+
+                    <div
+                        x-show="open"
+                        x-cloak
+                        class="absolute z-40 mt-1 w-full max-h-64 overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg divide-y divide-gray-100 dark:divide-gray-700/60"
+                    >
+                        @forelse($this->variantOptions as $v)
+                            @php
+                                $vLabel = strcasecmp((string) $v->label, 'Standard') === 0 ? '' : ' — '.$v->label;
+                                $vCode = $v->sku ?: 'AKM-'.$v->product_id.'-'.$v->id;
+                                $fullLabel = ($v->product?->name ?? 'Produk').$vLabel.' ('.$vCode.')';
+                            @endphp
+                            <button
+                                type="button"
+                                wire:click="selectVariant({{ $v->id }}, @js($fullLabel))"
+                                @click="open = false"
+                                class="w-full text-left px-3 py-2 text-sm hover:bg-sky-50 dark:hover:bg-gray-700/70 flex items-center justify-between gap-2 cursor-pointer {{ (int) $selectedVariantId === (int) $v->id ? 'bg-sky-50 dark:bg-gray-700 font-semibold' : '' }}"
+                            >
+                                <span class="text-gray-900 dark:text-white truncate">
+                                    {{ $v->product?->name }}{{ $vLabel }}
+                                </span>
+                                <span class="text-xs font-mono text-gray-500 dark:text-gray-400 shrink-0">
+                                    {{ $vCode }}
+                                </span>
+                            </button>
+                        @empty
+                            <div class="px-3 py-2.5 text-xs text-gray-500 dark:text-gray-400">
+                                Produk tidak ditemukan.
+                            </div>
+                        @endforelse
                     </div>
                 </div>
 
