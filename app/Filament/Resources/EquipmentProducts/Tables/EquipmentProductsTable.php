@@ -69,7 +69,11 @@ class EquipmentProductsTable
                     ->color('info')
                     ->wrap()
                     ->description(function (Product $record): string {
-                        $catName = $record->categories->first()?->name;
+                        $specificCat = $record->categories
+                            ->first(fn ($c) => $c->parent_id !== null && ! in_array($c->slug, ['alat-kopi', 'semua-alat-kopi'], true))
+                            ?? $record->categories->first(fn ($c) => ! in_array($c->slug, ['alat-kopi', 'semua-alat-kopi'], true));
+
+                        $catName = $specificCat?->name;
                         if (is_array($catName)) {
                             $catName = $catName[app()->getLocale()] ?? $catName['id'] ?? $catName['en'] ?? reset($catName) ?? '';
                         }
