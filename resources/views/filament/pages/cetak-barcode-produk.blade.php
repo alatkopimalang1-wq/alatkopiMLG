@@ -71,7 +71,18 @@
                 </div>
 
                 {{-- Pengaturan Tampilan Label --}}
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2 border-t border-gray-100 dark:border-gray-800">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 pt-2 border-t border-gray-100 dark:border-gray-800">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Jenis Barcode</label>
+                        <select
+                            wire:model.live="barcodeType"
+                            class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-xs font-medium text-gray-800 dark:text-gray-200"
+                        >
+                            <option value="code128">Barcode Batang (Code 128)</option>
+                            <option value="qrcode">QR Code (2D / 3D Matrix)</option>
+                        </select>
+                    </div>
+
                     <div>
                         <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Ukuran Label</label>
                         <select
@@ -184,7 +195,7 @@
                                     </div>
                                 @endif
 
-                                <div class="px-1">
+                                <div class="{{ $barcodeType === 'qrcode' ? 'w-16 h-16 mx-auto my-0.5 [&>svg]:w-full [&>svg]:h-full' : 'px-1' }}">
                                     {!! $svg !!}
                                 </div>
 

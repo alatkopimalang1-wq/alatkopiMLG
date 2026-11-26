@@ -61,4 +61,24 @@ class BarcodeCode128
 
         return "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 {$x} {$height}\" preserveAspectRatio=\"none\" class=\"w-full h-10\">{$rects}</svg>";
     }
+
+    /**
+     * Render a crisp 2D QR Code SVG for the given text.
+     */
+    public static function qrSvg(string $text): string
+    {
+        $options = new \chillerlan\QRCode\QROptions([
+            'outputType' => \chillerlan\QRCode\Output\QROutputInterface::MARKUP_SVG,
+            'outputBase64' => false,
+            'eccLevel' => \chillerlan\QRCode\Common\EccLevel::M,
+            'addQuietzone' => true,
+            'quietzoneSize' => 1,
+            'svgUseCssProperties' => false,
+            'drawLightModules' => false,
+        ]);
+
+        $svg = (new \chillerlan\QRCode\QRCode($options))->render($text ?: '000000');
+
+        return preg_replace('/^<\?xml[^>]*\?>\s*/i', '', trim((string) $svg)) ?? '';
+    }
 }

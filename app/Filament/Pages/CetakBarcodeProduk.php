@@ -33,6 +33,8 @@ class CetakBarcodeProduk extends Page
 
     public string $labelSize = '50x30';
 
+    public string $barcodeType = 'code128';
+
     public bool $showName = true;
 
     public bool $showPrice = true;
@@ -129,6 +131,8 @@ class CetakBarcodeProduk extends Page
 
     public function renderBarcodeSvg(string $code): string
     {
-        return BarcodeCode128::svg($code);
+        return $this->barcodeType === 'qrcode'
+            ? BarcodeCode128::qrSvg($code)
+            : BarcodeCode128::svg($code);
     }
 }
