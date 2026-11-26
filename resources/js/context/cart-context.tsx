@@ -11,6 +11,7 @@ interface CartContextType {
         grindOption?: string,
         customNotes?: string,
         preorderDpPercent?: number,
+        bundleSlotItemId?: number,
     ) => void;
     removeItem: (
         variantId: number,
@@ -70,6 +71,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
         grindOption: string = 'Biji Utuh (Whole Bean)',
         customNotes?: string,
         preorderDpPercent?: number,
+        bundleSlotItemId?: number,
     ) => {
         const isEquipment =
             product.series === 'alat-kopi' ||
@@ -136,6 +138,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
                     preorderDpPercent: isPreorder
                         ? resolvedDpPercent
                         : undefined,
+                    bundleSlotItemId,
                 },
             ];
         });

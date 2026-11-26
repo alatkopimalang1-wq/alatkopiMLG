@@ -62,6 +62,8 @@ Route::get('/acara', [ContentController::class, 'events'])->name('events.index')
 Route::get('/video', [ContentController::class, 'reels'])->name('reels.index');
 Route::get('/reels', [ContentController::class, 'reels'])->name('reels.alias');
 Route::get('/keranjang', [CartController::class, 'index'])->name('cart.index');
+Route::get('/paket-bundling', [\App\Http\Controllers\EquipmentBundleController::class, 'index'])->name('bundles.index');
+Route::get('/paket-bundling/{slug}', [\App\Http\Controllers\EquipmentBundleController::class, 'show'])->name('bundles.show');
 Route::post('/cart/quote', [CartController::class, 'quote'])->name('cart.quote');
 Route::post('/checkout', [CheckoutController::class, 'process'])->name('checkout.process');
 Route::get('/pesanan/{orderNumber}', [CheckoutController::class, 'show'])->name('orders.show');

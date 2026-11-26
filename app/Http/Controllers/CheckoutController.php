@@ -34,6 +34,7 @@ class CheckoutController extends Controller
             'items.*.grind_option' => 'nullable|string|max:100',
             'items.*.custom_notes' => 'nullable|string|max:500',
             'items.*.preorder_dp_percent' => 'nullable|integer|in:30,50,70,100',
+            'items.*.bundle_slot_item_id' => 'nullable|integer|exists:equipment_bundle_slot_items,id',
             'fulfillment_type' => 'nullable|string|in:delivery,pickup',
             'customer.name' => 'required|string|max:100',
             'customer.phone' => 'required|string|max:30',
@@ -111,6 +112,15 @@ class CheckoutController extends Controller
             $unitPrice = ($variant->product->slug === 'byob' && isset($item['price']) && is_numeric($item['price']))
                 ? (float) $item['price']
                 : (float) $variant->price;
+
+            if (! empty($item['bundle_slot_item_id'])) {
+                $bundleSlotItem = \App\Models\EquipmentBundleSlotItem::with('slot')->find($item['bundle_slot_item_id']);
+                if ($bundleSlotItem && (int) $bundleSlotItem->product_variant_id === (int) $variant->id) {
+                    $unitPrice = $bundleSlotItem->slot?->slot_type === 'free'
+                        ? 0.0
+                        : ($bundleSlotItem->bundle_price !== null ? (float) $bundleSlotItem->bundle_price : (float) $variant->price);
+                }
+            }
             $lineTotal = $unitPrice * $qty;
             $subtotal += $lineTotal;
 
