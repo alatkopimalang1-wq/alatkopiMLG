@@ -2550,6 +2550,69 @@ function PosContent({
     const handleProductClick = (product: Product) => {
         if (product.is_out_of_stock) return;
 
+        if (product.is_fixed_bundle && Array.isArray(product.fixed_bundle_items)) {
+            const discountPct = Number(product.discount_percent ?? 0);
+            for (const bItem of product.fixed_bundle_items) {
+                if (!bItem.is_preorder) {
+                    const existingQtyForVariant = cart
+                        .filter((c) => c.product_id === bItem.product_id && c.variant_id === bItem.variant_id)
+                        .reduce((sum, c) => sum + c.quantity, 0);
+                    if (existingQtyForVariant + bItem.quantity > bItem.stock) {
+                        showToast(
+                            `Stok ${bItem.product_name} (${bItem.variant_label}) tidak mencukupi (tersisa ${bItem.stock} pcs)`,
+                        );
+                        return;
+                    }
+                }
+            }
+
+            setCart((prev) => {
+                const next = [...prev];
+                for (const bItem of product.fixed_bundle_items || []) {
+                    const cartItemId = `bundle-${product.id}-${bItem.product_id}-${bItem.variant_id}`;
+                    const existingIdx = next.findIndex((c) => c.id === cartItemId);
+                    if (existingIdx >= 0) {
+                        const existing = next[existingIdx];
+                        const newQty = existing.quantity + bItem.quantity;
+                        const newDisc = recalculateItemDiscount(existing, newQty);
+                        next[existingIdx] = {
+                            ...existing,
+                            quantity: newQty,
+                            discount_amount: newDisc > 0 ? newDisc : undefined,
+                        };
+                    } else {
+                        const baseItem: CartItem = {
+                            id: cartItemId,
+                            product_id: bItem.product_id,
+                            product_name: bItem.product_name,
+                            variant_id: bItem.variant_id,
+                            variant_label: bItem.variant_label,
+                            price: bItem.price,
+                            quantity: bItem.quantity,
+                            image: bItem.image || product.image,
+                            cost_price: bItem.cost_price,
+                            notes: `Bundling: ${product.name}`,
+                            ...(discountPct > 0
+                                ? {
+                                      discount_type: 'percent' as const,
+                                      discount_value: discountPct,
+                                  }
+                                : {}),
+                        };
+                        const disc = recalculateItemDiscount(baseItem, bItem.quantity);
+                        if (disc > 0) {
+                            baseItem.discount_amount = disc;
+                        }
+                        next.push(baseItem);
+                    }
+                }
+                return next;
+            });
+
+            showToast(`Paket ${product.name} ditambahkan`);
+            return;
+        }
+
         // Check if C.Y.B.R / BYOB custom blend product
         if (
             product.slug === 'byob' ||

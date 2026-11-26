@@ -42,7 +42,7 @@ class FixedBundleForm
                             ->unique(FixedBundle::class, 'slug', ignoreRecord: true),
                     ]),
 
-                    Grid::make(3)->schema([
+                    Grid::make(2)->schema([
                         TextInput::make('discount_percent')
                             ->label('Diskon Keseluruhan (%)')
                             ->numeric()
@@ -57,11 +57,19 @@ class FixedBundleForm
                             ->label('Urutan Tampil')
                             ->numeric()
                             ->default(0),
+                    ]),
 
+                    Grid::make(2)->schema([
                         Toggle::make('is_active')
                             ->label('Aktif di Website')
                             ->default(true)
                             ->inline(false),
+
+                        Toggle::make('show_in_pos')
+                            ->label('Tampilkan di POS')
+                            ->default(true)
+                            ->inline(false)
+                            ->helperText('Munculkan paket bundling ini di layar kasir POS.'),
                     ]),
 
                     Textarea::make('description')

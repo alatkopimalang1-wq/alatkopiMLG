@@ -67,6 +67,10 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
                     <div className="py-0.2 absolute right-1 bottom-1 rounded-md border border-amber-300 bg-amber-50/95 px-1.5 text-[9px] font-bold text-amber-800 shadow-2xs sm:right-1.5 sm:bottom-1.5 dark:border-amber-700 dark:bg-amber-950/95 dark:text-amber-300">
                         Pre-Order
                     </div>
+                ) : product.is_fixed_bundle ? (
+                    <div className="py-0.2 absolute right-1 bottom-1 rounded-md border border-emerald-300 bg-emerald-50/95 px-1.5 text-[9px] font-bold text-emerald-800 shadow-2xs sm:right-1.5 sm:bottom-1.5 dark:border-emerald-700 dark:bg-emerald-950/95 dark:text-emerald-300">
+                        Bundling{product.discount_percent ? ` -${product.discount_percent}%` : ''}
+                    </div>
                 ) : product.slug === 'byob' || product.series === 'cybr' || product.series === 'custom-blend' ? (
                     <div className="py-0.2 absolute right-1 bottom-1 rounded-md border border-emerald-300 bg-emerald-50/95 px-1.5 text-[9px] font-bold text-emerald-800 shadow-2xs sm:right-1.5 sm:bottom-1.5 dark:border-emerald-700 dark:bg-emerald-950/95 dark:text-emerald-300">
                         Custom Blend

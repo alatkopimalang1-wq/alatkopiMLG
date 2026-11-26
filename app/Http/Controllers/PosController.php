@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\FixedBundle;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\PosCashFlow;
@@ -2224,7 +2225,7 @@ class PosController extends Controller
      */
     protected function getPosProducts()
     {
-        return Product::active()
+        $products = Product::active()
             ->forPos()
             ->with(['variants', 'images', 'categories'])
             ->orderBy('name')
@@ -2301,6 +2302,16 @@ class PosController extends Controller
                     })->values(),
                 ];
             });
+
+        $fixedBundles = FixedBundle::active()
+            ->forPos()
+            ->with(['items.product.primaryImage', 'items.product.images', 'items.variant'])
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get()
+            ->map(fn (FixedBundle $bundle) => $bundle->toPosArray());
+
+        return $fixedBundles->concat($products)->values();
     }
 
     /**

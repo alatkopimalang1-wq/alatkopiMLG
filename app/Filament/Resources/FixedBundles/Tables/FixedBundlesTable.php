@@ -41,6 +41,10 @@ class FixedBundlesTable
                     ->label('Aktif')
                     ->boolean(),
 
+                IconColumn::make('show_in_pos')
+                    ->label('Tampil di POS')
+                    ->boolean(),
+
                 TextColumn::make('sort_order')
                     ->label('Urutan')
                     ->sortable(),

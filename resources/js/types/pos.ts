@@ -28,6 +28,20 @@ export interface Product {
     stock_status: string;
     is_preorder?: boolean;
     is_out_of_stock: boolean;
+    is_fixed_bundle?: boolean;
+    discount_percent?: number;
+    fixed_bundle_items?: Array<{
+        product_id: number;
+        product_name: string;
+        variant_id: number;
+        variant_label: string;
+        price: number;
+        cost_price?: number;
+        quantity: number;
+        stock: number;
+        is_preorder: boolean;
+        image: string;
+    }>;
     variants: ProductVariant[];
 }
 
