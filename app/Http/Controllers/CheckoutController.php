@@ -326,23 +326,6 @@ class CheckoutController extends Controller
 
             foreach ($orderLines as $line) {
                 $order->items()->create($line);
-
-                if (empty($line['is_preorder']) && ! empty($line['product_variant_id'])) {
-                    $lockedVariant = ProductVariant::with('product')->lockForUpdate()->find($line['product_variant_id']);
-                    if ($lockedVariant) {
-                        $currentStock = (int) ($lockedVariant->stock ?? 0);
-                        $qtyOrdered = (int) $line['quantity'];
-                        if ($currentStock < $qtyOrdered) {
-                            throw new \Illuminate\Http\Exceptions\HttpResponseException(response()->json([
-                                'message' => "Maaf, stok untuk '{$line['product_name']}' ({$line['variant_label']}) hanya tersisa {$currentStock} pcs.",
-                            ], 422));
-                        }
-                        $lockedVariant->stock = max(0, $currentStock - $qtyOrdered);
-                        $lockedVariant->stock_status = $lockedVariant->stock > 0 ? 'in_stock' : 'out_of_stock';
-                        $lockedVariant->save();
-                        $lockedVariant->product?->syncStockFromVariants();
-                    }
-                }
             }
 
             return $order;

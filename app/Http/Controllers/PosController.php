@@ -425,6 +425,7 @@ class PosController extends Controller
                 'paid_at' => now(),
                 'payment_details' => [
                     'source' => 'pos',
+                    'stock_deducted_at' => now()->toIso8601String(),
                     'cashier_id' => auth()->id(),
                     'cashier_name' => auth()->user()?->name ?? 'Kasir',
                     'cash_tendered' => $cashTendered,

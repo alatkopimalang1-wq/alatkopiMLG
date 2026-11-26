@@ -31,6 +31,100 @@ class Order extends Model
                 $order->paid_at = now();
             }
         });
+
+        static::saved(function (Order $order) {
+            if ($order->is_ecommerce) {
+                return;
+            }
+
+            $details = is_array($order->payment_details) ? $order->payment_details : [];
+
+            if ($order->payment_status === 'paid' && empty($details['stock_deducted_at'])) {
+                $order->deductStockIfNeeded();
+            } elseif (in_array($order->payment_status, ['refunded', 'cancelled'], true) && ! empty($details['stock_deducted_at'])) {
+                $order->restoreStockIfDeducted();
+            }
+        });
+    }
+
+    /**
+     * Deduct variant & product stock once when an order's payment is confirmed.
+     */
+    public function deductStockIfNeeded(): void
+    {
+        \Illuminate\Support\Facades\DB::transaction(function () {
+            $lockedOrder = static::lockForUpdate()->with('items')->find($this->id);
+            if (! $lockedOrder || $lockedOrder->items->isEmpty()) {
+                return;
+            }
+
+            $details = is_array($lockedOrder->payment_details) ? $lockedOrder->payment_details : [];
+            if (! empty($details['stock_deducted_at'])) {
+                return;
+            }
+
+            foreach ($lockedOrder->items as $item) {
+                if ($item->is_preorder || empty($item->product_variant_id)) {
+                    continue;
+                }
+
+                $variant = ProductVariant::with('product')->lockForUpdate()->find($item->product_variant_id);
+                if (! $variant || ($variant->product && $variant->product->is_preorder)) {
+                    continue;
+                }
+
+                $qty = max(1, (int) $item->quantity);
+                $variant->stock = max(0, (int) ($variant->stock ?? 0) - $qty);
+                $variant->stock_status = $variant->stock > 0 ? 'in_stock' : 'out_of_stock';
+                $variant->save();
+
+                $variant->product?->syncStockFromVariants();
+            }
+
+            $details['stock_deducted_at'] = now()->toIso8601String();
+            $lockedOrder->updateQuietly(['payment_details' => $details]);
+            $this->payment_details = $details;
+        });
+    }
+
+    /**
+     * Restore variant & product stock if a paid order is later refunded or cancelled.
+     */
+    public function restoreStockIfDeducted(): void
+    {
+        \Illuminate\Support\Facades\DB::transaction(function () {
+            $lockedOrder = static::lockForUpdate()->with('items')->find($this->id);
+            if (! $lockedOrder || $lockedOrder->items->isEmpty()) {
+                return;
+            }
+
+            $details = is_array($lockedOrder->payment_details) ? $lockedOrder->payment_details : [];
+            if (empty($details['stock_deducted_at'])) {
+                return;
+            }
+
+            foreach ($lockedOrder->items as $item) {
+                if ($item->is_preorder || empty($item->product_variant_id)) {
+                    continue;
+                }
+
+                $variant = ProductVariant::with('product')->lockForUpdate()->find($item->product_variant_id);
+                if (! $variant || ($variant->product && $variant->product->is_preorder)) {
+                    continue;
+                }
+
+                $qty = max(1, (int) $item->quantity);
+                $variant->stock = max(0, (int) ($variant->stock ?? 0) + $qty);
+                $variant->stock_status = $variant->stock > 0 ? 'in_stock' : 'out_of_stock';
+                $variant->save();
+
+                $variant->product?->syncStockFromVariants();
+            }
+
+            unset($details['stock_deducted_at']);
+            $lockedOrder->updateQuietly(['payment_details' => $details]);
+            $this->payment_details = $details;
+        });
     }
 
     public function items(): HasMany
