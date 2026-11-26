@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { PublicLayout } from '@/layouts/public-layout';
 import { useCart } from '@/context/cart-context';
+import { BundleCartItemDetails } from '@/components/bundle-cart-item-details';
 import { formatRupiah } from '@/lib/trans';
 import { ShippingMapPicker } from '@/components/shipping-map-picker';
 import { getProductContentId, trackInitiateCheckout } from '@/lib/meta-pixel';
@@ -568,7 +569,24 @@ export default function CartPage({
             const pickupAddrText = `Ambil di Toko: ${pickupSettings.store_name} (${pickupSettings.store_address})`;
 
             const payload = {
-                items: items.map((i) => {
+                items: items.flatMap((i) => {
+                    if (i.bundleItems && i.bundleItems.length > 0) {
+                        return i.bundleItems.map((sub) => ({
+                            variant_id: sub.variant_id,
+                            quantity: sub.quantity * i.quantity,
+                            grind_option: '',
+                            custom_notes: `${i.product.name} (${sub.slot_title})`,
+                            price: sub.bundle_price,
+                            ...(sub.slot_id !== undefined
+                                ? { bundle_slot_id: sub.slot_id }
+                                : {}),
+                            ...(sub.slot_item_id !== null &&
+                            sub.slot_item_id !== undefined
+                                ? { bundle_slot_item_id: sub.slot_item_id }
+                                : {}),
+                        }));
+                    }
+
                     const isPreorder = Boolean(
                         i.product.is_preorder ||
                             i.product.stock_status === 'pre_order',
@@ -577,22 +595,24 @@ export default function CartPage({
                     const dpPercent = isPreorder
                         ? Math.max(minDp, i.preorderDpPercent ?? minDp)
                         : undefined;
-                    return {
-                        variant_id: i.variant.id,
-                        quantity: i.quantity,
-                        grind_option: i.grindOption,
-                        custom_notes: i.customNotes,
-                        price: i.variant.price,
-                        ...(dpPercent !== undefined
-                            ? { preorder_dp_percent: dpPercent }
-                            : {}),
-                        ...(i.bundleSlotId !== undefined
-                            ? { bundle_slot_id: i.bundleSlotId }
-                            : {}),
-                        ...(i.bundleSlotItemId !== undefined
-                            ? { bundle_slot_item_id: i.bundleSlotItemId }
-                            : {}),
-                    };
+                    return [
+                        {
+                            variant_id: i.variant.id,
+                            quantity: i.quantity,
+                            grind_option: i.grindOption,
+                            custom_notes: i.customNotes,
+                            price: i.variant.price,
+                            ...(dpPercent !== undefined
+                                ? { preorder_dp_percent: dpPercent }
+                                : {}),
+                            ...(i.bundleSlotId !== undefined
+                                ? { bundle_slot_id: i.bundleSlotId }
+                                : {}),
+                            ...(i.bundleSlotItemId !== undefined
+                                ? { bundle_slot_item_id: i.bundleSlotItemId }
+                                : {}),
+                        },
+                    ];
                 }),
                 fulfillment_type: fulfillmentType,
                 customer: {
@@ -823,35 +843,52 @@ export default function CartPage({
                                                                         .name
                                                                 }
                                                             </h3>
-                                                            <p className="text-[11px] font-medium text-accent-copper">
-                                                                {
-                                                                    item.variant
-                                                                        .label
-                                                                }
-                                                                {item.grindOption &&
-                                                                item.product
-                                                                    .series !==
-                                                                    'alat-kopi'
-                                                                    ? ` · ${item.grindOption}`
-                                                                    : ''}
-                                                            </p>
-                                                            {item.customNotes && (
-                                                                <div className="mt-1.5 rounded-lg border border-amber-200/70 bg-amber-50/80 p-2 text-[11px] leading-snug text-brand-900">
-                                                                    <div className="flex items-center gap-1 text-[10px] font-bold tracking-wider text-accent-copper uppercase">
-                                                                        <SlidersHorizontal className="h-3 w-3" />
-                                                                        <span>
-                                                                            Rasio
-                                                                            Racikan
-                                                                            Blend
-                                                                            (C.Y.B.R):
-                                                                        </span>
-                                                                    </div>
-                                                                    <p className="mt-0.5 font-semibold text-brand-950">
+                                                            {item.bundleItems &&
+                                                            item.bundleItems
+                                                                .length > 0 ? (
+                                                                <BundleCartItemDetails
+                                                                    bundleItems={
+                                                                        item.bundleItems
+                                                                    }
+                                                                    packageQty={
+                                                                        item.quantity
+                                                                    }
+                                                                />
+                                                            ) : (
+                                                                <>
+                                                                    <p className="text-[11px] font-medium text-accent-copper">
                                                                         {
-                                                                            item.customNotes
+                                                                            item
+                                                                                .variant
+                                                                                .label
                                                                         }
+                                                                        {item.grindOption &&
+                                                                        item
+                                                                            .product
+                                                                            .series !==
+                                                                            'alat-kopi'
+                                                                            ? ` · ${item.grindOption}`
+                                                                            : ''}
                                                                     </p>
-                                                                </div>
+                                                                    {item.customNotes && (
+                                                                        <div className="mt-1.5 rounded-lg border border-amber-200/70 bg-amber-50/80 p-2 text-[11px] leading-snug text-brand-900">
+                                                                            <div className="flex items-center gap-1 text-[10px] font-bold tracking-wider text-accent-copper uppercase">
+                                                                                <SlidersHorizontal className="h-3 w-3" />
+                                                                                <span>
+                                                                                    Rasio
+                                                                                    Racikan
+                                                                                    Blend
+                                                                                    (C.Y.B.R):
+                                                                                </span>
+                                                                            </div>
+                                                                            <p className="mt-0.5 font-semibold text-brand-950">
+                                                                                {
+                                                                                    item.customNotes
+                                                                                }
+                                                                            </p>
+                                                                        </div>
+                                                                    )}
+                                                                </>
                                                             )}
                                                             {(item.product
                                                                 .is_preorder ||
@@ -1050,6 +1087,24 @@ export default function CartPage({
                                                                     );
                                                                 return (
                                                                     <>
+                                                                        {item.bundleItems &&
+                                                                            item.bundleItems
+                                                                                .length >
+                                                                                0 &&
+                                                                            item.variant
+                                                                                .original_price &&
+                                                                            item.variant
+                                                                                .original_price >
+                                                                                item.variant
+                                                                                    .price && (
+                                                                                <span className="block text-[10px] font-semibold text-rose-500 line-through">
+                                                                                    {formatRupiah(
+                                                                                        item.variant
+                                                                                            .original_price *
+                                                                                            item.quantity,
+                                                                                    )}
+                                                                                </span>
+                                                                            )}
                                                                         {isPre &&
                                                                             dpPct <
                                                                                 100 && (
@@ -1059,7 +1114,7 @@ export default function CartPage({
                                                                                     )}
                                                                                 </span>
                                                                             )}
-                                                                        <span className="text-xs font-extrabold text-brand-950">
+                                                                        <span className="text-xs font-extrabold text-brand-950 sm:text-sm">
                                                                             {formatRupiah(
                                                                                 linePayable,
                                                                             )}

@@ -148,6 +148,22 @@ export interface Event {
     cover_image?: string | null;
 }
 
+export interface BundleCartSubItem {
+    slot_id: number;
+    slot_item_id?: number | null;
+    slot_title: string;
+    slot_type: 'selectable' | 'free';
+    is_optional: boolean;
+    product_id: number;
+    product_name: string;
+    variant_id: number;
+    variant_label: string;
+    quantity: number;
+    normal_price: number;
+    bundle_price: number;
+    weight_grams?: number;
+}
+
 export interface CartItem {
     variant: ProductVariant;
     product: Product;
@@ -157,6 +173,7 @@ export interface CartItem {
     preorderDpPercent?: number;
     bundleSlotId?: number;
     bundleSlotItemId?: number;
+    bundleItems?: BundleCartSubItem[];
 }
 
 export interface MegaMenuItem {

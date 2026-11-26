@@ -17,7 +17,11 @@ import { formatRupiah } from '@/lib/trans';
 import { ProductCard } from '@/components/product-card';
 import { ImageZoom } from '@animate-ui/react/primitives/effects/image-zoom';
 import { SlidingNumber } from '@animate-ui/react/primitives/texts/sliding-number';
-import type { Product, ProductVariant } from '@/types/sanubari';
+import type {
+    BundleCartSubItem,
+    Product,
+    ProductVariant,
+} from '@/types/sanubari';
 
 interface BundleSlotItemData {
     id: number;
@@ -257,27 +261,94 @@ export default function BundlingShow({
             return;
         }
 
-        chosenEntries.forEach(({ slot, item }) => {
-            const sQty = slotQtyBySlot[slot.id] ?? 1;
-            const variantWithBundlePrice: ProductVariant = {
-                ...item.variant,
-                price: item.bundle_price,
-                original_price:
-                    item.normal_price > item.bundle_price
-                        ? item.normal_price
-                        : item.variant.original_price,
-            };
-            addItem(
-                item.product,
-                variantWithBundlePrice,
-                sQty * bundleQty,
-                '',
-                `Paket Bundling: ${bundle.name} (${slot.title})`,
-                undefined,
-                item.bundle_slot_item_id ?? undefined,
-                item.bundle_slot_id ?? slot.id,
-            );
-        });
+        const bundleSubItems: BundleCartSubItem[] = chosenEntries.map(
+            ({ slot, item }) => ({
+                slot_id: slot.id,
+                slot_item_id: item.bundle_slot_item_id ?? null,
+                slot_title: slot.title,
+                slot_type: slot.slot_type,
+                is_optional: slot.is_optional,
+                product_id: item.product_id,
+                product_name: item.product_name,
+                variant_id: item.variant_id,
+                variant_label: item.variant_label,
+                quantity: slotQtyBySlot[slot.id] ?? 1,
+                normal_price: item.normal_price,
+                bundle_price: item.bundle_price,
+                weight_grams: item.variant.weight_grams || 0,
+            }),
+        );
+
+        const unitNormalTotal = bundleSubItems.reduce(
+            (sum, s) => sum + s.normal_price * s.quantity,
+            0,
+        );
+        const unitBundleTotal = bundleSubItems.reduce(
+            (sum, s) => sum + s.bundle_price * s.quantity,
+            0,
+        );
+        const totalWeight = bundleSubItems.reduce(
+            (sum, s) => sum + (s.weight_grams || 0) * s.quantity,
+            0,
+        );
+        const signature = bundleSubItems
+            .map((s) => `${s.slot_id}:${s.variant_id}:${s.quantity}`)
+            .join('|');
+        const firstImage =
+            bundle.banner_image ||
+            chosenEntries[0]?.item.image ||
+            chosenEntries[0]?.item.product.images?.[0]?.path;
+
+        const bundleProduct: Product = {
+            id: 1000000 + bundle.id,
+            name: bundle.name.toLowerCase().startsWith('custom')
+                ? bundle.name
+                : `Custom ${bundle.name}`,
+            slug: bundle.slug,
+            series: 'paket-bundling',
+            freshness_days: 0,
+            min_price: unitBundleTotal,
+            max_price: unitBundleTotal,
+            is_featured: true,
+            is_new: false,
+            status: 'active',
+            is_bundle: true,
+            bundle_url: `/paket-bundling/${bundle.slug}`,
+            images: firstImage
+                ? [
+                      {
+                          id: 0,
+                          product_id: 1000000 + bundle.id,
+                          path: firstImage,
+                          sort_order: 0,
+                          is_primary: true,
+                      },
+                  ]
+                : [],
+        };
+
+        const bundleVariant: ProductVariant = {
+            id: 1000000 + bundle.id,
+            product_id: 1000000 + bundle.id,
+            label: `${bundleSubItems.length} Item Custom`,
+            weight_grams: totalWeight,
+            price: unitBundleTotal,
+            original_price:
+                unitNormalTotal > unitBundleTotal ? unitNormalTotal : null,
+            stock_status: 'in_stock',
+        };
+
+        addItem(
+            bundleProduct,
+            bundleVariant,
+            bundleQty,
+            '',
+            `bundle:${bundle.id}:${signature}`,
+            undefined,
+            undefined,
+            undefined,
+            bundleSubItems,
+        );
 
         setAddedSuccess(true);
         setTimeout(() => {

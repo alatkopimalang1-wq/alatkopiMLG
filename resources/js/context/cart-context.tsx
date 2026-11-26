@@ -1,5 +1,10 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import type { CartItem, Product, ProductVariant } from '@/types/sanubari';
+import type {
+    BundleCartSubItem,
+    CartItem,
+    Product,
+    ProductVariant,
+} from '@/types/sanubari';
 import { getProductContentId, trackAddToCart } from '@/lib/meta-pixel';
 
 interface CartContextType {
@@ -13,6 +18,7 @@ interface CartContextType {
         preorderDpPercent?: number,
         bundleSlotItemId?: number,
         bundleSlotId?: number,
+        bundleItems?: BundleCartSubItem[],
     ) => void;
     removeItem: (
         variantId: number,
@@ -74,6 +80,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
         preorderDpPercent?: number,
         bundleSlotItemId?: number,
         bundleSlotId?: number,
+        bundleItems?: BundleCartSubItem[],
     ) => {
         const isEquipment =
             product.series === 'alat-kopi' ||
@@ -142,6 +149,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
                         : undefined,
                     bundleSlotId,
                     bundleSlotItemId,
+                    ...(bundleItems ? { bundleItems } : {}),
                 },
             ];
         });

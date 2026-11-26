@@ -5,6 +5,7 @@ import { ArrowRight, Minus, Plus, ShoppingBag, Trash2, X } from 'lucide-react';
 import { SlidingNumber } from '@animate-ui/react/primitives/texts/sliding-number';
 import { transition } from '@animate-ui/react/utils/motion';
 import { useCart } from '@/context/cart-context';
+import { BundleCartItemDetails } from '@/components/bundle-cart-item-details';
 import { formatRupiah } from '@/lib/trans';
 import { getEffectiveVariantStock } from '@/lib/stock';
 
@@ -199,21 +200,40 @@ export const CartDrawer: React.FC = () => {
                                                                 <Trash2 className="h-4 w-4" />
                                                             </button>
                                                         </div>
-                                                        <p className="text-xs font-medium text-accent-copper">
-                                                            {item.variant.label}
-                                                            {item.grindOption &&
-                                                            item.product
-                                                                .series !==
-                                                                'alat-kopi'
-                                                                ? ` • ${item.grindOption}`
-                                                                : ''}
-                                                        </p>
-                                                        {item.customNotes && (
-                                                            <p className="bg-sand-100/80 mt-1 rounded px-2 py-0.5 text-[11px] font-medium text-balance text-brand-600">
-                                                                {
-                                                                    item.customNotes
+                                                        {item.bundleItems &&
+                                                        item.bundleItems.length >
+                                                            0 ? (
+                                                            <BundleCartItemDetails
+                                                                bundleItems={
+                                                                    item.bundleItems
                                                                 }
-                                                            </p>
+                                                                packageQty={
+                                                                    item.quantity
+                                                                }
+                                                            />
+                                                        ) : (
+                                                            <>
+                                                                <p className="text-xs font-medium text-accent-copper">
+                                                                    {
+                                                                        item
+                                                                            .variant
+                                                                            .label
+                                                                    }
+                                                                    {item.grindOption &&
+                                                                    item.product
+                                                                        .series !==
+                                                                        'alat-kopi'
+                                                                        ? ` • ${item.grindOption}`
+                                                                        : ''}
+                                                                </p>
+                                                                {item.customNotes && (
+                                                                    <p className="bg-sand-100/80 mt-1 rounded px-2 py-0.5 text-[11px] font-medium text-balance text-brand-600">
+                                                                        {
+                                                                            item.customNotes
+                                                                        }
+                                                                    </p>
+                                                                )}
+                                                            </>
                                                         )}
                                                     </div>
 
@@ -314,6 +334,24 @@ export const CartDrawer: React.FC = () => {
                                                                                         dpPct
                                                                                     }
                                                                                     %
+                                                                                </span>
+                                                                            )}
+                                                                        {item.bundleItems &&
+                                                                            item.bundleItems
+                                                                                .length >
+                                                                                0 &&
+                                                                            item.variant
+                                                                                .original_price &&
+                                                                            item.variant
+                                                                                .original_price >
+                                                                                item.variant
+                                                                                    .price && (
+                                                                                <span className="block text-[10px] font-medium text-rose-500 line-through">
+                                                                                    {formatRupiah(
+                                                                                        item.variant
+                                                                                            .original_price *
+                                                                                            item.quantity,
+                                                                                    )}
                                                                                 </span>
                                                                             )}
                                                                         <span className="text-sm font-bold text-brand-900">
