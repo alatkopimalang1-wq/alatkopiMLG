@@ -47,7 +47,7 @@ class ProductPurchaseForm
                                     ProductPurchase::STATUS_DITERIMA => 'Diterima (Tambah Stok Sekarang)',
                                     ProductPurchase::STATUS_SELESAI => 'Selesai (Tambah Stok Sekarang)',
                                 ])
-                                ->default(ProductPurchase::STATUS_DITERIMA)
+                                ->default(ProductPurchase::STATUS_DIPESAN)
                                 ->required(),
 
                             DatePicker::make('due_date')
