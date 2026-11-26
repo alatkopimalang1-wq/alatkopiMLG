@@ -7,11 +7,13 @@ use App\Models\Product;
 use App\Models\ProductPurchase;
 use App\Models\ProductPurchaseItem;
 use App\Models\ProductVariant;
+use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Schemas\Components\Grid;
@@ -162,24 +164,63 @@ class ViewProductPurchase extends ViewRecord
 
         return Action::make('editReceiving')
             ->label('Ubah')
-            ->modalHeading('Ubah Info Penerimaan')
+            ->modalHeading('Info Penerimaan Produk')
             ->modalSubmitActionLabel('Simpan')
             ->fillForm([
-                'received_date' => $po->received_date?->format('Y-m-d'),
+                'received_date' => $po->received_date?->format('Y-m-d') ?? now()->format('Y-m-d'),
                 'receipt_number' => $po->receipt_number,
-                'receiver_name' => $po->receiver_name,
+                'receiver_name' => $po->receiver_name ?? auth()->user()?->name,
+                'post_stock' => true,
             ])
             ->schema([
-                DatePicker::make('received_date')->label('Tanggal Diterima'),
-                TextInput::make('receipt_number')->label('No. Terima'),
-                TextInput::make('receiver_name')->label('Penerima'),
+                DatePicker::make('received_date')
+                    ->label('Tanggal Diterima')
+                    ->default(now())
+                    ->required(),
+                TextInput::make('receipt_number')
+                    ->label('No. Terima')
+                    ->placeholder('contoh: EL123987')
+                    ->required(),
+                TextInput::make('receiver_name')
+                    ->label('Penerima')
+                    ->placeholder('Contoh, Budi')
+                    ->datalist(fn (): array => User::query()->orderBy('name')->pluck('name')->all())
+                    ->required(),
+                Toggle::make('post_stock')
+                    ->label('Lanjut tambah stok masuk (Post Stok)')
+                    ->helperText('Jika diaktifkan, stok produk otomatis bertambah dan status PO berubah menjadi Diterima.')
+                    ->default(true)
+                    ->disabled(fn (): bool => $po->hasStockApplied()),
             ])
             ->action(function (array $data) use ($po) {
-                $po->update($data);
-                $po->refresh();
+                $hadStock = $po->hasStockApplied();
+                $postStock = (bool) ($data['post_stock'] ?? false);
+
+                $po->update([
+                    'received_date' => $data['received_date'],
+                    'receipt_number' => $data['receipt_number'],
+                    'receiver_name' => $data['receiver_name'],
+                ]);
+
+                if ($postStock) {
+                    if (! $po->isStockInStatus()) {
+                        $po->status = ProductPurchase::STATUS_DITERIMA;
+                        $po->save();
+                    }
+                    $po->syncStockWithStatus();
+                    $this->selectedStatus = (string) $po->status;
+                }
+
+                $po->load(['items.product', 'items.variant', 'user']);
+
+                $body = 'Info penerimaan berhasil disimpan.';
+                if ($postStock && ! $hadStock && $po->hasStockApplied()) {
+                    $body = "Stok produk otomatis bertambah (+{$po->total_qty} pcs) dan status PO berubah menjadi Diterima.";
+                }
 
                 Notification::make()
-                    ->title('Info Penerimaan Diperbarui')
+                    ->title('Penerimaan Produk Disimpan')
+                    ->body($body)
                     ->success()
                     ->send();
             });

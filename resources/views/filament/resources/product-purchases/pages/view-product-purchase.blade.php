@@ -177,9 +177,9 @@
                     <h3 class="text-sm font-bold text-gray-900 dark:text-white">Info Penerimaan</h3>
                     <button type="button"
                             wire:click="mountAction('editReceiving')"
-                            class="inline-flex items-center gap-1 rounded-md bg-sky-600 hover:bg-sky-700 px-2.5 py-1 text-xs font-semibold text-white transition">
+                            class="inline-flex items-center gap-1 rounded-md {{ $po->hasStockApplied() ? 'bg-sky-600 hover:bg-sky-700' : 'bg-emerald-600 hover:bg-emerald-700' }} px-2.5 py-1 text-xs font-semibold text-white transition">
                         <x-heroicon-m-pencil-square class="w-3.5 h-3.5" />
-                        Ubah
+                        {{ $po->hasStockApplied() ? 'Ubah' : 'Terima Barang' }}
                     </button>
                 </div>
                 <dl class="space-y-3 text-xs">
