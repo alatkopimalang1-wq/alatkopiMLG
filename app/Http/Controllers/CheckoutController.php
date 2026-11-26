@@ -508,6 +508,7 @@ class CheckoutController extends Controller
                 'shipping_cost' => (float) $order->shipping_cost,
                 'unique_code' => (int) $order->unique_code,
                 'total_amount' => (float) $order->total_amount,
+                'payment_details' => $order->payment_details,
                 'shipping_courier' => $order->shipping_courier,
                 'shipping_service' => $order->shipping_service,
                 'shipping_etd' => $order->shipping_etd,
