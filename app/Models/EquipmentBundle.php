@@ -89,9 +89,10 @@ class EquipmentBundle extends Model
             $cheapestNormal = null;
             $cheapestBundle = null;
 
-            if ($slot->slot_type === 'selectable' && $slot->category_id) {
+            $catIds = $slot->resolvedCategoryIds();
+            if ($slot->slot_type === 'selectable' && ! empty($catIds)) {
                 $catProducts = Product::active()
-                    ->whereHas('categories', fn ($q) => $q->where('categories.id', $slot->category_id))
+                    ->whereHas('categories', fn ($q) => $q->whereIn('categories.id', $catIds))
                     ->with('variants')
                     ->get();
 
@@ -132,9 +133,10 @@ class EquipmentBundle extends Model
         if ($hasOptionalOnly && $minBundlePrice <= 0 && $this->slots->isNotEmpty()) {
             foreach ($this->slots as $slot) {
                 $discountPct = max(0.0, min(100.0, (float) ($slot->discount_percent ?? 0)));
-                if ($slot->slot_type === 'selectable' && $slot->category_id) {
+                $slotCatIds = $slot->resolvedCategoryIds();
+                if ($slot->slot_type === 'selectable' && ! empty($slotCatIds)) {
                     $catProducts = Product::active()
-                        ->whereHas('categories', fn ($q) => $q->where('categories.id', $slot->category_id))
+                        ->whereHas('categories', fn ($q) => $q->whereIn('categories.id', $slotCatIds))
                         ->with('variants')
                         ->get();
                     foreach ($catProducts as $prod) {

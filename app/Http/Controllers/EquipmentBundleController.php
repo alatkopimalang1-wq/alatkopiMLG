@@ -50,9 +50,10 @@ class EquipmentBundleController extends Controller
             'slots' => $bundle->slots->map(function ($slot) use ($reservedStock) {
                 $discountPct = max(0.0, min(100.0, (float) ($slot->discount_percent ?? 0)));
 
-                if ($slot->slot_type === 'selectable' && $slot->category_id) {
+                $catIds = $slot->resolvedCategoryIds();
+                if ($slot->slot_type === 'selectable' && ! empty($catIds)) {
                     $categoryProducts = Product::active()
-                        ->whereHas('categories', fn ($q) => $q->where('categories.id', $slot->category_id))
+                        ->whereHas('categories', fn ($q) => $q->whereIn('categories.id', $catIds))
                         ->with(['primaryImage', 'images', 'variants'])
                         ->orderBy('name')
                         ->get();

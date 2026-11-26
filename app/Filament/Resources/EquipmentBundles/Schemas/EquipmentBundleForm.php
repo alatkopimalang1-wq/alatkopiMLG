@@ -109,8 +109,9 @@ class EquipmentBundleForm
                                 ]),
 
                                 Grid::make(2)->schema([
-                                    Select::make('category_id')
+                                    Select::make('category_ids')
                                         ->label('Pilih Kategori Produk')
+                                        ->multiple()
                                         ->options(fn (): array => Category::query()
                                             ->orderBy('sort_order')
                                             ->get()
@@ -125,9 +126,14 @@ class EquipmentBundleForm
                                             ->all())
                                         ->searchable()
                                         ->preload()
+                                        ->afterStateHydrated(function (Select $component, $state, $record): void {
+                                            if (empty($state) && $record?->category_id) {
+                                                $component->state([$record->category_id]);
+                                            }
+                                        })
                                         ->visible(fn (callable $get): bool => ($get('slot_type') ?? 'selectable') === 'selectable')
                                         ->required(fn (callable $get): bool => ($get('slot_type') ?? 'selectable') === 'selectable')
-                                        ->helperText('Semua produk dalam kategori ini otomatis menjadi pilihan slot dengan mengikuti harga masing-masing produk.'),
+                                        ->helperText('Bisa pilih lebih dari 1 kategori. Semua produk dalam kategori terpilih otomatis menjadi pilihan slot dengan mengikuti harga masing-masing produk.'),
 
                                     TextInput::make('discount_percent')
                                         ->label('Diskon Bundling Kategori (%)')

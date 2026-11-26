@@ -13,6 +13,7 @@ class EquipmentBundleSlot extends Model
         'title',
         'slot_type',
         'category_id',
+        'category_ids',
         'discount_percent',
         'is_optional',
         'quantity',
@@ -21,6 +22,7 @@ class EquipmentBundleSlot extends Model
 
     protected $casts = [
         'category_id' => 'integer',
+        'category_ids' => 'array',
         'discount_percent' => 'float',
         'is_optional' => 'boolean',
         'quantity' => 'integer',
@@ -40,5 +42,21 @@ class EquipmentBundleSlot extends Model
     public function items(): HasMany
     {
         return $this->hasMany(EquipmentBundleSlotItem::class)->orderBy('sort_order')->orderBy('id');
+    }
+
+    /**
+     * Resolve all category IDs configured for this slot (supporting both
+     * multi-category `category_ids` and legacy single `category_id`).
+     *
+     * @return int[]
+     */
+    public function resolvedCategoryIds(): array
+    {
+        $ids = $this->category_ids;
+        if (empty($ids) && $this->category_id) {
+            $ids = [$this->category_id];
+        }
+
+        return array_values(array_unique(array_filter(array_map('intval', (array) $ids))));
     }
 }
