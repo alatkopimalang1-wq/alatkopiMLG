@@ -10,6 +10,7 @@ interface CartContextType {
         quantity?: number,
         grindOption?: string,
         customNotes?: string,
+        preorderDpPercent?: number,
     ) => void;
     removeItem: (
         variantId: number,
@@ -20,6 +21,12 @@ interface CartContextType {
         variantId: number,
         grindOption: string,
         quantity: number,
+        customNotes?: string,
+    ) => void;
+    updateItemDpPercent: (
+        variantId: number,
+        grindOption: string,
+        dpPercent: number,
         customNotes?: string,
     ) => void;
     clearCart: () => void;
@@ -62,6 +69,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
         quantity: number = 1,
         grindOption: string = 'Biji Utuh (Whole Bean)',
         customNotes?: string,
+        preorderDpPercent?: number,
     ) => {
         const isEquipment =
             product.series === 'alat-kopi' ||
@@ -71,6 +79,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
                 ),
             );
         const resolvedGrindOption = isEquipment ? '' : grindOption;
+        const isPreorder = Boolean(
+            product.is_preorder || product.stock_status === 'pre_order',
+        );
+        const minDp = product.preorder_dp_percent ?? 100;
+        const resolvedDpPercent = isPreorder
+            ? Math.max(minDp, preorderDpPercent ?? minDp)
+            : 100;
 
         setItems((prev) => {
             const existingIndex = prev.findIndex(
@@ -82,6 +97,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
             if (existingIndex > -1) {
                 const next = [...prev];
                 next[existingIndex].quantity += quantity;
+                if (isPreorder) {
+                    next[existingIndex].preorderDpPercent = resolvedDpPercent;
+                }
                 return next;
             }
             return [
@@ -92,6 +110,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
                     quantity,
                     grindOption: resolvedGrindOption,
                     customNotes,
+                    preorderDpPercent: isPreorder
+                        ? resolvedDpPercent
+                        : undefined,
                 },
             ];
         });
@@ -154,6 +175,30 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
         );
     };
 
+    const updateItemDpPercent = (
+        variantId: number,
+        grindOption: string,
+        dpPercent: number,
+        customNotes?: string,
+    ) => {
+        setItems((prev) =>
+            prev.map((i) => {
+                if (
+                    i.variant.id === variantId &&
+                    i.grindOption === grindOption &&
+                    (i.customNotes || '') === (customNotes || '')
+                ) {
+                    const minDp = i.product.preorder_dp_percent ?? 100;
+                    return {
+                        ...i,
+                        preorderDpPercent: Math.max(minDp, dpPercent),
+                    };
+                }
+                return i;
+            }),
+        );
+    };
+
     const clearCart = () => setItems([]);
 
     const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
@@ -169,6 +214,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
                 addItem,
                 removeItem,
                 updateQuantity,
+                updateItemDpPercent,
                 clearCart,
                 itemCount,
                 subtotal,

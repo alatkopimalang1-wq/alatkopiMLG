@@ -156,6 +156,7 @@ export default function CartPage({
         itemCount,
         subtotal,
         updateQuantity,
+        updateItemDpPercent,
         removeItem,
         clearCart,
     } = useCart();
@@ -444,17 +445,22 @@ export default function CartPage({
             item.product.is_preorder ||
                 item.product.stock_status === 'pre_order',
         );
+        const minDp = item.product.preorder_dp_percent ?? 100;
         const dpPercent = isPreorder
-            ? (item.product.preorder_dp_percent ?? 100)
+            ? Math.max(minDp, item.preorderDpPercent ?? minDp)
             : 100;
         return sum + Math.round((lineTotal * dpPercent) / 100);
     }, 0);
-    const hasPreorderDp = items.some(
-        (item) =>
-            (item.product.is_preorder ||
-                item.product.stock_status === 'pre_order') &&
-            (item.product.preorder_dp_percent ?? 100) < 100,
-    );
+    const hasPreorderDp = items.some((item) => {
+        const isPreorder = Boolean(
+            item.product.is_preorder ||
+                item.product.stock_status === 'pre_order',
+        );
+        if (!isPreorder) return false;
+        const minDp = item.product.preorder_dp_percent ?? 100;
+        const chosenDp = Math.max(minDp, item.preorderDpPercent ?? minDp);
+        return chosenDp < 100;
+    });
     const remainingBalance = Math.max(0, subtotal - payableSubtotal);
 
     // Grand total
@@ -499,13 +505,26 @@ export default function CartPage({
             const pickupAddrText = `Ambil di Toko: ${pickupSettings.store_name} (${pickupSettings.store_address})`;
 
             const payload = {
-                items: items.map((i) => ({
-                    variant_id: i.variant.id,
-                    quantity: i.quantity,
-                    grind_option: i.grindOption,
-                    custom_notes: i.customNotes,
-                    price: i.variant.price,
-                })),
+                items: items.map((i) => {
+                    const isPreorder = Boolean(
+                        i.product.is_preorder ||
+                            i.product.stock_status === 'pre_order',
+                    );
+                    const minDp = i.product.preorder_dp_percent ?? 100;
+                    const dpPercent = isPreorder
+                        ? Math.max(minDp, i.preorderDpPercent ?? minDp)
+                        : undefined;
+                    return {
+                        variant_id: i.variant.id,
+                        quantity: i.quantity,
+                        grind_option: i.grindOption,
+                        custom_notes: i.customNotes,
+                        price: i.variant.price,
+                        ...(dpPercent !== undefined
+                            ? { preorder_dp_percent: dpPercent }
+                            : {}),
+                    };
+                }),
                 fulfillment_type: fulfillmentType,
                 customer: {
                     name: customerName,
@@ -763,6 +782,96 @@ export default function CartPage({
                                                                             item.customNotes
                                                                         }
                                                                     </p>
+                                                                </div>
+                                                            )}
+                                                            {(item.product
+                                                                .is_preorder ||
+                                                                item.product
+                                                                    .stock_status ===
+                                                                    'pre_order') && (
+                                                                <div className="mt-1.5 rounded-lg border border-amber-200 bg-amber-50/80 p-2 text-[11px] text-amber-950">
+                                                                    <div className="mb-1 flex items-center justify-between gap-2">
+                                                                        <span className="font-bold text-amber-800">
+                                                                            Pre-Order
+                                                                            ·
+                                                                            Pilih
+                                                                            DP:
+                                                                        </span>
+                                                                        <span className="text-[10px] text-amber-700">
+                                                                            Min.{' '}
+                                                                            {item
+                                                                                .product
+                                                                                .preorder_dp_percent ??
+                                                                                100}
+                                                                            %
+                                                                        </span>
+                                                                    </div>
+                                                                    <div className="flex flex-wrap gap-1">
+                                                                        {[
+                                                                            30,
+                                                                            50,
+                                                                            70,
+                                                                            100,
+                                                                        ]
+                                                                            .filter(
+                                                                                (
+                                                                                    pct,
+                                                                                ) =>
+                                                                                    pct >=
+                                                                                    (item
+                                                                                        .product
+                                                                                        .preorder_dp_percent ??
+                                                                                        100),
+                                                                            )
+                                                                            .map(
+                                                                                (
+                                                                                    pct,
+                                                                                ) => {
+                                                                                    const minDp =
+                                                                                        item
+                                                                                            .product
+                                                                                            .preorder_dp_percent ??
+                                                                                        100;
+                                                                                    const currentDp =
+                                                                                        Math.max(
+                                                                                            minDp,
+                                                                                            item.preorderDpPercent ??
+                                                                                                minDp,
+                                                                                        );
+                                                                                    const isSelected =
+                                                                                        currentDp ===
+                                                                                        pct;
+                                                                                    return (
+                                                                                        <button
+                                                                                            key={
+                                                                                                pct
+                                                                                            }
+                                                                                            type="button"
+                                                                                            onClick={() =>
+                                                                                                updateItemDpPercent(
+                                                                                                    item
+                                                                                                        .variant
+                                                                                                        .id,
+                                                                                                    item.grindOption,
+                                                                                                    pct,
+                                                                                                    item.customNotes,
+                                                                                                )
+                                                                                            }
+                                                                                            className={`cursor-pointer rounded-md border px-2 py-0.5 text-[10px] font-bold transition-colors ${
+                                                                                                isSelected
+                                                                                                    ? 'border-amber-700 bg-amber-600 text-white'
+                                                                                                    : 'border-amber-300 bg-white text-amber-900 hover:border-amber-500'
+                                                                                            }`}
+                                                                                        >
+                                                                                            {pct ===
+                                                                                            100
+                                                                                                ? '100% (Lunas)'
+                                                                                                : `DP ${pct}%`}
+                                                                                        </button>
+                                                                                    );
+                                                                                },
+                                                                            )}
+                                                                    </div>
                                                                 </div>
                                                             )}
                                                         </div>

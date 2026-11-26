@@ -118,18 +118,18 @@ class EquipmentProductForm
                                 ->live(),
                         ]),
                         Select::make('preorder_dp_percent')
-                            ->label('Pengaturan Down Payment (DP) Pre-Order')
+                            ->label('Minimum Down Payment (DP) Pre-Order')
                             ->options([
-                                30 => '30%',
-                                50 => '50%',
-                                70 => '70%',
-                                100 => '100% (Lunas)',
+                                30 => 'Minimal DP 30%',
+                                50 => 'Minimal DP 50%',
+                                70 => 'Minimal DP 70%',
+                                100 => '100% (Wajib Lunas)',
                             ])
                             ->default(100)
                             ->native(false)
                             ->visible(fn (callable $get): bool => (bool) $get('is_preorder'))
                             ->required(fn (callable $get): bool => (bool) $get('is_preorder'))
-                            ->helperText('Tentukan persentase Down Payment (DP) yang berlaku untuk produk Pre-Order ini.'),
+                            ->helperText('Pelanggan dapat memilih DP mulai dari persentase minimum ini hingga 100% (Lunas) saat memesan produk.'),
                     ]),
 
                 Section::make('Harga, Stok & Varian Produk')

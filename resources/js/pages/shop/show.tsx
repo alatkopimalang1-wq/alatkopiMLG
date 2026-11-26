@@ -295,6 +295,12 @@ export default function ProductShow({
         product.is_preorder || product.stock_status === 'pre_order',
     );
     const preorderDpPercent = product.preorder_dp_percent ?? 100;
+    const availableDpOptions = [30, 50, 70, 100].filter(
+        (pct) => pct >= preorderDpPercent,
+    );
+    const [selectedDpPercent, setSelectedDpPercent] = useState<number>(
+        availableDpOptions[0] ?? 100,
+    );
 
     const isProductOutOfStock =
         !isPreorder &&
@@ -316,6 +322,8 @@ export default function ProductShow({
             selectedVariant,
             quantity,
             isEquipment ? '' : grindOption,
+            undefined,
+            isPreorder ? selectedDpPercent : undefined,
         );
         setIsAdded(true);
         setTimeout(() => setIsAdded(false), 1400);
@@ -326,7 +334,7 @@ export default function ProductShow({
               `Halo Alat Kopi Malang! Saya ingin menanyakan ketersediaan restock produk:\n*${product.name}*\nUkuran: ${selectedVariant.label}\n\nMohon info estimasi ready stock kembali. Terima kasih!`,
           )}`
         : `https://wa.me/6282132095241?text=${encodeURIComponent(
-              `Halo Alat Kopi Malang! Saya ingin memesan langsung:\n*${product.name}*\nVarian: ${selectedVariant.label}${!isEquipment && grindOption ? `\nGilingan: ${grindOption}` : ''}\nJumlah: ${quantity}x (${formatRupiah(selectedVariant.price * quantity)})\n\nMohon info ketersediaan stok & ongkir ke alamat saya. Terima kasih!`,
+              `Halo Alat Kopi Malang! Saya ingin memesan langsung:\n*${product.name}*\nVarian: ${selectedVariant.label}${!isEquipment && grindOption ? `\nGilingan: ${grindOption}` : ''}${isPreorder ? `\nStatus: Pre-Order (${selectedDpPercent === 100 ? '100% Lunas' : `DP ${selectedDpPercent}%`})` : ''}\nJumlah: ${quantity}x (${formatRupiah(selectedVariant.price * quantity)})\n\nMohon info ketersediaan stok & ongkir ke alamat saya. Terima kasih!`,
           )}`;
 
     const tokopediaUrl =
@@ -566,7 +574,7 @@ export default function ProductShow({
                                         <span>PRE-ORDER</span>
                                         {preorderDpPercent < 100 && (
                                             <span>
-                                                · DP {preorderDpPercent}%
+                                                · DP Mulai {preorderDpPercent}%
                                             </span>
                                         )}
                                     </span>
@@ -614,22 +622,73 @@ export default function ProductShow({
                                 </span>
                             </div>
                             {isPreorder && (
-                                <div className="mt-2 rounded-xl border border-amber-200 bg-amber-50/90 px-3.5 py-2.5 text-xs text-amber-900">
-                                    <span className="font-bold">
-                                        Produk Pre-Order
-                                    </span>{' '}
-                                    · Down Payment (DP):{' '}
-                                    <span className="font-extrabold">
-                                        {preorderDpPercent === 100
-                                            ? '100% (Lunas)'
-                                            : `${preorderDpPercent}% (${formatRupiah(
-                                                  Math.round(
-                                                      (selectedVariant.price *
-                                                          preorderDpPercent) /
-                                                          100,
-                                                  ),
-                                              )})`}
-                                    </span>
+                                <div className="mt-3 space-y-2.5 rounded-xl border border-amber-200 bg-amber-50/90 p-3.5 text-xs text-amber-950">
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
+                                        <span className="font-bold">
+                                            Pilih Down Payment (DP) Pre-Order:
+                                        </span>
+                                        <span className="text-[11px] font-semibold text-amber-800">
+                                            Minimal DP {preorderDpPercent}%
+                                        </span>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                        {availableDpOptions.map((pct) => {
+                                            const active =
+                                                selectedDpPercent === pct;
+                                            return (
+                                                <button
+                                                    key={pct}
+                                                    type="button"
+                                                    onClick={() =>
+                                                        setSelectedDpPercent(
+                                                            pct,
+                                                        )
+                                                    }
+                                                    className={`cursor-pointer rounded-lg border px-3 py-1.5 text-xs font-bold transition-all ${
+                                                        active
+                                                            ? 'border-amber-700 bg-amber-600 text-white shadow-xs'
+                                                            : 'border-amber-300 bg-white text-amber-900 hover:border-amber-500'
+                                                    }`}
+                                                >
+                                                    {pct === 100
+                                                        ? '100% (Lunas)'
+                                                        : `DP ${pct}%`}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                    <div className="flex flex-wrap items-center justify-between gap-2 border-t border-amber-200/80 pt-2 text-[11px]">
+                                        <span>
+                                            Bayar Sekarang:{' '}
+                                            <strong className="text-amber-950">
+                                                {formatRupiah(
+                                                    Math.round(
+                                                        (selectedVariant.price *
+                                                            quantity *
+                                                            selectedDpPercent) /
+                                                            100,
+                                                    ),
+                                                )}
+                                            </strong>
+                                        </span>
+                                        {selectedDpPercent < 100 && (
+                                            <span className="text-amber-800">
+                                                Sisa Pelunasan:{' '}
+                                                <strong>
+                                                    {formatRupiah(
+                                                        selectedVariant.price *
+                                                            quantity -
+                                                            Math.round(
+                                                                (selectedVariant.price *
+                                                                    quantity *
+                                                                    selectedDpPercent) /
+                                                                    100,
+                                                            ),
+                                                    )}
+                                                </strong>
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                             )}
                         </div>

@@ -112,7 +112,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                     <span className="absolute top-2 left-2 z-20 rounded-md bg-amber-600 px-2 py-0.5 text-[10px] font-bold text-white shadow-xs">
                         Pre-Order
                         {(product.preorder_dp_percent ?? 100) < 100
-                            ? ` · DP ${product.preorder_dp_percent}%`
+                            ? ` · DP Mulai ${product.preorder_dp_percent}%`
                             : ''}
                     </span>
                 ) : product.is_flash_sale ? (
@@ -253,7 +253,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                         <span className="absolute top-3 left-3 z-20 rounded-full bg-amber-600 px-3 py-1 text-[12px] font-bold text-white shadow-xs">
                             Pre-Order
                             {(product.preorder_dp_percent ?? 100) < 100
-                                ? ` · DP ${product.preorder_dp_percent}%`
+                                ? ` · DP Mulai ${product.preorder_dp_percent}%`
                                 : ''}
                         </span>
                     ) : product.is_flash_sale ? (

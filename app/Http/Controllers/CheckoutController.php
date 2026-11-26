@@ -33,6 +33,7 @@ class CheckoutController extends Controller
             'items.*.price' => 'nullable|numeric|min:0',
             'items.*.grind_option' => 'nullable|string|max:100',
             'items.*.custom_notes' => 'nullable|string|max:500',
+            'items.*.preorder_dp_percent' => 'nullable|integer|in:30,50,70,100',
             'fulfillment_type' => 'nullable|string|in:delivery,pickup',
             'customer.name' => 'required|string|max:100',
             'customer.phone' => 'required|string|max:30',
@@ -89,10 +90,14 @@ class CheckoutController extends Controller
             $lineTotal = $unitPrice * $qty;
             $subtotal += $lineTotal;
 
-            $dpPercent = $isPreorder ? (int) ($variant->product->preorder_dp_percent ?? 100) : 100;
-            if (! in_array($dpPercent, [30, 50, 70, 100], true)) {
-                $dpPercent = 100;
+            $minDpPercent = $isPreorder ? (int) ($variant->product->preorder_dp_percent ?? 100) : 100;
+            if (! in_array($minDpPercent, [30, 50, 70, 100], true)) {
+                $minDpPercent = 100;
             }
+            $requestedDpPercent = isset($item['preorder_dp_percent'])
+                ? (int) $item['preorder_dp_percent']
+                : $minDpPercent;
+            $dpPercent = $isPreorder ? max($minDpPercent, $requestedDpPercent) : 100;
             $payableSubtotal += round($lineTotal * ($dpPercent / 100));
             $hasPreorder = $hasPreorder || $isPreorder;
 

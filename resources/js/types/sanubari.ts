@@ -150,6 +150,7 @@ export interface CartItem {
     quantity: number;
     grindOption: string;
     customNotes?: string;
+    preorderDpPercent?: number;
 }
 
 export interface MegaMenuItem {
