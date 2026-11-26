@@ -7,6 +7,13 @@
             .equipment-table-wrap .fi-pagination-records-per-page-select {
                 display: none !important;
             }
+            .equipment-table-wrap .fi-ta-header-toolbar {
+                justify-content: flex-start !important;
+            }
+            .equipment-table-wrap .fi-ta-search-field {
+                margin-inline-start: 0 !important;
+                width: 100% !important;
+            }
         }
     </style>
 
