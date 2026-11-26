@@ -69,8 +69,20 @@ class EquipmentProductsTable
                 TextColumn::make('stock')
                     ->label('Stok (Pcs)')
                     ->badge()
-                    ->color(fn ($state): string => (int) $state > 0 ? 'success' : 'danger')
-                    ->formatStateUsing(fn ($state): string => (int) $state > 0 ? number_format((int) $state, 0, ',', '.').' pcs' : 'Habis (0 pcs)')
+                    ->color(function ($state, Product $record): string {
+                        if ($record->is_preorder) {
+                            return $record->is_out_of_stock ? 'danger' : 'success';
+                        }
+
+                        return (int) $state > 0 ? 'success' : 'danger';
+                    })
+                    ->formatStateUsing(function ($state, Product $record): string {
+                        if ($record->is_preorder) {
+                            return $record->is_out_of_stock ? 'Kosong (Pre-Order)' : 'Tersedia (Pre-Order)';
+                        }
+
+                        return (int) $state > 0 ? number_format((int) $state, 0, ',', '.').' pcs' : 'Habis (0 pcs)';
+                    })
                     ->description(fn (Product $record) => $record->variants->count() > 1 ? $record->variants->count().' varian' : null)
                     ->sortable(),
 
