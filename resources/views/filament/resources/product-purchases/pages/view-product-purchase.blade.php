@@ -16,8 +16,12 @@
                     Butuh Diproses
                 </a>
                 <a href="{{ $listUrl }}?activeTab=telah_diproses"
-                   class="px-2 py-1 rounded-md transition {{ in_array($po->status, ['diterima', 'selesai']) ? 'text-primary-600 dark:text-primary-400 font-bold bg-primary-50 dark:bg-primary-950/50' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white' }}">
+                   class="px-2 py-1 rounded-md transition {{ $po->status === 'diterima' ? 'text-primary-600 dark:text-primary-400 font-bold bg-primary-50 dark:bg-primary-950/50' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white' }}">
                     Telah Diproses
+                </a>
+                <a href="{{ $listUrl }}?activeTab=selesai"
+                   class="px-2 py-1 rounded-md transition {{ $po->status === 'selesai' ? 'text-primary-600 dark:text-primary-400 font-bold bg-primary-50 dark:bg-primary-950/50' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white' }}">
+                    Selesai
                 </a>
                 <a href="{{ $listUrl }}?activeTab=retur"
                    class="px-2 py-1 rounded-md transition {{ $po->status === 'retur' ? 'text-primary-600 dark:text-primary-400 font-bold bg-primary-50 dark:bg-primary-950/50' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white' }}">

@@ -36,15 +36,14 @@ class ListProductPurchases extends ListRecords
                 ])),
 
             'telah_diproses' => Tab::make('Telah Diproses')
-                ->badge(fn (): int => ProductPurchase::whereIn('status', [
-                    ProductPurchase::STATUS_DITERIMA,
-                    ProductPurchase::STATUS_SELESAI,
-                ])->count())
+                ->badge(fn (): int => ProductPurchase::where('status', ProductPurchase::STATUS_DITERIMA)->count())
+                ->badgeColor('info')
+                ->modifyQueryUsing(fn (Builder $query): Builder => $query->where('status', ProductPurchase::STATUS_DITERIMA)),
+
+            'selesai' => Tab::make('Selesai')
+                ->badge(fn (): int => ProductPurchase::where('status', ProductPurchase::STATUS_SELESAI)->count())
                 ->badgeColor('success')
-                ->modifyQueryUsing(fn (Builder $query): Builder => $query->whereIn('status', [
-                    ProductPurchase::STATUS_DITERIMA,
-                    ProductPurchase::STATUS_SELESAI,
-                ])),
+                ->modifyQueryUsing(fn (Builder $query): Builder => $query->where('status', ProductPurchase::STATUS_SELESAI)),
 
             'retur' => Tab::make('Retur')
                 ->badge(fn (): int => ProductPurchase::where('status', ProductPurchase::STATUS_RETUR)->count())
