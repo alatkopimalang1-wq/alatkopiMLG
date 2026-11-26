@@ -49,6 +49,21 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         product.is_preorder || product.stock_status === 'pre_order',
     );
 
+    const realStock = isPreorder
+        ? null
+        : product.variants &&
+            product.variants.length > 0 &&
+            product.variants.some(
+                (v) => v.stock !== undefined && v.stock !== null,
+            )
+          ? product.variants.reduce(
+                (sum, v) => sum + Math.max(0, v.stock ?? 0),
+                0,
+            )
+          : product.stock !== undefined && product.stock !== null
+            ? Math.max(0, product.stock)
+            : null;
+
     const isOutOfStock =
         !isPreorder &&
         Boolean(
@@ -177,6 +192,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                         >
                             {formatRupiah(primaryVariant.price)}
                         </div>
+                        {!isPreorder && realStock !== null && realStock > 0 && (
+                            <div
+                                className={`text-[11px] font-semibold ${
+                                    realStock <= 5
+                                        ? 'text-amber-600'
+                                        : 'text-emerald-700'
+                                }`}
+                            >
+                                Stok: {realStock}
+                            </div>
+                        )}
                     </div>
                 </Link>
 
@@ -307,6 +333,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                     >
                         {formatRupiah(primaryVariant.price)}
                     </span>
+                    {!isPreorder && realStock !== null && realStock > 0 && (
+                        <span
+                            className={`mt-0.5 block text-xs font-semibold ${
+                                realStock <= 5
+                                    ? 'text-amber-600'
+                                    : 'text-emerald-700'
+                            }`}
+                        >
+                            Stok: {realStock}
+                        </span>
+                    )}
                 </div>
 
                 {isOutOfStock ? (

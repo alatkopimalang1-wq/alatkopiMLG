@@ -302,18 +302,33 @@ export default function ProductShow({
         availableDpOptions[0] ?? 100,
     );
 
+    const selectedVariantStock =
+        !isPreorder &&
+        selectedVariant.stock !== undefined &&
+        selectedVariant.stock !== null
+            ? Math.max(0, Number(selectedVariant.stock))
+            : null;
+
     const isProductOutOfStock =
         !isPreorder &&
         Boolean(
             product.is_out_of_stock ||
                 product.stock_status === 'out_of_stock' ||
+                (product.stock !== undefined &&
+                    product.stock !== null &&
+                    product.stock <= 0) ||
                 (variants.length > 0 &&
-                    variants.every((v) => v.stock_status === 'out_of_stock')),
+                    variants.every((v) =>
+                        v.stock !== undefined && v.stock !== null
+                            ? v.stock <= 0
+                            : v.stock_status === 'out_of_stock',
+                    )),
         );
     const isCurrentVariantOutOfStock =
         !isPreorder &&
         (isProductOutOfStock ||
-            selectedVariant.stock_status === 'out_of_stock');
+            selectedVariant.stock_status === 'out_of_stock' ||
+            (selectedVariantStock !== null && selectedVariantStock <= 0));
 
     const handleAddToCart = () => {
         if (isCurrentVariantOutOfStock) return;
@@ -738,8 +753,13 @@ export default function ProductShow({
                                         const active =
                                             selectedVariant.id === v.id;
                                         const vOutOfStock =
-                                            isProductOutOfStock ||
-                                            v.stock_status === 'out_of_stock';
+                                            !isPreorder &&
+                                            (isProductOutOfStock ||
+                                                v.stock_status ===
+                                                    'out_of_stock' ||
+                                                (v.stock !== undefined &&
+                                                    v.stock !== null &&
+                                                    v.stock <= 0));
                                         const vImage =
                                             v.image_url ||
                                             (v.image
@@ -751,6 +771,15 @@ export default function ProductShow({
                                                 type="button"
                                                 onClick={() => {
                                                     setSelectedVariant(v);
+                                                    if (
+                                                        !isPreorder &&
+                                                        v.stock !== undefined &&
+                                                        v.stock !== null &&
+                                                        v.stock > 0 &&
+                                                        quantity > v.stock
+                                                    ) {
+                                                        setQuantity(v.stock);
+                                                    }
                                                     const targetIdx =
                                                         combinedImages.findIndex(
                                                             (img) =>
@@ -825,6 +854,38 @@ export default function ProductShow({
 
                         {/* Quantity Stepper & Add to Cart */}
                         <div className="space-y-3 pt-2">
+                            {isPreorder ? (
+                                <div className="flex items-center justify-between text-xs sm:text-sm">
+                                    <span className="font-semibold text-brand-800">
+                                        Ketersediaan:
+                                    </span>
+                                    <span className="font-bold text-amber-700">
+                                        Pre-Order (Tanpa Batas Stok)
+                                    </span>
+                                </div>
+                            ) : selectedVariantStock !== null ? (
+                                <div className="flex items-center justify-between text-xs sm:text-sm">
+                                    <span className="font-semibold text-brand-800">
+                                        Stok Tersedia:
+                                    </span>
+                                    {selectedVariantStock > 0 ? (
+                                        <span
+                                            className={`font-bold ${
+                                                selectedVariantStock <= 5
+                                                    ? 'text-amber-600'
+                                                    : 'text-emerald-700'
+                                            }`}
+                                        >
+                                            {selectedVariantStock} pcs
+                                        </span>
+                                    ) : (
+                                        <span className="font-bold text-rose-600">
+                                            Stok Habis
+                                        </span>
+                                    )}
+                                </div>
+                            ) : null}
+
                             <div className="flex items-center gap-2.5 sm:gap-3">
                                 {/* Stepper */}
                                 <div
@@ -851,11 +912,27 @@ export default function ProductShow({
                                     </span>
                                     <button
                                         type="button"
-                                        disabled={isCurrentVariantOutOfStock}
-                                        onClick={() =>
-                                            setQuantity(quantity + 1)
+                                        disabled={
+                                            isCurrentVariantOutOfStock ||
+                                            (!isPreorder &&
+                                                selectedVariantStock !== null &&
+                                                quantity >=
+                                                    selectedVariantStock)
                                         }
-                                        className="hover:bg-sand-100 flex h-full w-9 items-center justify-center rounded-lg text-brand-800 transition-colors disabled:cursor-not-allowed sm:h-8 sm:w-8"
+                                        onClick={() =>
+                                            setQuantity(
+                                                !isPreorder &&
+                                                    selectedVariantStock !==
+                                                        null &&
+                                                    selectedVariantStock > 0
+                                                    ? Math.min(
+                                                          selectedVariantStock,
+                                                          quantity + 1,
+                                                      )
+                                                    : quantity + 1,
+                                            )
+                                        }
+                                        className="hover:bg-sand-100 flex h-full w-9 items-center justify-center rounded-lg text-brand-800 transition-colors disabled:cursor-not-allowed disabled:opacity-40 sm:h-8 sm:w-8"
                                     >
                                         <Plus className="h-3.5 w-3.5" />
                                     </button>

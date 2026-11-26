@@ -281,7 +281,9 @@ class Product extends Model
 
             $this->updateQuietly([
                 'stock' => $totalStock,
-                'stock_status' => $totalStock > 0 ? 'in_stock' : 'out_of_stock',
+                'stock_status' => $this->is_preorder
+                    ? 'pre_order'
+                    : ($totalStock > 0 ? 'in_stock' : 'out_of_stock'),
             ]);
         }
     }
@@ -298,7 +300,9 @@ class Product extends Model
             }
 
             $stock = (int) ($product->stock ?? 0);
-            $product->stock_status = $stock > 0 ? 'in_stock' : 'out_of_stock';
+            $product->stock_status = $product->is_preorder
+                ? 'pre_order'
+                : ($stock > 0 ? 'in_stock' : 'out_of_stock');
         });
 
         static::saved(function (Product $product) {
