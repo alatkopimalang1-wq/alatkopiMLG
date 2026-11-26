@@ -26,6 +26,7 @@ export interface Product {
     max_price: number;
     stock?: number;
     stock_status: string;
+    is_preorder?: boolean;
     is_out_of_stock: boolean;
     variants: ProductVariant[];
 }

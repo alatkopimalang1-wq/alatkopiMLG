@@ -58,10 +58,14 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
                     loading="lazy"
                 />
                 {product.is_out_of_stock ? (
-                    <div className="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-stone-900/80">
-                        <span className="rounded border border-rose-200 bg-rose-50 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-rose-700 uppercase dark:border-rose-900 dark:bg-rose-950/60 dark:text-rose-400">
-                            Habis
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/65 backdrop-blur-[1px]">
+                        <span className="rounded border border-white/30 bg-black/90 px-2 py-0.5 text-[10px] font-black tracking-widest text-white uppercase shadow-md">
+                            HABIS
                         </span>
+                    </div>
+                ) : product.is_preorder ? (
+                    <div className="py-0.2 absolute right-1 bottom-1 rounded-md border border-amber-300 bg-amber-50/95 px-1.5 text-[9px] font-bold text-amber-800 shadow-2xs sm:right-1.5 sm:bottom-1.5 dark:border-amber-700 dark:bg-amber-950/95 dark:text-amber-300">
+                        Pre-Order
                     </div>
                 ) : product.slug === 'byob' || product.series === 'cybr' || product.series === 'custom-blend' ? (
                     <div className="py-0.2 absolute right-1 bottom-1 rounded-md border border-emerald-300 bg-emerald-50/95 px-1.5 text-[9px] font-bold text-emerald-800 shadow-2xs sm:right-1.5 sm:bottom-1.5 dark:border-emerald-700 dark:bg-emerald-950/95 dark:text-emerald-300">

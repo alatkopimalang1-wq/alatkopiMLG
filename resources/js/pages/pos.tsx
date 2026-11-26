@@ -162,7 +162,9 @@ interface Product {
     image: string;
     min_price: number;
     max_price: number;
+    stock?: number;
     stock_status: string;
+    is_preorder?: boolean;
     is_out_of_stock: boolean;
     variants: ProductVariant[];
 }
@@ -2476,15 +2478,26 @@ function PosContent({
 
     // Add to Cart Logic
     const addToCart = (product: Product, variant: ProductVariant) => {
+        const isPre = Boolean(product.is_preorder || product.stock_status === 'pre_order');
+        const vStock = (variant as any).stock !== undefined ? Number((variant as any).stock) : null;
+
         if (
-            product.is_out_of_stock ||
-            variant.stock_status === 'out_of_stock'
+            !isPre &&
+            (product.is_out_of_stock ||
+                variant.stock_status === 'out_of_stock' ||
+                (vStock !== null && vStock <= 0))
         ) {
             showToast('Produk atau varian ini sedang habis');
             return;
         }
 
         const cartItemId = `${product.id}-${variant.id}`;
+        const existingItem = cart.find((item) => item.id === cartItemId);
+        if (!isPre && vStock !== null && existingItem && existingItem.quantity >= vStock) {
+            showToast(`Stok maksimal ${product.name} (${variant.label}) hanya ${vStock} pcs`);
+            return;
+        }
+
         setCart((prev) => {
             const existing = prev.find((item) => item.id === cartItemId);
             if (existing) {
@@ -2562,8 +2575,17 @@ function PosContent({
             return prev
                 .map((item) => {
                     if (item.id === cartItemId) {
-                        const newQty = item.quantity + delta;
+                        let newQty = item.quantity + delta;
                         if (newQty <= 0) return null;
+                        if (delta > 0 && item.product_id && item.variant_id) {
+                            const prod = products.find((p) => p.id === item.product_id);
+                            const isPre = Boolean(prod?.is_preorder || prod?.stock_status === 'pre_order');
+                            const vari = prod?.variants?.find((v) => v.id === item.variant_id) as any;
+                            if (!isPre && vari && vari.stock !== undefined && newQty > Number(vari.stock)) {
+                                showToast(`Stok maksimal ${item.product_name} (${item.variant_label}) hanya ${vari.stock} pcs`);
+                                newQty = Math.max(1, Number(vari.stock));
+                            }
+                        }
                         const newDisc = recalculateItemDiscount(item, newQty);
                         return {
                             ...item,

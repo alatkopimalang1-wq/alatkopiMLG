@@ -82,6 +82,21 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
         const isPreorder = Boolean(
             product.is_preorder || product.stock_status === 'pre_order',
         );
+        const variantStock =
+            !isPreorder &&
+            variant.stock !== undefined &&
+            variant.stock !== null
+                ? Math.max(0, Number(variant.stock))
+                : null;
+
+        if (
+            !isPreorder &&
+            (variant.stock_status === 'out_of_stock' ||
+                (variantStock !== null && variantStock <= 0))
+        ) {
+            return;
+        }
+
         const minDp = product.preorder_dp_percent ?? 100;
         const resolvedDpPercent = isPreorder
             ? Math.max(minDp, preorderDpPercent ?? minDp)
@@ -96,18 +111,26 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
             );
             if (existingIndex > -1) {
                 const next = [...prev];
-                next[existingIndex].quantity += quantity;
+                const newQty = next[existingIndex].quantity + quantity;
+                next[existingIndex].quantity =
+                    variantStock !== null
+                        ? Math.min(variantStock, newQty)
+                        : newQty;
                 if (isPreorder) {
                     next[existingIndex].preorderDpPercent = resolvedDpPercent;
                 }
                 return next;
             }
+            const initialQty =
+                variantStock !== null
+                    ? Math.min(variantStock, Math.max(1, quantity))
+                    : Math.max(1, quantity);
             return [
                 ...prev,
                 {
                     product,
                     variant,
-                    quantity,
+                    quantity: initialQty,
                     grindOption: resolvedGrindOption,
                     customNotes,
                     preorderDpPercent: isPreorder
@@ -168,7 +191,21 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
                     i.grindOption === grindOption &&
                     (i.customNotes || '') === (customNotes || '')
                 ) {
-                    return { ...i, quantity };
+                    const isPre = Boolean(
+                        i.product.is_preorder ||
+                            i.product.stock_status === 'pre_order',
+                    );
+                    const maxStock =
+                        !isPre &&
+                        i.variant.stock !== undefined &&
+                        i.variant.stock !== null
+                            ? Math.max(0, Number(i.variant.stock))
+                            : null;
+                    const cappedQty =
+                        maxStock !== null && maxStock > 0
+                            ? Math.min(maxStock, quantity)
+                            : quantity;
+                    return { ...i, quantity: cappedQty };
                 }
                 return i;
             }),

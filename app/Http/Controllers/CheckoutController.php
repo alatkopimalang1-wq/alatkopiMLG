@@ -77,11 +77,21 @@ class CheckoutController extends Controller
                 || $variant->product->stock_status === 'pre_order'
                 || $variant->stock_status === 'pre_order';
 
-            if (! $isPreorder && ($variant->stock_status === 'out_of_stock' || $variant->product->stock_status === 'out_of_stock')) {
+            $availableStock = (int) ($variant->stock ?? 0);
+            if (! $isPreorder && ($variant->stock_status === 'out_of_stock' || $variant->product->stock_status === 'out_of_stock' || $availableStock <= 0)) {
                 return response()->json([
                     'message' => "Maaf, stok untuk produk '{$variant->product->name}' ({$variant->label}) sedang habis (Sold Out) dan tidak dapat dibeli.",
                     'errors' => [
                         'items' => ["Produk '{$variant->product->name}' ({$variant->label}) habis terjual."],
+                    ],
+                ], 422);
+            }
+
+            if (! $isPreorder && $item['quantity'] > $availableStock) {
+                return response()->json([
+                    'message' => "Maaf, stok untuk '{$variant->product->name}' ({$variant->label}) hanya tersisa {$availableStock} pcs.",
+                    'errors' => [
+                        'items' => ["Stok '{$variant->product->name}' ({$variant->label}) tersisa {$availableStock} pcs."],
                     ],
                 ], 422);
             }
@@ -316,6 +326,23 @@ class CheckoutController extends Controller
 
             foreach ($orderLines as $line) {
                 $order->items()->create($line);
+
+                if (empty($line['is_preorder']) && ! empty($line['product_variant_id'])) {
+                    $lockedVariant = ProductVariant::with('product')->lockForUpdate()->find($line['product_variant_id']);
+                    if ($lockedVariant) {
+                        $currentStock = (int) ($lockedVariant->stock ?? 0);
+                        $qtyOrdered = (int) $line['quantity'];
+                        if ($currentStock < $qtyOrdered) {
+                            throw new \Illuminate\Http\Exceptions\HttpResponseException(response()->json([
+                                'message' => "Maaf, stok untuk '{$line['product_name']}' ({$line['variant_label']}) hanya tersisa {$currentStock} pcs.",
+                            ], 422));
+                        }
+                        $lockedVariant->stock = max(0, $currentStock - $qtyOrdered);
+                        $lockedVariant->stock_status = $lockedVariant->stock > 0 ? 'in_stock' : 'out_of_stock';
+                        $lockedVariant->save();
+                        $lockedVariant->product?->syncStockFromVariants();
+                    }
+                }
             }
 
             return $order;

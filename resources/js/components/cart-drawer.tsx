@@ -237,6 +237,27 @@ export const CartDrawer: React.FC = () => {
                                                             </span>
                                                             <button
                                                                 type="button"
+                                                                disabled={
+                                                                    !(
+                                                                        item
+                                                                            .product
+                                                                            .is_preorder ||
+                                                                        item
+                                                                            .product
+                                                                            .stock_status ===
+                                                                            'pre_order'
+                                                                    ) &&
+                                                                    item.variant
+                                                                        .stock !==
+                                                                        undefined &&
+                                                                    item.variant
+                                                                        .stock !==
+                                                                        null &&
+                                                                    item.quantity >=
+                                                                        item
+                                                                            .variant
+                                                                            .stock
+                                                                }
                                                                 onClick={() =>
                                                                     updateQuantity(
                                                                         item
@@ -248,7 +269,7 @@ export const CartDrawer: React.FC = () => {
                                                                         item.customNotes,
                                                                     )
                                                                 }
-                                                                className="hover:bg-sand-100 cursor-pointer p-1 text-brand-700 transition-transform active:scale-95"
+                                                                className="hover:bg-sand-100 cursor-pointer p-1 text-brand-700 transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
                                                             >
                                                                 <Plus className="h-3.5 w-3.5" />
                                                             </button>

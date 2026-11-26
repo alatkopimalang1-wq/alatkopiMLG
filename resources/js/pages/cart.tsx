@@ -501,6 +501,32 @@ export default function CartPage({
             return;
         }
 
+        const outOfStockItem = items.find((item) => {
+            const isPre = Boolean(
+                item.product.is_preorder ||
+                    item.product.stock_status === 'pre_order',
+            );
+            if (isPre) return false;
+            const vStock =
+                item.variant.stock !== undefined && item.variant.stock !== null
+                    ? Number(item.variant.stock)
+                    : null;
+            return (
+                item.variant.stock_status === 'out_of_stock' ||
+                item.product.stock_status === 'out_of_stock' ||
+                (vStock !== null && (vStock <= 0 || item.quantity > vStock))
+            );
+        });
+        if (outOfStockItem) {
+            const vStock = outOfStockItem.variant.stock ?? 0;
+            setErrorMessage(
+                vStock <= 0
+                    ? `Produk '${outOfStockItem.product.name}' (${outOfStockItem.variant.label}) stoknya sudah habis.`
+                    : `Stok '${outOfStockItem.product.name}' (${outOfStockItem.variant.label}) hanya tersisa ${vStock} pcs.`,
+            );
+            return;
+        }
+
         if (isPickup) {
             if (!customerName.trim() || !customerPhone.trim()) {
                 setErrorMessage(
@@ -938,6 +964,27 @@ export default function CartPage({
                                                             </span>
                                                             <button
                                                                 type="button"
+                                                                disabled={
+                                                                    !(
+                                                                        item
+                                                                            .product
+                                                                            .is_preorder ||
+                                                                        item
+                                                                            .product
+                                                                            .stock_status ===
+                                                                            'pre_order'
+                                                                    ) &&
+                                                                    item.variant
+                                                                        .stock !==
+                                                                        undefined &&
+                                                                    item.variant
+                                                                        .stock !==
+                                                                        null &&
+                                                                    item.quantity >=
+                                                                        item
+                                                                            .variant
+                                                                            .stock
+                                                                }
                                                                 onClick={() =>
                                                                     updateQuantity(
                                                                         item
@@ -949,7 +996,7 @@ export default function CartPage({
                                                                         item.customNotes,
                                                                     )
                                                                 }
-                                                                className="hover:bg-sand-100 cursor-pointer p-1 text-brand-700"
+                                                                className="hover:bg-sand-100 cursor-pointer p-1 text-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
                                                             >
                                                                 <Plus className="h-3 w-3" />
                                                             </button>
