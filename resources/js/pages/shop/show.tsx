@@ -823,9 +823,6 @@ export default function ProductShow({
                                         Produk Ini Tersedia di:
                                     </h4>
                                 </div>
-                                <span className="flex-shrink-0 rounded-full border border-indigo-100 bg-indigo-50 px-2 py-0.5 text-[9.5px] font-black tracking-wider text-indigo-600 uppercase sm:px-2.5 sm:text-xs">
-                                    TOKO RESMI
-                                </span>
                             </div>
 
                             <div className="grid grid-cols-2 gap-2.5">
