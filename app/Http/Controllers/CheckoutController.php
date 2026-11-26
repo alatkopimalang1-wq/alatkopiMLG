@@ -65,6 +65,7 @@ class CheckoutController extends Controller
         $subtotal = 0;
         $payableSubtotal = 0;
         $hasPreorder = false;
+        $dpPercents = [];
         $totalWeightGrams = 0;
         $orderLines = [];
 
@@ -98,6 +99,9 @@ class CheckoutController extends Controller
                 ? (int) $item['preorder_dp_percent']
                 : $minDpPercent;
             $dpPercent = $isPreorder ? max($minDpPercent, $requestedDpPercent) : 100;
+            if ($isPreorder) {
+                $dpPercents[] = $dpPercent;
+            }
             $payableSubtotal += round($lineTotal * ($dpPercent / 100));
             $hasPreorder = $hasPreorder || $isPreorder;
 
@@ -250,6 +254,8 @@ class CheckoutController extends Controller
             'customer_latitude' => $validated['customer']['latitude'] ?? null,
             'customer_longitude' => $validated['customer']['longitude'] ?? null,
             'is_preorder' => $hasPreorder,
+            'dp_percent' => count(array_unique($dpPercents)) === 1 ? $dpPercents[0] : null,
+            'dp_percents' => array_values(array_unique($dpPercents)),
             'dp_payable_subtotal' => $payableSubtotal,
             'remaining_balance' => max(0, $subtotal - $payableSubtotal),
         ];
