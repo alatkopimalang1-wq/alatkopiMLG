@@ -114,6 +114,7 @@ class ProductPurchaseForm
                                         ->label('Produk Alat Kopi')
                                         ->options(fn (): array => Product::query()
                                             ->where('series', 'alat-kopi')
+                                            ->where(fn ($q) => $q->where('is_preorder', false)->orWhereNull('is_preorder'))
                                             ->orderBy('name')
                                             ->pluck('name', 'id')
                                             ->all())
