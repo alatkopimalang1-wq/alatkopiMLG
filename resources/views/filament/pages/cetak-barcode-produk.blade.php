@@ -13,18 +13,30 @@
                 margin: 0 !important;
                 padding: 0 !important;
                 background: #fff !important;
+                height: auto !important;
+                min-height: 0 !important;
             }
-            body * {
-                visibility: hidden !important;
+            .fi-sidebar,
+            .fi-topbar,
+            .fi-header,
+            .fi-breadcrumbs,
+            .no-print {
+                display: none !important;
             }
-            #barcode-print-area,
-            #barcode-print-area * {
-                visibility: visible !important;
+            .fi-layout,
+            .fi-main,
+            .fi-main-ctn,
+            .fi-page,
+            .fi-page-main,
+            main {
+                padding: 0 !important;
+                margin: 0 !important;
+                min-height: 0 !important;
+                height: auto !important;
+                max-width: none !important;
+                width: 100% !important;
             }
             #barcode-print-area {
-                position: absolute !important;
-                left: 0 !important;
-                top: 0 !important;
                 width: 100% !important;
                 background: #fff !important;
                 border: none !important;
@@ -55,16 +67,14 @@
                 text-align: center !important;
                 @if($labelSize === '40x20')
                     width: 40mm !important;
-                    height: 20mm !important;
+                    height: 19.5mm !important;
+                    min-height: 0 !important;
                     padding: 1mm 1.5mm !important;
-                    page-break-after: always !important;
-                    break-after: page !important;
                 @elseif($labelSize === '50x30')
                     width: 50mm !important;
-                    height: 30mm !important;
+                    height: 29.5mm !important;
+                    min-height: 0 !important;
                     padding: 1.5mm 2mm !important;
-                    page-break-after: always !important;
-                    break-after: page !important;
                 @else
                     width: 100% !important;
                     min-height: 35mm !important;
@@ -74,10 +84,12 @@
                     page-break-inside: avoid !important;
                 @endif
             }
-            .barcode-label-card:last-child {
-                page-break-after: auto !important;
-                break-after: auto !important;
+            @if($labelSize !== 'a4_grid')
+            .barcode-label-card:not(:last-child) {
+                page-break-after: always !important;
+                break-after: page !important;
             }
+            @endif
             .barcode-label-name {
                 font-weight: 700 !important;
                 color: #000 !important;
