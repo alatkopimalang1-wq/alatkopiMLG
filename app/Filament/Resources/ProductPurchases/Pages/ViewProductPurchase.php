@@ -291,6 +291,11 @@ class ViewProductPurchase extends ViewRecord
                     ->required(),
             ])
             ->action(function (array $data) use ($po) {
+                if ($po->is_paid) {
+                    Notification::make()->title('PO Sudah Dibayar')->body('Item dan diskon tidak dapat diubah setelah status Sudah Bayar.')->warning()->send();
+
+                    return;
+                }
                 $po->discount_amount = max(0, (float) ($data['discount_amount'] ?? 0));
                 $po->save();
                 $po->recalculateTotals();
@@ -392,6 +397,11 @@ class ViewProductPurchase extends ViewRecord
                 ]),
             ])
             ->action(function (array $data) use ($po) {
+                if ($po->is_paid) {
+                    Notification::make()->title('PO Sudah Dibayar')->body('Produk tidak dapat ditambahkan setelah status Sudah Bayar.')->warning()->send();
+
+                    return;
+                }
                 DB::transaction(function () use ($data, $po) {
                     $qty = max(1, (int) ($data['quantity'] ?? 1));
                     $cost = max(0, (float) ($data['unit_cost'] ?? 0));
@@ -467,6 +477,11 @@ class ViewProductPurchase extends ViewRecord
                 ]),
             ])
             ->action(function (array $data, array $arguments) use ($po) {
+                if ($po->is_paid) {
+                    Notification::make()->title('PO Sudah Dibayar')->body('Produk yang sudah dimasukkan tidak dapat diedit setelah status Sudah Bayar.')->warning()->send();
+
+                    return;
+                }
                 $item = ProductPurchaseItem::where('product_purchase_id', $po->id)
                     ->find($arguments['itemId'] ?? 0);
 
@@ -521,6 +536,11 @@ class ViewProductPurchase extends ViewRecord
             ->modalHeading('Hapus Item dari PO?')
             ->modalDescription('Item ini akan dihapus dari daftar produk pesanan.')
             ->action(function (array $arguments) use ($po) {
+                if ($po->is_paid) {
+                    Notification::make()->title('PO Sudah Dibayar')->body('Produk tidak dapat dihapus setelah status Sudah Bayar.')->warning()->send();
+
+                    return;
+                }
                 if ($po->items()->count() <= 1) {
                     Notification::make()
                         ->title('Tidak Dapat Menghapus')

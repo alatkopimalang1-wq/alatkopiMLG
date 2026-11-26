@@ -193,12 +193,19 @@
         <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-xs overflow-hidden">
             <div class="flex items-center justify-between px-4 py-3.5 border-b border-gray-100 dark:border-gray-800">
                 <h3 class="text-sm sm:text-base font-bold text-gray-900 dark:text-white">Produk Pesanan</h3>
-                <button type="button"
-                        wire:click="mountAction('addItem')"
-                        class="inline-flex items-center gap-1.5 rounded-lg bg-primary-600 hover:bg-primary-700 px-3 py-1.5 text-xs font-semibold text-white transition">
-                    <x-heroicon-m-plus class="w-4 h-4" />
-                    Tambah Produk
-                </button>
+                @if(! $po->is_paid)
+                    <button type="button"
+                            wire:click="mountAction('addItem')"
+                            class="inline-flex items-center gap-1.5 rounded-lg bg-primary-600 hover:bg-primary-700 px-3 py-1.5 text-xs font-semibold text-white transition">
+                        <x-heroicon-m-plus class="w-4 h-4" />
+                        Tambah Produk
+                    </button>
+                @else
+                    <span class="inline-flex items-center gap-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 px-3 py-1.5 text-xs font-medium text-gray-500 dark:text-gray-400">
+                        <x-heroicon-m-lock-closed class="w-3.5 h-3.5" />
+                        Terkunci (Sudah Bayar)
+                    </span>
+                @endif
             </div>
 
             <div class="overflow-x-auto">
@@ -260,21 +267,27 @@
                                     {{ $fmt($item->subtotal) }}
                                 </td>
                                 <td class="py-3 px-4 text-center">
-                                    <div class="inline-flex items-center gap-2">
-                                        <button type="button"
-                                                wire:click="mountAction('editItem', { itemId: {{ $item->id }} })"
-                                                class="inline-flex items-center gap-1 text-xs font-semibold text-sky-600 hover:text-sky-700 dark:text-sky-400">
-                                            <x-heroicon-m-pencil class="w-3.5 h-3.5" />
-                                            Ubah
-                                        </button>
-                                        @if($po->items->count() > 1)
+                                    @if(! $po->is_paid)
+                                        <div class="inline-flex items-center gap-2">
                                             <button type="button"
-                                                    wire:click="mountAction('deleteItem', { itemId: {{ $item->id }} })"
-                                                    class="inline-flex items-center gap-1 text-xs font-semibold text-rose-600 hover:text-rose-700 dark:text-rose-400">
-                                                <x-heroicon-m-trash class="w-3.5 h-3.5" />
+                                                    wire:click="mountAction('editItem', { itemId: {{ $item->id }} })"
+                                                    class="inline-flex items-center gap-1 text-xs font-semibold text-sky-600 hover:text-sky-700 dark:text-sky-400">
+                                                <x-heroicon-m-pencil class="w-3.5 h-3.5" />
+                                                Ubah
                                             </button>
-                                        @endif
-                                    </div>
+                                            @if($po->items->count() > 1)
+                                                <button type="button"
+                                                        wire:click="mountAction('deleteItem', { itemId: {{ $item->id }} })"
+                                                        class="inline-flex items-center gap-1 text-xs font-semibold text-rose-600 hover:text-rose-700 dark:text-rose-400">
+                                                    <x-heroicon-m-trash class="w-3.5 h-3.5" />
+                                                </button>
+                                            @endif
+                                        </div>
+                                    @else
+                                        <span class="inline-flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500" title="Tidak dapat diubah karena PO sudah dibayar">
+                                            <x-heroicon-m-lock-closed class="w-3.5 h-3.5" />
+                                        </span>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach
@@ -294,12 +307,14 @@
                             <td colspan="5" class="py-2 px-4 text-right font-medium text-gray-600 dark:text-gray-400">Diskon</td>
                             <td class="py-2 px-4 text-right font-semibold text-gray-900 dark:text-white">{{ $fmt($po->discount_amount) }}</td>
                             <td class="py-2 px-4 text-center">
-                                <button type="button"
-                                        wire:click="mountAction('editDiscount')"
-                                        class="inline-flex items-center gap-1 text-xs font-semibold text-sky-600 hover:text-sky-700 dark:text-sky-400">
-                                    <x-heroicon-m-cog-6-tooth class="w-3.5 h-3.5" />
-                                    Diskon
-                                </button>
+                                @if(! $po->is_paid)
+                                    <button type="button"
+                                            wire:click="mountAction('editDiscount')"
+                                            class="inline-flex items-center gap-1 text-xs font-semibold text-sky-600 hover:text-sky-700 dark:text-sky-400">
+                                        <x-heroicon-m-cog-6-tooth class="w-3.5 h-3.5" />
+                                        Diskon
+                                    </button>
+                                @endif
                             </td>
                         </tr>
                         <tr class="border-t border-gray-200 dark:border-gray-700 bg-gray-100/70 dark:bg-gray-800/60">
