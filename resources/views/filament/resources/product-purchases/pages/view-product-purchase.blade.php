@@ -128,8 +128,8 @@
             </div>
         </div>
 
-        {{-- 3-Column Info Cards (Supplier, Info Penerimaan, Catatan & Jatuh Tempo) --}}
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {{-- 2-Column Info Cards (Supplier & Info Penerimaan) --}}
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {{-- Card 1: Supplier --}}
             <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-xs flex flex-col justify-between">
                 <div>
@@ -198,39 +198,6 @@
                         <dd class="font-medium text-gray-800 dark:text-gray-200 mt-0.5">{{ $po->receiver_name ?: '—' }}</dd>
                     </div>
                 </dl>
-            </div>
-
-            {{-- Card 3: Stacked Catatan & Jatuh Tempo --}}
-            <div class="space-y-4">
-                <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-xs">
-                    <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3 mb-3">
-                        <h3 class="text-sm font-bold text-gray-900 dark:text-white">Catatan</h3>
-                        <button type="button"
-                                wire:click="mountAction('editNotes')"
-                                class="inline-flex items-center gap-1 rounded-md bg-sky-600 hover:bg-sky-700 px-2.5 py-1 text-xs font-semibold text-white transition">
-                            <x-heroicon-m-pencil-square class="w-3.5 h-3.5" />
-                            Ubah
-                        </button>
-                    </div>
-                    <p class="text-xs text-gray-700 dark:text-gray-300 whitespace-pre-line">
-                        {{ $po->notes ?: 'Tidak ada' }}
-                    </p>
-                </div>
-
-                <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-xs">
-                    <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3 mb-3">
-                        <h3 class="text-sm font-bold text-gray-900 dark:text-white">Jatuh Tempo</h3>
-                        <button type="button"
-                                wire:click="mountAction('editDueDate')"
-                                class="inline-flex items-center gap-1 rounded-md bg-sky-600 hover:bg-sky-700 px-2.5 py-1 text-xs font-semibold text-white transition">
-                            <x-heroicon-m-pencil-square class="w-3.5 h-3.5" />
-                            Ubah
-                        </button>
-                    </div>
-                    <p class="text-xs font-medium text-gray-800 dark:text-gray-200">
-                        {{ $po->due_date ? $po->due_date->format('d M Y') : 'Tidak ada' }}
-                    </p>
-                </div>
             </div>
         </div>
 
