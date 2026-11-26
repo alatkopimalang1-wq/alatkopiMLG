@@ -110,15 +110,17 @@
                         >
                             @foreach(\App\Models\ProductPurchase::STATUS_LABELS as $statusKey => $statusLabel)
                                 @php
-                                    $isDisabledOption = ! $po->is_paid && in_array($statusKey, [
+                                    $isDiterimaLocked = $statusKey === \App\Models\ProductPurchase::STATUS_DITERIMA
+                                        && $po->status !== \App\Models\ProductPurchase::STATUS_DITERIMA;
+                                    $isDisabledOption = $isDiterimaLocked || (! $po->is_paid && in_array($statusKey, [
                                         \App\Models\ProductPurchase::STATUS_DIKIRIM,
                                         \App\Models\ProductPurchase::STATUS_DITERIMA,
                                         \App\Models\ProductPurchase::STATUS_SELESAI,
                                         \App\Models\ProductPurchase::STATUS_RETUR,
-                                    ], true);
+                                    ], true));
                                 @endphp
                                 <option value="{{ $statusKey }}" @disabled($isDisabledOption)>
-                                    {{ $statusLabel }}{{ $isDisabledOption ? ' (Perlu Bayar)' : '' }}
+                                    {{ $statusLabel }}{{ $isDiterimaLocked ? ' (Via Terima Barang)' : ($isDisabledOption ? ' (Perlu Bayar)' : '') }}
                                 </option>
                             @endforeach
                         </select>

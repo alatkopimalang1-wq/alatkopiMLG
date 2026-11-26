@@ -53,7 +53,6 @@ class ProductPurchaseForm
                                     return [
                                         ProductPurchase::STATUS_DIPESAN => 'Dipesan (Butuh Diproses)',
                                         ProductPurchase::STATUS_DIKIRIM => 'Dikirim (Butuh Diproses)',
-                                        ProductPurchase::STATUS_DITERIMA => 'Diterima (Tambah Stok Sekarang)',
                                         ProductPurchase::STATUS_SELESAI => 'Selesai (Tambah Stok Sekarang)',
                                     ];
                                 })

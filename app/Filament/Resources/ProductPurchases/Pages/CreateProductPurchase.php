@@ -40,6 +40,10 @@ class CreateProductPurchase extends CreateRecord
         $data['total_amount'] = max(0, $subtotal - $orderDiscount);
         $data['user_id'] = auth()->id();
 
+        if (($data['status'] ?? null) === ProductPurchase::STATUS_DITERIMA) {
+            $data['status'] = ProductPurchase::STATUS_DIPESAN;
+        }
+
         if (empty($data['is_paid']) && ! in_array($data['status'] ?? ProductPurchase::STATUS_DIPESAN, [ProductPurchase::STATUS_DIPESAN, ProductPurchase::STATUS_DIBATALKAN], true)) {
             $data['status'] = ProductPurchase::STATUS_DIPESAN;
         }

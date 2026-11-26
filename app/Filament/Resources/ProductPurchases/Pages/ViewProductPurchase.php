@@ -79,6 +79,18 @@ class ViewProductPurchase extends ViewRecord
         /** @var ProductPurchase $po */
         $po = $this->getRecord();
 
+        if ($value === ProductPurchase::STATUS_DITERIMA && $po->status !== ProductPurchase::STATUS_DITERIMA) {
+            $this->selectedStatus = (string) $po->status;
+
+            Notification::make()
+                ->title('Gunakan Menu Terima Barang')
+                ->body('Status Diterima hanya dapat dilakukan melalui tombol "Terima Barang" dengan mengisi Tanggal Diterima dan Nama Penerima.')
+                ->danger()
+                ->send();
+
+            return;
+        }
+
         $restrictedWhenUnpaid = [
             ProductPurchase::STATUS_DIKIRIM,
             ProductPurchase::STATUS_DITERIMA,
@@ -190,9 +202,8 @@ class ViewProductPurchase extends ViewRecord
                     ->default(now())
                     ->required(),
                 TextInput::make('receipt_number')
-                    ->label('No. Terima')
-                    ->placeholder('contoh: EL123987')
-                    ->required(),
+                    ->label('No. Terima (Opsional)')
+                    ->placeholder('contoh: EL123987'),
                 TextInput::make('receiver_name')
                     ->label('Penerima')
                     ->placeholder('Contoh, Budi')
