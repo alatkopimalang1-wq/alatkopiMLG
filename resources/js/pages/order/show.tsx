@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Head, Link, router, usePage } from '@inertiajs/react';
+import { BundleCartItemDetails } from '@/components/bundle-cart-item-details';
+import { groupOrderItems } from '@/lib/order-bundle-groups';
 import {
     AlertCircle,
     ArrowLeft,
@@ -867,47 +869,80 @@ export default function OrderShowPage({
                     </div>
 
                     <div className="divide-y divide-sand-200/60">
-                        {order.items.map((item) => (
-                            <div
-                                key={item.id}
-                                className="flex items-start justify-between gap-4 py-3.5"
-                            >
-                                <div className="min-w-0 flex-1 space-y-1">
-                                    <h3 className="text-sm font-bold text-brand-950">
-                                        {item.product_name}
-                                    </h3>
-                                    <p className="text-xs font-medium text-accent-copper">
-                                        Varian: {item.variant_label}
-                                    </p>
-                                    {(item.custom_notes ||
-                                        (item as any).customNotes) && (
-                                        <div className="mt-1.5 rounded-xl border border-amber-200/70 bg-amber-50/80 p-2.5 text-xs leading-snug text-brand-900">
-                                            <div className="flex items-center gap-1.5 text-[11px] font-bold tracking-wider text-accent-copper uppercase">
-                                                <SlidersHorizontal className="h-3.5 w-3.5" />
-                                                <span>
-                                                    Rasio & Komposisi Kopi
-                                                    (C.Y.B.R):
-                                                </span>
-                                            </div>
-                                            <p className="mt-1 font-semibold text-brand-950">
-                                                {item.custom_notes ||
-                                                    (item as any).customNotes}
-                                            </p>
+                        {groupOrderItems(order.items).map((entry) => {
+                            if (entry.type === 'bundle') {
+                                return (
+                                    <div key={entry.key} className="space-y-2 py-3.5">
+                                        <div className="flex items-center gap-3">
+                                            {entry.image && (
+                                                <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-xl border border-sand-200 bg-cream-50">
+                                                    <img
+                                                        src={
+                                                            entry.image.startsWith('http://') ||
+                                                            entry.image.startsWith('https://')
+                                                                ? entry.image
+                                                                : `/storage/${entry.image.replace(/^\/?(public\/|storage\/)?/, '')}`
+                                                        }
+                                                        alt={entry.bundleName}
+                                                        className="h-full w-full object-cover"
+                                                    />
+                                                </div>
+                                            )}
+                                            <h3 className="text-sm font-bold text-brand-950">
+                                                {entry.bundleName}
+                                            </h3>
                                         </div>
-                                    )}
-                                </div>
+                                        <BundleCartItemDetails
+                                            bundleItems={entry.bundleItems}
+                                            packageQty={1}
+                                        />
+                                    </div>
+                                );
+                            }
 
-                                <div className="flex-shrink-0 text-right">
-                                    <span className="text-xs font-medium text-brand-500">
-                                        {item.quantity}x @{' '}
-                                        {formatRupiah(item.price)}
-                                    </span>
-                                    <div className="text-sm font-extrabold text-brand-950">
-                                        {formatRupiah(item.subtotal)}
+                            const item = entry.item;
+                            return (
+                                <div
+                                    key={entry.key}
+                                    className="flex items-start justify-between gap-4 py-3.5"
+                                >
+                                    <div className="min-w-0 flex-1 space-y-1">
+                                        <h3 className="text-sm font-bold text-brand-950">
+                                            {item.product_name}
+                                        </h3>
+                                        <p className="text-xs font-medium text-accent-copper">
+                                            Varian: {item.variant_label}
+                                        </p>
+                                        {(item.custom_notes ||
+                                            (item as any).customNotes) && (
+                                            <div className="mt-1.5 rounded-xl border border-amber-200/70 bg-amber-50/80 p-2.5 text-xs leading-snug text-brand-900">
+                                                <div className="flex items-center gap-1.5 text-[11px] font-bold tracking-wider text-accent-copper uppercase">
+                                                    <SlidersHorizontal className="h-3.5 w-3.5" />
+                                                    <span>
+                                                        Rasio & Komposisi Kopi
+                                                        (C.Y.B.R):
+                                                    </span>
+                                                </div>
+                                                <p className="mt-1 font-semibold text-brand-950">
+                                                    {item.custom_notes ||
+                                                        (item as any).customNotes}
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="flex-shrink-0 text-right">
+                                        <span className="text-xs font-medium text-brand-500">
+                                            {item.quantity}x @{' '}
+                                            {formatRupiah(item.price)}
+                                        </span>
+                                        <div className="text-sm font-extrabold text-brand-950">
+                                            {formatRupiah(item.subtotal)}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
 
                     {/* Breakdown */}

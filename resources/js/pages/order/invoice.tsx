@@ -11,6 +11,8 @@ import {
     Truck,
 } from 'lucide-react';
 import { formatRupiah } from '@/lib/trans';
+import { BundleCartItemDetails } from '@/components/bundle-cart-item-details';
+import { groupOrderItems } from '@/lib/order-bundle-groups';
 
 interface InvoiceItem {
     id: number;
@@ -19,6 +21,7 @@ interface InvoiceItem {
     grind_option?: string | null;
     custom_notes?: string | null;
     price: number;
+    normal_price?: number;
     quantity: number;
     subtotal: number;
     is_preorder?: boolean;
@@ -350,55 +353,89 @@ export default function OrderInvoicePage({ order, settings }: InvoiceProps) {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-sand-200">
-                                {order.items.map((item, idx) => (
-                                    <tr
-                                        key={item.id || idx}
-                                        className="align-top"
-                                    >
-                                        <td className="py-3.5 pr-2 font-medium text-brand-400">
-                                            {idx + 1}
-                                        </td>
-                                        <td className="space-y-1 px-3 py-3.5">
-                                            <div className="flex flex-wrap items-center gap-2 text-sm font-bold text-brand-950">
-                                                <span>{item.product_name}</span>
-                                                {item.is_preorder && (
-                                                    <span className="inline-flex items-center rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-bold tracking-wide text-amber-800 uppercase">
-                                                        Pre-Order
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <div className="text-[11px] font-medium text-accent-copper">
-                                                Varian: {item.variant_label}
-                                            </div>
+                                {groupOrderItems(order.items).map((entry, idx) => {
+                                    if (entry.type === 'bundle') {
+                                        return (
+                                            <tr
+                                                key={entry.key}
+                                                className="align-top"
+                                            >
+                                                <td className="py-3.5 pr-2 font-medium text-brand-400">
+                                                    {idx + 1}
+                                                </td>
+                                                <td className="space-y-1 px-3 py-3.5">
+                                                    <div className="text-sm font-bold text-brand-950">
+                                                        {entry.bundleName}
+                                                    </div>
+                                                    <BundleCartItemDetails
+                                                        bundleItems={entry.bundleItems}
+                                                        packageQty={1}
+                                                    />
+                                                </td>
+                                                <td className="px-3 py-3.5 text-center font-bold text-brand-950">
+                                                    1
+                                                </td>
+                                                <td className="px-3 py-3.5 text-right font-medium text-brand-700">
+                                                    {formatRupiah(entry.totalSubtotal)}
+                                                </td>
+                                                <td className="py-3.5 pl-3 text-right font-extrabold text-brand-950">
+                                                    {formatRupiah(entry.totalSubtotal)}
+                                                </td>
+                                            </tr>
+                                        );
+                                    }
 
-                                            {/* Prominent BYOB Blend Ratio Display */}
-                                            {item.custom_notes && (
-                                                <div className="mt-1.5 rounded-lg border border-amber-200 bg-amber-50/90 p-2.5 text-xs leading-snug text-brand-950">
-                                                    <div className="flex items-center gap-1 text-[10px] font-bold tracking-wider text-accent-copper uppercase">
-                                                        <SlidersHorizontal className="h-3 w-3" />
-                                                        <span>
-                                                            Komposisi Biji Kopi
-                                                            & Rasio Blend
-                                                            (C.Y.B.R):
+                                    const item = entry.item;
+                                    return (
+                                        <tr
+                                            key={entry.key}
+                                            className="align-top"
+                                        >
+                                            <td className="py-3.5 pr-2 font-medium text-brand-400">
+                                                {idx + 1}
+                                            </td>
+                                            <td className="space-y-1 px-3 py-3.5">
+                                                <div className="flex flex-wrap items-center gap-2 text-sm font-bold text-brand-950">
+                                                    <span>{item.product_name}</span>
+                                                    {item.is_preorder && (
+                                                        <span className="inline-flex items-center rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-bold tracking-wide text-amber-800 uppercase">
+                                                            Pre-Order
                                                         </span>
-                                                    </div>
-                                                    <div className="mt-0.5 font-semibold text-brand-900">
-                                                        {item.custom_notes}
-                                                    </div>
+                                                    )}
                                                 </div>
-                                            )}
-                                        </td>
-                                        <td className="px-3 py-3.5 text-center font-bold text-brand-950">
-                                            {item.quantity}
-                                        </td>
-                                        <td className="px-3 py-3.5 text-right font-medium text-brand-700">
-                                            {formatRupiah(item.price)}
-                                        </td>
-                                        <td className="py-3.5 pl-3 text-right font-extrabold text-brand-950">
-                                            {formatRupiah(item.subtotal)}
-                                        </td>
-                                    </tr>
-                                ))}
+                                                <div className="text-[11px] font-medium text-accent-copper">
+                                                    Varian: {item.variant_label}
+                                                </div>
+
+                                                {/* Prominent BYOB Blend Ratio Display */}
+                                                {item.custom_notes && (
+                                                    <div className="mt-1.5 rounded-lg border border-amber-200 bg-amber-50/90 p-2.5 text-xs leading-snug text-brand-950">
+                                                        <div className="flex items-center gap-1 text-[10px] font-bold tracking-wider text-accent-copper uppercase">
+                                                            <SlidersHorizontal className="h-3 w-3" />
+                                                            <span>
+                                                                Komposisi Biji Kopi
+                                                                & Rasio Blend
+                                                                (C.Y.B.R):
+                                                            </span>
+                                                        </div>
+                                                        <div className="mt-0.5 font-semibold text-brand-900">
+                                                            {item.custom_notes}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </td>
+                                            <td className="px-3 py-3.5 text-center font-bold text-brand-950">
+                                                {item.quantity}
+                                            </td>
+                                            <td className="px-3 py-3.5 text-right font-medium text-brand-700">
+                                                {formatRupiah(item.price)}
+                                            </td>
+                                            <td className="py-3.5 pl-3 text-right font-extrabold text-brand-950">
+                                                {formatRupiah(item.subtotal)}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>
