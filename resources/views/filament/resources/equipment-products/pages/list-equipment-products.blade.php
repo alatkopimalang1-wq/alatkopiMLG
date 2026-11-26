@@ -8,11 +8,10 @@
                 display: none !important;
             }
             .equipment-table-wrap .fi-ta-header-toolbar {
-                justify-content: flex-start !important;
+                justify-content: flex-end !important;
             }
             .equipment-table-wrap .fi-ta-search-field {
-                margin-inline-start: 0 !important;
-                width: 100% !important;
+                margin-inline-start: auto !important;
             }
         }
     </style>
