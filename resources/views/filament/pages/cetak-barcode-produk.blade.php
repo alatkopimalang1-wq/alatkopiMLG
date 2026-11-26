@@ -195,7 +195,7 @@
                                     </div>
                                 @endif
 
-                                <div class="{{ $barcodeType === 'qrcode' ? 'w-16 h-16 mx-auto my-0.5 [&>svg]:w-full [&>svg]:h-full' : 'px-1' }}">
+                                <div style="{{ $barcodeType === 'qrcode' ? 'padding: 4px 0;' : 'padding: 0 4px;' }}">
                                     {!! $svg !!}
                                 </div>
 

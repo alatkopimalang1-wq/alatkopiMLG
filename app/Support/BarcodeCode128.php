@@ -59,7 +59,7 @@ class BarcodeCode128
             }
         }
 
-        return "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 {$x} {$height}\" preserveAspectRatio=\"none\" class=\"w-full h-10\">{$rects}</svg>";
+        return "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 {$x} {$height}\" preserveAspectRatio=\"none\" style=\"width: 100%; height: 42px; display: block;\">{$rects}</svg>";
     }
 
     /**
@@ -78,7 +78,13 @@ class BarcodeCode128
         ]);
 
         $svg = (new \chillerlan\QRCode\QRCode($options))->render($text ?: '000000');
+        $svg = preg_replace('/^<\?xml[^>]*\?>\s*/i', '', trim((string) $svg)) ?? '';
 
-        return preg_replace('/^<\?xml[^>]*\?>\s*/i', '', trim((string) $svg)) ?? '';
+        return preg_replace(
+            '/<svg\b([^>]*)>/i',
+            '<svg$1 width="72" height="72" style="width: 72px; height: 72px; display: block; margin: 0 auto;">',
+            $svg,
+            1
+        ) ?? $svg;
     }
 }
