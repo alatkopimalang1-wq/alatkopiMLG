@@ -822,6 +822,117 @@ export default function CartPage({
                                                 ? rawImg
                                                 : `/storage/${rawImg.replace(/^\/?(public\/|storage\/)?/, '')}`
                                             : '/brand/logo-circle.png';
+
+                                        if (
+                                            item.bundleItems &&
+                                            item.bundleItems.length > 0
+                                        ) {
+                                            return (
+                                                <div
+                                                    key={`${item.variant.id}-${item.grindOption}-${idx}`}
+                                                    className="space-y-2 py-3"
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl border border-sand-200 bg-cream-50">
+                                                            <img
+                                                                src={img}
+                                                                alt={item.product.name}
+                                                                className="h-full w-full object-cover"
+                                                            />
+                                                        </div>
+                                                        <div className="flex min-w-0 flex-1 items-start justify-between gap-2">
+                                                            <h3 className="line-clamp-2 text-xs font-bold text-brand-950 sm:text-sm">
+                                                                {item.product.name}
+                                                            </h3>
+                                                            <div className="flex flex-shrink-0 items-center gap-1">
+                                                                <Link
+                                                                    href={`/paket-bundling/${item.product.slug}?edit=${encodeURIComponent(item.customNotes || '')}`}
+                                                                    className="inline-flex items-center gap-1 rounded-md border border-brand-200 bg-sand-50 px-2 py-0.5 text-[11px] font-bold text-brand-800 transition-colors hover:bg-sand-200/70"
+                                                                    title="Edit paket bundling"
+                                                                >
+                                                                    <Pencil className="h-3 w-3" />
+                                                                    <span>Edit</span>
+                                                                </Link>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() =>
+                                                                        removeItem(
+                                                                            item.variant.id,
+                                                                            item.grindOption,
+                                                                            item.customNotes,
+                                                                        )
+                                                                    }
+                                                                    className="cursor-pointer p-1 text-gray-400 hover:text-red-500"
+                                                                    aria-label="Hapus item"
+                                                                >
+                                                                    <Trash2 className="h-3.5 w-3.5" />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <BundleCartItemDetails
+                                                        bundleItems={item.bundleItems}
+                                                        packageQty={item.quantity}
+                                                    />
+
+                                                    <div className="flex items-center justify-between pt-1">
+                                                        <div className="-ml-2 flex scale-90 items-center overflow-hidden rounded-lg border border-sand-200 bg-white">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    updateQuantity(
+                                                                        item.variant.id,
+                                                                        item.grindOption,
+                                                                        item.quantity - 1,
+                                                                        item.customNotes,
+                                                                    )
+                                                                }
+                                                                className="hover:bg-sand-100 cursor-pointer p-1 text-brand-700"
+                                                            >
+                                                                <Minus className="h-3 w-3" />
+                                                            </button>
+                                                            <span className="px-2 text-xs font-bold text-brand-950">
+                                                                {item.quantity}
+                                                            </span>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    updateQuantity(
+                                                                        item.variant.id,
+                                                                        item.grindOption,
+                                                                        item.quantity + 1,
+                                                                        item.customNotes,
+                                                                    )
+                                                                }
+                                                                className="hover:bg-sand-100 cursor-pointer p-1 text-brand-700"
+                                                            >
+                                                                <Plus className="h-3 w-3" />
+                                                            </button>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            {item.variant.original_price &&
+                                                                item.variant.original_price >
+                                                                    item.variant.price && (
+                                                                    <span className="block text-[10px] font-semibold text-rose-500 line-through">
+                                                                        {formatRupiah(
+                                                                            item.variant.original_price *
+                                                                                item.quantity,
+                                                                        )}
+                                                                    </span>
+                                                                )}
+                                                            <span className="text-xs font-extrabold text-brand-950 sm:text-sm">
+                                                                {formatRupiah(
+                                                                    item.variant.price *
+                                                                        item.quantity,
+                                                                )}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        }
+
                                         return (
                                             <div
                                                 key={`${item.variant.id}-${item.grindOption}-${idx}`}
