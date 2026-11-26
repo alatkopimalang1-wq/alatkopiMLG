@@ -93,6 +93,11 @@ export default function BundlingShow({
     );
     const [activeModalSlot, setActiveModalSlot] =
         useState<BundleSlotData | null>(null);
+    const [activeProductGroup, setActiveProductGroup] = useState<{
+        product_id: number;
+        product_name: string;
+        variants: BundleSlotItemData[];
+    } | null>(null);
     const [errorMsg, setErrorMsg] = useState('');
     const [addedSuccess, setAddedSuccess] = useState(false);
 
@@ -180,13 +185,50 @@ export default function BundlingShow({
             ? Math.round(((normalTotal - bundleTotal) / normalTotal) * 100)
             : null;
 
+    const closePickerModal = () => {
+        setActiveModalSlot(null);
+        setActiveProductGroup(null);
+    };
+
+    const groupedModalProducts = useMemo(() => {
+        if (!activeModalSlot) return [];
+        const map = new Map<
+            number,
+            {
+                product_id: number;
+                product_name: string;
+                image?: string | null;
+                variants: BundleSlotItemData[];
+            }
+        >();
+
+        activeModalSlot.items.forEach((item) => {
+            const existing = map.get(item.product_id);
+            if (existing) {
+                existing.variants.push(item);
+                if (!existing.image && item.image) {
+                    existing.image = item.image;
+                }
+            } else {
+                map.set(item.product_id, {
+                    product_id: item.product_id,
+                    product_name: item.product_name,
+                    image: item.image,
+                    variants: [item],
+                });
+            }
+        });
+
+        return Array.from(map.values());
+    }, [activeModalSlot]);
+
     const handleSelectOption = (
         slot: BundleSlotData,
         option: BundleSlotItemData,
     ) => {
         if (option.is_out_of_stock) return;
         setSelectedBySlot((prev) => ({ ...prev, [slot.id]: option }));
-        setActiveModalSlot(null);
+        closePickerModal();
         setErrorMsg('');
     };
 
@@ -771,102 +813,231 @@ export default function BundlingShow({
             {activeModalSlot && (
                 <div
                     className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs"
-                    onClick={() => setActiveModalSlot(null)}
+                    onClick={closePickerModal}
                 >
                     <div
                         className="flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="flex items-center justify-between border-b border-gray-200 px-5 py-3.5">
-                            <div>
-                                <h3 className="text-base font-bold text-gray-900">
-                                    Pilih Produk — {activeModalSlot.title}
-                                </h3>
-                                {(activeModalSlot.discount_percent ?? 0) > 0 && (
-                                    <p className="text-xs font-semibold text-emerald-700">
-                                        Diskon khusus bundling{' '}
-                                        {activeModalSlot.discount_percent}%
-                                    </p>
+                            <div className="flex items-center gap-2.5">
+                                {activeProductGroup && (
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setActiveProductGroup(null)
+                                        }
+                                        className="rounded-lg border border-sand-200 bg-sand-50 p-1.5 text-brand-800 hover:bg-sand-100"
+                                        title="Kembali ke daftar produk"
+                                    >
+                                        <ArrowLeft className="h-4 w-4" />
+                                    </button>
                                 )}
+                                <div>
+                                    <h3 className="text-base font-bold text-gray-900">
+                                        {activeProductGroup
+                                            ? `Pilih Varian — ${activeProductGroup.product_name}`
+                                            : `Pilih Produk — ${activeModalSlot.title}`}
+                                    </h3>
+                                    {(activeModalSlot.discount_percent ?? 0) >
+                                        0 && (
+                                        <p className="text-xs font-semibold text-emerald-700">
+                                            Diskon khusus bundling{' '}
+                                            {activeModalSlot.discount_percent}%
+                                        </p>
+                                    )}
+                                </div>
                             </div>
                             <button
                                 type="button"
-                                onClick={() => setActiveModalSlot(null)}
+                                onClick={closePickerModal}
                                 className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100"
                             >
                                 <X className="h-5 w-5" />
                             </button>
                         </div>
 
-                        <div className="grid grid-cols-3 gap-2.5 overflow-y-auto p-3.5 sm:gap-3 sm:p-4">
-                            {activeModalSlot.items.map((opt) => {
-                                const isSelected =
-                                    selectedBySlot[activeModalSlot.id]?.id ===
-                                    opt.id;
-                                return (
-                                    <div
-                                        key={opt.id}
-                                        onClick={() =>
-                                            handleSelectOption(
-                                                activeModalSlot,
-                                                opt,
-                                            )
-                                        }
-                                        className={`relative flex flex-col justify-between rounded-xl border p-2 text-center transition ${
-                                            opt.is_out_of_stock
-                                                ? 'cursor-not-allowed border-gray-200 bg-gray-50 opacity-75'
-                                                : isSelected
-                                                  ? 'cursor-pointer border-brand-700 bg-sand-50 ring-2 ring-brand-700'
-                                                  : 'cursor-pointer border-gray-200 bg-white hover:border-brand-700 hover:shadow-md'
-                                        }`}
-                                    >
-                                        <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-gray-50">
-                                            <img
-                                                src={resolveImg(opt.image)}
-                                                alt={opt.product_name}
-                                                className={`h-full w-full object-cover ${
-                                                    opt.is_out_of_stock
-                                                        ? 'grayscale opacity-50'
-                                                        : ''
-                                                }`}
-                                            />
-                                            {opt.is_out_of_stock && (
-                                                <div className="absolute inset-0 flex items-center justify-center bg-black/25">
-                                                    <span className="-rotate-12 border-2 border-rose-600 bg-white/95 px-2 py-0.5 text-[10px] font-black tracking-widest text-rose-600 uppercase shadow-sm">
-                                                        STOK HABIS
-                                                    </span>
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        <div className="mt-2">
-                                            <div className="line-clamp-2 text-[11px] font-bold leading-snug text-gray-900 sm:text-xs">
-                                                {opt.product_name}
-                                                {opt.variant_label &&
-                                                opt.variant_label !== 'Standard'
-                                                    ? ` (${opt.variant_label})`
-                                                    : ''}
+                        {activeProductGroup ? (
+                            <div className="grid grid-cols-3 gap-2.5 overflow-y-auto p-3.5 sm:gap-3 sm:p-4">
+                                {activeProductGroup.variants.map((opt) => {
+                                    const isSelected =
+                                        selectedBySlot[activeModalSlot.id]
+                                            ?.id === opt.id;
+                                    return (
+                                        <div
+                                            key={opt.id}
+                                            onClick={() =>
+                                                handleSelectOption(
+                                                    activeModalSlot,
+                                                    opt,
+                                                )
+                                            }
+                                            className={`relative flex flex-col justify-between rounded-xl border p-2 text-center transition ${
+                                                opt.is_out_of_stock
+                                                    ? 'cursor-not-allowed border-gray-200 bg-gray-50 opacity-75'
+                                                    : isSelected
+                                                      ? 'cursor-pointer border-brand-700 bg-sand-50 ring-2 ring-brand-700'
+                                                      : 'cursor-pointer border-gray-200 bg-white hover:border-brand-700 hover:shadow-md'
+                                            }`}
+                                        >
+                                            <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-gray-50">
+                                                <img
+                                                    src={resolveImg(opt.image)}
+                                                    alt={opt.variant_label}
+                                                    className={`h-full w-full object-cover ${
+                                                        opt.is_out_of_stock
+                                                            ? 'grayscale opacity-50'
+                                                            : ''
+                                                    }`}
+                                                />
+                                                {opt.is_out_of_stock && (
+                                                    <div className="absolute inset-0 flex items-center justify-center bg-black/25">
+                                                        <span className="-rotate-12 border-2 border-rose-600 bg-white/95 px-2 py-0.5 text-[10px] font-black tracking-widest text-rose-600 uppercase shadow-sm">
+                                                            STOK HABIS
+                                                        </span>
+                                                    </div>
+                                                )}
                                             </div>
-                                            <div className="mt-1 text-[11px] sm:text-xs">
-                                                {opt.normal_price >
-                                                    opt.bundle_price && (
-                                                    <span className="block text-[10px] text-rose-500 line-through">
+
+                                            <div className="mt-2">
+                                                <div className="line-clamp-2 text-[11px] font-bold leading-snug text-gray-900 sm:text-xs">
+                                                    {opt.variant_label ||
+                                                        'Standard'}
+                                                </div>
+                                                <div className="mt-1 text-[11px] sm:text-xs">
+                                                    {opt.normal_price >
+                                                        opt.bundle_price && (
+                                                        <span className="block text-[10px] text-rose-500 line-through">
+                                                            {formatRupiah(
+                                                                opt.normal_price,
+                                                            )}
+                                                        </span>
+                                                    )}
+                                                    <span className="font-extrabold text-gray-900">
                                                         {formatRupiah(
-                                                            opt.normal_price,
+                                                            opt.bundle_price,
                                                         )}
                                                     </span>
-                                                )}
-                                                <span className="font-extrabold text-gray-900">
-                                                    {formatRupiah(
-                                                        opt.bundle_price,
-                                                    )}
-                                                </span>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
+                                    );
+                                })}
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-3 gap-2.5 overflow-y-auto p-3.5 sm:gap-3 sm:p-4">
+                                {groupedModalProducts.map((group) => {
+                                    const hasMultipleVariants =
+                                        group.variants.length > 1;
+                                    const inStockVariants =
+                                        group.variants.filter(
+                                            (v) => !v.is_out_of_stock,
+                                        );
+                                    const allOutOfStock =
+                                        inStockVariants.length === 0;
+                                    const displayVariant =
+                                        (inStockVariants.length > 0
+                                            ? inStockVariants
+                                            : group.variants
+                                        ).reduce((min, v) =>
+                                            v.bundle_price < min.bundle_price
+                                                ? v
+                                                : min,
+                                        );
+                                    const isSelected = group.variants.some(
+                                        (v) =>
+                                            v.id ===
+                                            selectedBySlot[activeModalSlot.id]
+                                                ?.id,
+                                    );
+
+                                    return (
+                                        <div
+                                            key={group.product_id}
+                                            onClick={() => {
+                                                if (allOutOfStock) return;
+                                                if (hasMultipleVariants) {
+                                                    setActiveProductGroup({
+                                                        product_id:
+                                                            group.product_id,
+                                                        product_name:
+                                                            group.product_name,
+                                                        variants:
+                                                            group.variants,
+                                                    });
+                                                } else {
+                                                    handleSelectOption(
+                                                        activeModalSlot,
+                                                        group.variants[0],
+                                                    );
+                                                }
+                                            }}
+                                            className={`relative flex flex-col justify-between rounded-xl border p-2 text-center transition ${
+                                                allOutOfStock
+                                                    ? 'cursor-not-allowed border-gray-200 bg-gray-50 opacity-75'
+                                                    : isSelected
+                                                      ? 'cursor-pointer border-brand-700 bg-sand-50 ring-2 ring-brand-700'
+                                                      : 'cursor-pointer border-gray-200 bg-white hover:border-brand-700 hover:shadow-md'
+                                            }`}
+                                        >
+                                            <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-gray-50">
+                                                <img
+                                                    src={resolveImg(
+                                                        group.image,
+                                                    )}
+                                                    alt={group.product_name}
+                                                    className={`h-full w-full object-cover ${
+                                                        allOutOfStock
+                                                            ? 'grayscale opacity-50'
+                                                            : ''
+                                                    }`}
+                                                />
+                                                {hasMultipleVariants &&
+                                                    !allOutOfStock && (
+                                                        <span className="absolute right-1.5 bottom-1.5 rounded-md bg-brand-950/80 px-1.5 py-0.5 text-[9px] font-bold text-white shadow-xs">
+                                                            {
+                                                                group.variants
+                                                                    .length
+                                                            }{' '}
+                                                            Varian
+                                                        </span>
+                                                    )}
+                                                {allOutOfStock && (
+                                                    <div className="absolute inset-0 flex items-center justify-center bg-black/25">
+                                                        <span className="-rotate-12 border-2 border-rose-600 bg-white/95 px-2 py-0.5 text-[10px] font-black tracking-widest text-rose-600 uppercase shadow-sm">
+                                                            STOK HABIS
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div className="mt-2">
+                                                <div className="line-clamp-2 text-[11px] font-bold leading-snug text-gray-900 sm:text-xs">
+                                                    {group.product_name}
+                                                </div>
+                                                <div className="mt-1 text-[11px] sm:text-xs">
+                                                    {displayVariant.normal_price >
+                                                        displayVariant.bundle_price && (
+                                                        <span className="block text-[10px] text-rose-500 line-through">
+                                                            {formatRupiah(
+                                                                displayVariant.normal_price,
+                                                            )}
+                                                        </span>
+                                                    )}
+                                                    <span className="font-extrabold text-gray-900">
+                                                        {hasMultipleVariants
+                                                            ? `Mulai ${formatRupiah(displayVariant.bundle_price)}`
+                                                            : formatRupiah(
+                                                                  displayVariant.bundle_price,
+                                                              )}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
