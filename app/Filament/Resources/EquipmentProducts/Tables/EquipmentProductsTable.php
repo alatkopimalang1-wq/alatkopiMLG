@@ -139,7 +139,7 @@ class EquipmentProductsTable
                             }
 
                             $lines = $variants->map(function ($v) use ($record) {
-                                $isOut = $record->stock_status === 'out_of_stock' || $v->stock_status === 'out_of_stock';
+                                $isOut = $record->stock_status === 'out_of_stock';
 
                                 return $isOut
                                     ? '<div class="h-7 flex items-center"><span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-rose-600 text-white">Kosong (PO)</span></div>'

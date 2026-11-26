@@ -51,7 +51,7 @@ class FixedBundleController extends Controller
                 : max(0, $rawStock - (int) ($reservedStock[$variant->id] ?? 0));
 
             $isOutOfStock = $isPreorder
-                ? ($prod->stock_status === 'out_of_stock' || $variant->stock_status === 'out_of_stock')
+                ? ($prod->stock_status === 'out_of_stock')
                 : ($prod->stock_status === 'out_of_stock'
                     || $variant->stock_status === 'out_of_stock'
                     || $effectiveStock < $qty);

@@ -44,8 +44,11 @@ class MarketplaceStockSyncService
 
         // 1. If item has product_variant_id
         if ($item->product_variant_id) {
-            $variant = ProductVariant::find($item->product_variant_id);
+            $variant = ProductVariant::with('product')->find($item->product_variant_id);
             if ($variant) {
+                if ($variant->product && ($variant->product->is_preorder || $variant->product->stock_status === 'pre_order')) {
+                    return;
+                }
                 $newStock = max(0, (int) ($variant->stock ?? 0) - $qty);
                 $variant->stock = $newStock;
                 $variant->stock_status = $newStock > 0 ? 'in_stock' : 'out_of_stock';
@@ -63,6 +66,9 @@ class MarketplaceStockSyncService
             // If item only has product_id
             $product = Product::find($item->product_id);
             if ($product) {
+                if ($product->is_preorder || $product->stock_status === 'pre_order') {
+                    return;
+                }
                 $newStock = max(0, (int) ($product->stock ?? 0) - $qty);
                 $product->stock = $newStock;
                 $product->stock_status = $newStock > 0 ? 'in_stock' : 'out_of_stock';
@@ -222,6 +228,9 @@ class MarketplaceStockSyncService
                     $soldQty = $lastStock - $currentMpStock;
 
                     if ($mapping->variant) {
+                        if ($mapping->variant->product && ($mapping->variant->product->is_preorder || $mapping->variant->product->stock_status === 'pre_order')) {
+                            continue;
+                        }
                         $newStock = max(0, (int) ($mapping->variant->stock ?? 0) - $soldQty);
                         $mapping->variant->stock = $newStock;
                         $mapping->variant->stock_status = $newStock > 0 ? 'in_stock' : 'out_of_stock';
@@ -232,6 +241,9 @@ class MarketplaceStockSyncService
                         static::pushStockToOtherMarketplace($mapping, $newStock);
                         $updated++;
                     } elseif ($mapping->product) {
+                        if ($mapping->product->is_preorder || $mapping->product->stock_status === 'pre_order') {
+                            continue;
+                        }
                         $newStock = max(0, (int) ($mapping->product->stock ?? 0) - $soldQty);
                         $mapping->product->stock = $newStock;
                         $mapping->product->stock_status = $newStock > 0 ? 'in_stock' : 'out_of_stock';

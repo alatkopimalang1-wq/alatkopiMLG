@@ -69,7 +69,7 @@ class Order extends Model
                 }
 
                 $variant = ProductVariant::with('product')->lockForUpdate()->find($item->product_variant_id);
-                if (! $variant || ($variant->product && $variant->product->is_preorder)) {
+                if (! $variant || ($variant->product && ($variant->product->is_preorder || $variant->product->stock_status === 'pre_order'))) {
                     continue;
                 }
 
@@ -109,7 +109,7 @@ class Order extends Model
                 }
 
                 $variant = ProductVariant::with('product')->lockForUpdate()->find($item->product_variant_id);
-                if (! $variant || ($variant->product && $variant->product->is_preorder)) {
+                if (! $variant || ($variant->product && ($variant->product->is_preorder || $variant->product->stock_status === 'pre_order'))) {
                     continue;
                 }
 

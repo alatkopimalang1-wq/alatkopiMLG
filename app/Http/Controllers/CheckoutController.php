@@ -80,7 +80,7 @@ class CheckoutController extends Controller
                 || $variant->product->stock_status === 'pre_order'
                 || $variant->stock_status === 'pre_order';
 
-            if ($isPreorder && ($variant->stock_status === 'out_of_stock' || $variant->product->stock_status === 'out_of_stock')) {
+            if ($isPreorder && $variant->product->stock_status === 'out_of_stock') {
                 return response()->json([
                     'message' => "Maaf, produk Pre-Order '{$variant->product->name}' ({$variant->label}) sedang kosong (Sold Out).",
                     'errors' => [
