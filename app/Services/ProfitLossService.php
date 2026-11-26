@@ -342,8 +342,9 @@ class ProfitLossService
             }
         }
 
-        // Calculate margin % for each day in dailySummaryMap
+        // Calculate net profit & margin % for each day in dailySummaryMap
         foreach ($dailySummaryMap as &$day) {
+            $day['net_profit'] = $day['gross_profit'] - ($day['expenses_total'] ?? 0.0);
             $day['margin_pct'] = $day['net_sales'] > 0
                 ? round(($day['gross_profit'] / $day['net_sales']) * 100, 1)
                 : 0.0;
