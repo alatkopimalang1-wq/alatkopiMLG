@@ -51,7 +51,9 @@ export function groupOrderItems<T extends OrderLikeItem>(
         const match = notes.match(BUNDLE_NOTE_RE);
 
         if (match) {
-            const bundleName = match[1].trim();
+            const bundleName = match[1]
+                .replace(/^Paket Bundling:\s*/i, '')
+                .trim();
             const slotTitle = match[2].trim();
             const subItem: BundleCartSubItem = {
                 slot_id: idx + 1,

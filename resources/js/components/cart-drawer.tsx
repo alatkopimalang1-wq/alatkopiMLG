@@ -185,17 +185,21 @@ export const CartDrawer: React.FC = () => {
                                                                 {item.product.name}
                                                             </h4>
                                                             <div className="flex flex-shrink-0 items-center gap-1">
-                                                                <Link
-                                                                    href={`/paket-bundling/${item.product.slug}?edit=${encodeURIComponent(item.customNotes || '')}`}
-                                                                    onClick={() =>
-                                                                        setIsCartOpen(false)
-                                                                    }
-                                                                    className="inline-flex items-center gap-1 rounded-md border border-brand-200 bg-sand-50 px-2 py-0.5 text-[11px] font-bold text-brand-800 transition-colors hover:bg-sand-200/70"
-                                                                    title="Edit paket bundling"
-                                                                >
-                                                                    <Pencil className="h-3 w-3" />
-                                                                    <span>Edit</span>
-                                                                </Link>
+                                                                {item.product.bundle_url?.startsWith(
+                                                                    '/paket-bundling/',
+                                                                ) && (
+                                                                    <Link
+                                                                        href={`/paket-bundling/${item.product.slug}?edit=${encodeURIComponent(item.customNotes || '')}`}
+                                                                        onClick={() =>
+                                                                            setIsCartOpen(false)
+                                                                        }
+                                                                        className="inline-flex items-center gap-1 rounded-md border border-brand-200 bg-sand-50 px-2 py-0.5 text-[11px] font-bold text-brand-800 transition-colors hover:bg-sand-200/70"
+                                                                        title="Edit paket bundling"
+                                                                    >
+                                                                        <Pencil className="h-3 w-3" />
+                                                                        <span>Edit</span>
+                                                                    </Link>
+                                                                )}
                                                                 <button
                                                                     type="button"
                                                                     onClick={() =>

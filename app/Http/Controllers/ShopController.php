@@ -7,6 +7,7 @@ use App\Filament\Pages\ManageEquipmentBrands;
 use App\Models\BrewGuide;
 use App\Models\Category;
 use App\Models\EquipmentBundle;
+use App\Models\FixedBundle;
 use App\Models\Product;
 use App\Models\Setting;
 use Illuminate\Http\JsonResponse;
@@ -52,7 +53,22 @@ class ShopController extends Controller
                 });
             }
 
-            $bundleCards = $bundleQuery->get()->map(fn (EquipmentBundle $b) => $b->toProductCardArray());
+            $customCards = $bundleQuery->get()->map(fn (EquipmentBundle $b) => $b->toProductCardArray());
+
+            $fixedQuery = FixedBundle::active()
+                ->with(['items.product.primaryImage', 'items.variant'])
+                ->orderBy('sort_order')
+                ->orderByDesc('id');
+
+            if ($search !== '') {
+                $fixedQuery->where(function ($fq) use ($search) {
+                    $fq->where('name', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%");
+                });
+            }
+
+            $fixedCards = $fixedQuery->get()->map(fn (FixedBundle $b) => $b->toProductCardArray());
+            $bundleCards = $fixedCards->concat($customCards)->values();
         }
 
         if ($isBundleFilter) {
@@ -238,6 +254,16 @@ class ShopController extends Controller
             ->take(8)
             ->get();
 
+        $fixedBundles = FixedBundle::active()
+            ->where(function ($query) use ($q) {
+                $query->where('name', 'like', "%{$q}%")
+                    ->orWhere('description', 'like', "%{$q}%");
+            })
+            ->with(['items.product.primaryImage', 'items.variant'])
+            ->take(4)
+            ->get()
+            ->map(fn (FixedBundle $b) => $b->toProductCardArray());
+
         $bundles = EquipmentBundle::active()
             ->where(function ($query) use ($q) {
                 $query->where('name', 'like', "%{$q}%")
@@ -255,7 +281,7 @@ class ShopController extends Controller
 
         return response()->json([
             'query' => $q,
-            'products' => $bundles->concat($products)->take(10)->values(),
+            'products' => $fixedBundles->concat($bundles)->concat($products)->take(10)->values(),
             'guides' => $guides,
         ]);
     }

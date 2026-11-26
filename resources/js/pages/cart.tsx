@@ -572,11 +572,17 @@ export default function CartPage({
             const payload = {
                 items: items.flatMap((i) => {
                     if (i.bundleItems && i.bundleItems.length > 0) {
+                        const isFixed = i.product.bundle_url?.startsWith('/produk-bundling/');
+                        const notePrefix =
+                            isFixed &&
+                            !/^(Custom|Paket Bundling:?)\s+/i.test(i.product.name)
+                                ? `Paket Bundling: ${i.product.name}`
+                                : i.product.name;
                         return i.bundleItems.map((sub) => ({
                             variant_id: sub.variant_id,
                             quantity: sub.quantity * i.quantity,
                             grind_option: '',
-                            custom_notes: `${i.product.name} (${sub.slot_title})`,
+                            custom_notes: `${notePrefix} (${sub.slot_title})`,
                             price: sub.bundle_price,
                             ...(sub.slot_id !== undefined
                                 ? { bundle_slot_id: sub.slot_id }
@@ -845,14 +851,18 @@ export default function CartPage({
                                                                 {item.product.name}
                                                             </h3>
                                                             <div className="flex flex-shrink-0 items-center gap-1">
-                                                                <Link
-                                                                    href={`/paket-bundling/${item.product.slug}?edit=${encodeURIComponent(item.customNotes || '')}`}
-                                                                    className="inline-flex items-center gap-1 rounded-md border border-brand-200 bg-sand-50 px-2 py-0.5 text-[11px] font-bold text-brand-800 transition-colors hover:bg-sand-200/70"
-                                                                    title="Edit paket bundling"
-                                                                >
-                                                                    <Pencil className="h-3 w-3" />
-                                                                    <span>Edit</span>
-                                                                </Link>
+                                                                {item.product.bundle_url?.startsWith(
+                                                                    '/paket-bundling/',
+                                                                ) && (
+                                                                    <Link
+                                                                        href={`/paket-bundling/${item.product.slug}?edit=${encodeURIComponent(item.customNotes || '')}`}
+                                                                        className="inline-flex items-center gap-1 rounded-md border border-brand-200 bg-sand-50 px-2 py-0.5 text-[11px] font-bold text-brand-800 transition-colors hover:bg-sand-200/70"
+                                                                        title="Edit paket bundling"
+                                                                    >
+                                                                        <Pencil className="h-3 w-3" />
+                                                                        <span>Edit</span>
+                                                                    </Link>
+                                                                )}
                                                                 <button
                                                                     type="button"
                                                                     onClick={() =>
