@@ -4,15 +4,22 @@ namespace App\Filament\Resources\EquipmentProducts\Tables;
 
 use App\Filament\Resources\EquipmentProducts\EquipmentProductResource;
 use App\Models\Product;
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Notifications\Notification;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\HtmlString;
+use Illuminate\Support\Str;
 
 class EquipmentProductsTable
 {
@@ -239,7 +246,79 @@ class EquipmentProductsTable
             ->filtersLayout(\Filament\Tables\Enums\FiltersLayout::AboveContent)
             ->recordUrl(null)
             ->recordActions([
-                EditAction::make()->label('Ubah'),
+                ActionGroup::make([
+                    Action::make('salin')
+                        ->label('Salin')
+                        ->icon(Heroicon::DocumentDuplicate)
+                        ->requiresConfirmation()
+                        ->modalHeading('Salin Produk?')
+                        ->modalDescription('Produk beserta varian, kategori, dan foto akan disalin sebagai produk baru.')
+                        ->action(function (Product $record) {
+                            $copy = DB::transaction(function () use ($record) {
+                                $record->load(['variants', 'categories', 'images']);
+
+                                $baseName = $record->name.' (Salinan)';
+                                $baseSlug = Str::slug($baseName);
+                                $slug = $baseSlug;
+                                $i = 1;
+                                while (Product::where('slug', $slug)->exists()) {
+                                    $slug = "{$baseSlug}-{$i}";
+                                    $i++;
+                                }
+
+                                $copy = $record->replicate(['slug']);
+                                $copy->name = $baseName;
+                                $copy->slug = $slug;
+                                $copy->stock = 0;
+                                $copy->stock_status = $copy->is_preorder ? 'pre_order' : 'out_of_stock';
+                                $copy->save();
+
+                                $copy->categories()->sync($record->categories->pluck('id')->all());
+
+                                foreach ($record->variants as $v) {
+                                    $vCopy = $v->replicate();
+                                    $vCopy->product_id = $copy->id;
+                                    $vCopy->stock = 0;
+                                    $vCopy->stock_status = $copy->is_preorder ? $v->stock_status : 'out_of_stock';
+                                    if (! empty($v->sku)) {
+                                        $vCopy->sku = $v->sku.'-COPY';
+                                    }
+                                    $vCopy->save();
+                                }
+
+                                foreach ($record->images as $img) {
+                                    $imgCopy = $img->replicate();
+                                    $imgCopy->product_id = $copy->id;
+                                    $imgCopy->save();
+                                }
+
+                                return $copy;
+                            });
+
+                            Notification::make()
+                                ->title('Produk Berhasil Disalin')
+                                ->success()
+                                ->send();
+
+                            return redirect(EquipmentProductResource::getUrl('edit', ['record' => $copy]));
+                        }),
+
+                    Action::make('cek_web')
+                        ->label('Cek produk di web')
+                        ->icon(Heroicon::ArrowTopRightOnSquare)
+                        ->url(fn (Product $record): string => route('shop.show', $record->slug), shouldOpenInNewTab: true),
+
+                    EditAction::make()
+                        ->label('Edit'),
+
+                    DeleteAction::make()
+                        ->label('Hapus'),
+                ])
+                    ->label('Kelola')
+                    ->icon(Heroicon::ChevronDown)
+                    ->button()
+                    ->size('sm')
+                    ->color('gray'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
