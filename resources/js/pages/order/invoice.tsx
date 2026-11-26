@@ -21,6 +21,7 @@ interface InvoiceItem {
     price: number;
     quantity: number;
     subtotal: number;
+    is_preorder?: boolean;
 }
 
 interface InvoiceOrder {
@@ -368,8 +369,13 @@ export default function OrderInvoicePage({ order, settings }: InvoiceProps) {
                                             {idx + 1}
                                         </td>
                                         <td className="space-y-1 px-3 py-3.5">
-                                            <div className="text-sm font-bold text-brand-950">
-                                                {item.product_name}
+                                            <div className="flex flex-wrap items-center gap-2 text-sm font-bold text-brand-950">
+                                                <span>{item.product_name}</span>
+                                                {item.is_preorder && (
+                                                    <span className="inline-flex items-center rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-bold tracking-wide text-amber-800 uppercase">
+                                                        Pre-Order
+                                                    </span>
+                                                )}
                                             </div>
                                             <div className="text-[11px] font-medium text-accent-copper">
                                                 Varian: {item.variant_label}

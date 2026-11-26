@@ -539,6 +539,7 @@ class CheckoutController extends Controller
                     'price' => (float) $item->price,
                     'quantity' => $item->quantity,
                     'subtotal' => (float) $item->subtotal,
+                    'is_preorder' => (bool) ($item->product?->is_preorder ?? false) || $item->product?->stock_status === 'pre_order',
                 ]),
             ],
             'settings' => [
