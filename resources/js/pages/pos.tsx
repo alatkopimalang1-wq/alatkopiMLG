@@ -2923,6 +2923,7 @@ function PosContent({
                 quantity: i.quantity,
                 subtotal: i.price * i.quantity - (i.discount_amount || 0),
                 discount_amount: i.discount_amount,
+                custom_notes: i.notes || null,
                 bundle_id: i.bundle_id,
                 bundle_name: i.bundle_name,
                 bundle_unit_qty: i.bundle_unit_qty,
@@ -3096,6 +3097,7 @@ function PosContent({
                         subtotal:
                             i.price * i.quantity - (i.discount_amount || 0),
                         discount_amount: i.discount_amount,
+                        custom_notes: i.notes || null,
                         bundle_id: i.bundle_id,
                         bundle_name: i.bundle_name,
                         bundle_unit_qty: i.bundle_unit_qty,
@@ -4586,6 +4588,7 @@ function PosContent({
                 subtotal:
                     item.price * item.quantity - (item.discount_amount || 0),
                 discount_amount: item.discount_amount,
+                custom_notes: item.notes || null,
                 bundle_id: item.bundle_id,
                 bundle_name: item.bundle_name,
                 bundle_unit_qty: item.bundle_unit_qty,

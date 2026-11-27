@@ -13,6 +13,7 @@ import {
 import { formatRupiah } from '@/lib/trans';
 import { BundleCartItemDetails } from '@/components/bundle-cart-item-details';
 import { groupOrderItems } from '@/lib/order-bundle-groups';
+import { extractDpSummaryFromItems } from '@/lib/thermal-printer';
 
 interface InvoiceItem {
     id: number;
@@ -407,22 +408,37 @@ export default function OrderInvoicePage({ order, settings }: InvoiceProps) {
                                                     Varian: {item.variant_label}
                                                 </div>
 
-                                                {/* Prominent BYOB Blend Ratio Display */}
-                                                {item.custom_notes && (
-                                                    <div className="mt-1.5 rounded-lg border border-amber-200 bg-amber-50/90 p-2.5 text-xs leading-snug text-brand-950">
-                                                        <div className="flex items-center gap-1 text-[10px] font-bold tracking-wider text-accent-copper uppercase">
-                                                            <SlidersHorizontal className="h-3 w-3" />
-                                                            <span>
-                                                                Komposisi Biji Kopi
-                                                                & Rasio Blend
-                                                                (C.Y.B.R):
-                                                            </span>
+                                                {/* Prominent BYOB Blend Ratio or DP Display */}
+                                                {item.custom_notes && (() => {
+                                                    const isDpNote = /\bDP\b.*\|.*\bSisa:/i.test(item.custom_notes);
+                                                    return (
+                                                        <div
+                                                            className={`mt-1.5 rounded-lg border p-2.5 text-xs leading-snug text-brand-950 ${
+                                                                isDpNote
+                                                                    ? 'border-sky-200 bg-sky-50/90'
+                                                                    : 'border-amber-200 bg-amber-50/90'
+                                                            }`}
+                                                        >
+                                                            <div
+                                                                className={`flex items-center gap-1 text-[10px] font-bold tracking-wider uppercase ${
+                                                                    isDpNote
+                                                                        ? 'text-sky-700'
+                                                                        : 'text-accent-copper'
+                                                                }`}
+                                                            >
+                                                                <SlidersHorizontal className="h-3 w-3" />
+                                                                <span>
+                                                                    {isDpNote
+                                                                        ? 'Rincian Downpayment (DP):'
+                                                                        : 'Komposisi Biji Kopi & Rasio Blend (C.Y.B.R):'}
+                                                                </span>
+                                                            </div>
+                                                            <div className="mt-0.5 font-semibold text-brand-900">
+                                                                {item.custom_notes}
+                                                            </div>
                                                         </div>
-                                                        <div className="mt-0.5 font-semibold text-brand-900">
-                                                            {item.custom_notes}
-                                                        </div>
-                                                    </div>
-                                                )}
+                                                    );
+                                                })()}
                                             </td>
                                             <td className="px-3 py-3.5 text-center font-bold text-brand-950">
                                                 {item.quantity}
@@ -444,6 +460,43 @@ export default function OrderInvoicePage({ order, settings }: InvoiceProps) {
                 {/* Calculation Summary */}
                 <div className="flex flex-col justify-end border-t-2 border-sand-200 pt-4 sm:flex-row">
                     <div className="w-full space-y-2 text-xs sm:w-80">
+                        {!order.payment_details?.is_preorder && (() => {
+                            const manualDp = extractDpSummaryFromItems(
+                                order.items.map((it) => ({
+                                    product_name: it.product_name,
+                                    variant_label: it.variant_label,
+                                    price: it.price,
+                                    quantity: it.quantity,
+                                    subtotal: it.subtotal,
+                                    custom_notes: it.custom_notes,
+                                })),
+                            );
+                            if (!manualDp) return null;
+                            return (
+                                <>
+                                    <div className="flex justify-between text-brand-600">
+                                        <span>Total Pesanan (Full)</span>
+                                        <span className="font-semibold text-brand-950">
+                                            {formatRupiah(manualDp.totalFull)}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between text-sky-700">
+                                        <span className="font-semibold">
+                                            Pembayaran DP ({manualDp.dpPercentLabel})
+                                        </span>
+                                        <span className="font-bold">
+                                            {formatRupiah(manualDp.dpPaid)}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between text-amber-700">
+                                        <span className="font-semibold">Sisa Pelunasan</span>
+                                        <span className="font-bold">
+                                            {formatRupiah(manualDp.dpRemaining)}
+                                        </span>
+                                    </div>
+                                </>
+                            );
+                        })()}
                         <div className="flex justify-between text-brand-600">
                             <span>Subtotal Produk</span>
                             <span className="font-semibold text-brand-950">

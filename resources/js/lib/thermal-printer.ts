@@ -283,6 +283,52 @@ export function groupReceiptItemsForDisplay(items: ReceiptItem[]): GroupedReceip
     return entries;
 }
 
+export interface DpSummaryInfo {
+    totalFull: number;
+    dpPaid: number;
+    dpRemaining: number;
+    dpPercentLabel: string;
+}
+
+export function extractDpSummaryFromItems(items: ReceiptItem[]): DpSummaryInfo | null {
+    let totalFull = 0;
+    let dpPaid = 0;
+    let dpRemaining = 0;
+    let found = false;
+    let lastPercentLabel = '';
+    let dpCount = 0;
+
+    for (const item of items) {
+        if (!item.custom_notes) continue;
+        const m = item.custom_notes.match(
+            /Total:\s*Rp\s*([\d.]+)\s*\|\s*DP\s*\(([^)]+)\):\s*Rp\s*([\d.]+)\s*\|\s*Sisa:\s*Rp\s*([\d.]+)/i,
+        );
+        if (m) {
+            found = true;
+            dpCount++;
+            const parseNum = (s: string) => Number(s.replace(/\./g, '')) || 0;
+            totalFull += parseNum(m[1]);
+            lastPercentLabel = m[2];
+            dpPaid += parseNum(m[3]);
+            dpRemaining += parseNum(m[4]);
+        }
+    }
+
+    if (!found) return null;
+    const pct = totalFull > 0 ? (dpPaid / totalFull) * 100 : 0;
+    const computedLabel =
+        dpCount === 1 && lastPercentLabel
+            ? lastPercentLabel
+            : `${Number.isInteger(pct) ? pct : pct.toFixed(1).replace(/\.0$/, '')}%`;
+
+    return {
+        totalFull,
+        dpPaid,
+        dpRemaining,
+        dpPercentLabel: computedLabel,
+    };
+}
+
 export function generateHtmlReceiptBody(
     receipt: ReceiptData,
     opts: ReceiptFormatOptions = {},
@@ -359,6 +405,17 @@ export function generateHtmlReceiptBody(
                     Rp ${formatRp(item.subtotal)}
                 </td>
             </tr>
+            ${
+                item.custom_notes && !/^Bundling:/i.test(item.custom_notes)
+                    ? `
+            <tr>
+                <td colspan="2" style="padding-left: 6px; padding-bottom: 4px; font-size: 9.5px; color: #333; line-height: 1.3;">
+                    ${escapeHtml(item.custom_notes)}
+                </td>
+            </tr>
+            `
+                    : ''
+            }
         `;
         })
         .join('');
@@ -431,6 +488,24 @@ export function generateHtmlReceiptBody(
 
         <!-- Totals -->
         <table style="width: 100%; font-size: ${baseFontSize}; border-collapse: collapse; color: #000; font-variant-numeric: tabular-nums;">
+            ${(() => {
+                const dpSum = extractDpSummaryFromItems(receipt.items);
+                if (!dpSum) return '';
+                return `
+            <tr>
+                <td style="text-align: left; padding: 2px 0;">Total Pesanan (Full)</td>
+                <td style="text-align: right; white-space: nowrap; font-weight: 700;">Rp ${formatRp(dpSum.totalFull)}</td>
+            </tr>
+            <tr>
+                <td style="text-align: left; padding: 2px 0; font-weight: 700;">DP Dibayar (${escapeHtml(dpSum.dpPercentLabel)})</td>
+                <td style="text-align: right; white-space: nowrap; font-weight: 700;">Rp ${formatRp(dpSum.dpPaid)}</td>
+            </tr>
+            <tr style="border-bottom: 1px dashed #999;">
+                <td style="text-align: left; padding: 2px 0 4px; font-weight: 700;">Sisa Pelunasan</td>
+                <td style="text-align: right; white-space: nowrap; font-weight: 700; padding-bottom: 4px;">Rp ${formatRp(dpSum.dpRemaining)}</td>
+            </tr>
+            `;
+            })()}
             <tr>
                 <td style="text-align: left; padding: 2px 0;">Subtotal</td>
                 <td style="text-align: right; white-space: nowrap; font-weight: 700;">Rp ${formatRp(receipt.subtotal)}</td>
@@ -633,11 +708,33 @@ export function generatePlainTextReceipt(
         const qtyPrice = `  ${item.quantity}x ${formatRp(item.price)}`;
         const lineTotal = formatRp(item.subtotal);
         lines.push(padLine(qtyPrice, lineTotal, cols));
+
+        if (item.custom_notes && !/^Bundling:/i.test(item.custom_notes)) {
+            let remNote = item.custom_notes.trim();
+            const noteMax = Math.max(12, cols - 2);
+            while (remNote.length > 0) {
+                if (remNote.length <= noteMax) {
+                    lines.push(`  ${remNote}`);
+                    break;
+                }
+                let split = remNote.lastIndexOf(' ', noteMax);
+                if (split <= 0) split = noteMax;
+                lines.push(`  ${remNote.substring(0, split)}`);
+                remNote = remNote.substring(split).trim();
+            }
+        }
     }
 
     lines.push(divider);
 
     // Totals
+    const dpSumPlain = extractDpSummaryFromItems(receipt.items);
+    if (dpSumPlain) {
+        lines.push(padLine('Total Pesanan', `Rp ${formatRp(dpSumPlain.totalFull)}`, cols));
+        lines.push(padLine(`DP (${dpSumPlain.dpPercentLabel})`, `Rp ${formatRp(dpSumPlain.dpPaid)}`, cols));
+        lines.push(padLine('Sisa Pelunasan', `Rp ${formatRp(dpSumPlain.dpRemaining)}`, cols));
+        lines.push(divider);
+    }
     lines.push(padLine('Subtotal', `Rp ${formatRp(receipt.subtotal)}`, cols));
     if (receipt.discount_amount > 0) {
         lines.push(
@@ -2112,7 +2209,7 @@ export function generateWhatsAppReceiptUrl(
                 cleanVar !== 'Standar'
                     ? ` (${cleanVar})`
                     : '';
-            return `${idx + 1}. *${i.product_name}*${variant}\n   ${i.quantity}x @ Rp ${formatRp(i.price)} = Rp ${formatRp(i.subtotal)}`;
+            return `${idx + 1}. *${i.product_name}*${variant}\n   ${i.quantity}x @ Rp ${formatRp(i.price)} = Rp ${formatRp(i.subtotal)}${i.custom_notes && !/^Bundling:/i.test(i.custom_notes) ? `\n   _${i.custom_notes}_` : ''}`;
         })
         .join('\n\n');
 
@@ -2149,6 +2246,12 @@ export function generateWhatsAppReceiptUrl(
     }
     if (receipt.shipping_cost && receipt.shipping_cost > 0) {
         text += `Ongkir    : Rp ${formatRp(receipt.shipping_cost)}\n`;
+    }
+    const dpSumWa = extractDpSummaryFromItems(receipt.items);
+    if (dpSumWa) {
+        text += `Total Full: Rp ${formatRp(dpSumWa.totalFull)}\n`;
+        text += `DP (${dpSumWa.dpPercentLabel}) : Rp ${formatRp(dpSumWa.dpPaid)}\n`;
+        text += `Sisa Bayar: Rp ${formatRp(dpSumWa.dpRemaining)}\n`;
     }
     text += `*TOTAL    : Rp ${formatRp(receipt.total_amount)}*\n`;
     text += `Metode    : ${receipt.payment_method_label}\n`;
@@ -2529,7 +2632,7 @@ export function generatePreBillWhatsAppText(preBill: PreBillData): string {
                 cleanVar !== 'Standar'
                     ? ` (${cleanVar})`
                     : '';
-            return `${idx + 1}. *${i.product_name}*${variant}\n   ${i.quantity}x @ Rp ${formatRp(i.price)} = Rp ${formatRp(i.subtotal)}`;
+            return `${idx + 1}. *${i.product_name}*${variant}\n   ${i.quantity}x @ Rp ${formatRp(i.price)} = Rp ${formatRp(i.subtotal)}${i.custom_notes && !/^Bundling:/i.test(i.custom_notes) ? `\n   _${i.custom_notes}_` : ''}`;
         })
         .join('\n\n');
 
@@ -3135,6 +3238,16 @@ export function buildA4InvoicePdfBytes(preBill: PreBillData): Uint8Array {
                 [0.42, 0.447, 0.502],
             ),
         );
+        let itemNoteY = rowY + 37;
+        if (item.custom_notes && !/^Bundling:/i.test(item.custom_notes)) {
+            const noteLines = wrapText(item.custom_notes, 54);
+            for (const nl of noteLines) {
+                ops.push(
+                    textOp(colDescX, itemNoteY, nl, 'F1', 7.8, [0.012, 0.412, 0.631]),
+                );
+                itemNoteY += 10;
+            }
+        }
         ops.push(
             textRightOp(
                 colPriceRight,
@@ -3166,7 +3279,7 @@ export function buildA4InvoicePdfBytes(preBill: PreBillData): Uint8Array {
                 [0.067, 0.094, 0.153],
             ),
         );
-        rowY += 34;
+        rowY = Math.max(rowY + 34, itemNoteY + 4);
         ops.push(lineOp(marginX, rowY, rightX, rowY, [0.898, 0.906, 0.922], 0.7));
     }
 
@@ -3253,7 +3366,9 @@ export function buildA4InvoicePdfBytes(preBill: PreBillData): Uint8Array {
         ),
     );
 
+    const dpSumPdf = extractDpSummaryFromItems(preBill.items);
     let totalsRows = 1;
+    if (dpSumPdf) totalsRows += 3;
     if (preBill.discount_amount > 0) totalsRows++;
     if ((preBill.shipping_cost || 0) > 0) totalsRows++;
     const totalsBoxH = 46 + totalsRows * 16;
@@ -3271,6 +3386,55 @@ export function buildA4InvoicePdfBytes(preBill: PreBillData): Uint8Array {
     );
 
     let tY = bottomTopY + 18;
+    if (dpSumPdf) {
+        ops.push(textOp(rightColX + 12, tY, 'Total Pesanan (Full):', 'F1', 9.0, [0.294, 0.333, 0.388]));
+        ops.push(
+            textRightOp(
+                rightX - 12,
+                tY,
+                `Rp ${formatRp(dpSumPdf.totalFull)}`,
+                'F2',
+                9.0,
+                [0.067, 0.094, 0.153],
+            ),
+        );
+        tY += 16;
+
+        ops.push(
+            textOp(
+                rightColX + 12,
+                tY,
+                `DP Dibayar (${dpSumPdf.dpPercentLabel}):`,
+                'F2',
+                9.0,
+                [0.012, 0.412, 0.631],
+            ),
+        );
+        ops.push(
+            textRightOp(
+                rightX - 12,
+                tY,
+                `Rp ${formatRp(dpSumPdf.dpPaid)}`,
+                'F2',
+                9.0,
+                [0.012, 0.412, 0.631],
+            ),
+        );
+        tY += 16;
+
+        ops.push(textOp(rightColX + 12, tY, 'Sisa Pelunasan:', 'F2', 9.0, [0.706, 0.325, 0.035]));
+        ops.push(
+            textRightOp(
+                rightX - 12,
+                tY,
+                `Rp ${formatRp(dpSumPdf.dpRemaining)}`,
+                'F2',
+                9.0,
+                [0.706, 0.325, 0.035],
+            ),
+        );
+        tY += 16;
+    }
     ops.push(textOp(rightColX + 12, tY, 'Subtotal:', 'F1', 9.5, [0.294, 0.333, 0.388]));
     ops.push(
         textRightOp(

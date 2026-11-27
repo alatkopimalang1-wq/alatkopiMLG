@@ -7,6 +7,7 @@ import {
     generatePlainTextReceipt,
     groupReceiptItemsForDisplay,
     cleanVariantLabelForReceipt,
+    extractDpSummaryFromItems,
 } from '@/lib/thermal-printer';
 import {
     Printer,
@@ -369,6 +370,11 @@ export const ThermalReceiptPreview: React.FC<ThermalReceiptPreviewProps> = ({
                                         Rp {formatRp(item.subtotal)}
                                     </span>
                                 </div>
+                                {item.custom_notes && !/^Bundling:/i.test(item.custom_notes) && (
+                                    <div className="pl-2 text-[9.5px] leading-snug text-stone-600">
+                                        {item.custom_notes}
+                                    </div>
+                                )}
                             </div>
                         );
                     })}
@@ -378,11 +384,30 @@ export const ThermalReceiptPreview: React.FC<ThermalReceiptPreviewProps> = ({
                 <div className="my-2 border-b border-dashed border-stone-300" />
 
                 {/* Totals Section */}
-                <div className="space-y-1">
-                    <div className="flex justify-between text-stone-800">
-                        <span>Subtotal</span>
-                        <span>Rp {formatRp(receipt.subtotal)}</span>
-                    </div>
+                {(() => {
+                    const dpSummary = extractDpSummaryFromItems(receipt.items);
+                    return (
+                        <div className="space-y-1">
+                            {dpSummary && (
+                                <div className="mb-1 space-y-0.5 rounded border border-dashed border-stone-300 bg-stone-50 px-2 py-1.5 text-[10px]">
+                                    <div className="flex justify-between text-stone-700">
+                                        <span>Total Pesanan (Full)</span>
+                                        <span className="font-semibold">Rp {formatRp(dpSummary.totalFull)}</span>
+                                    </div>
+                                    <div className="flex justify-between font-bold text-sky-800">
+                                        <span>DP Dibayar ({dpSummary.dpPercentLabel})</span>
+                                        <span>Rp {formatRp(dpSummary.dpPaid)}</span>
+                                    </div>
+                                    <div className="flex justify-between font-bold text-amber-800">
+                                        <span>Sisa Pelunasan</span>
+                                        <span>Rp {formatRp(dpSummary.dpRemaining)}</span>
+                                    </div>
+                                </div>
+                            )}
+                            <div className="flex justify-between text-stone-800">
+                                <span>Subtotal</span>
+                                <span>Rp {formatRp(receipt.subtotal)}</span>
+                            </div>
 
                     {receipt.discount_amount > 0 && (
                         <div className="flex justify-between font-bold text-emerald-800">
@@ -433,7 +458,9 @@ export const ThermalReceiptPreview: React.FC<ThermalReceiptPreviewProps> = ({
                             </div>
                         </>
                     )}
-                </div>
+                        </div>
+                    );
+                })()}
 
                 {/* Double dashed separator */}
                 <div className="my-2.5 border-b-2 border-dashed border-stone-400" />
