@@ -81,7 +81,7 @@ class ManageFooterSettings extends Page
             'whatsapp_message' => 'Halo Alat Kopi Malang! Saya ingin bertanya tentang produk kopi.',
 
             // Sosial Media
-            'social_title' => 'Dapatkan Update Seputar Kopi',
+            'social_title' => 'Dapatkan update seputar alat kopi',
             'instagram' => 'https://instagram.com/alat_kopi_malang',
             'facebook' => 'https://facebook.com/sanubariroastery',
             'x_url' => 'https://x.com/sanubariroastery',
@@ -333,7 +333,7 @@ class ManageFooterSettings extends Page
                         TextInput::make('social_title')
                             ->label('Judul Ajakan Sosial Media')
                             ->required()
-                            ->default('Dapatkan Update Seputar Kopi'),
+                            ->default('Dapatkan update seputar alat kopi'),
                         Grid::make(3)->schema([
                             TextInput::make('instagram')
                                 ->label('Instagram URL')

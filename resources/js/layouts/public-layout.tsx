@@ -1186,7 +1186,7 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({
 
                 const socialTitle =
                     footerSettings.social_title ||
-                    'Dapatkan Update Seputar Kopi';
+                    'Dapatkan update seputar alat kopi';
                 const footerInstagram =
                     footerSettings.instagram ||
                     settings?.instagram ||
