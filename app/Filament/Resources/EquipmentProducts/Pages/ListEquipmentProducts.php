@@ -4,10 +4,15 @@ namespace App\Filament\Resources\EquipmentProducts\Pages;
 
 use App\Filament\Resources\EquipmentProducts\EquipmentProductResource;
 use App\Models\Product;
+use App\Services\EquipmentProductImportService;
+use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class ListEquipmentProducts extends ListRecords
@@ -19,6 +24,65 @@ class ListEquipmentProducts extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('downloadTemplate')
+                ->label('Download Template')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->color('gray')
+                ->action(function (EquipmentProductImportService $importer) {
+                    $csv = $importer->generateTemplateCsv();
+
+                    return response()->streamDownload(function () use ($csv) {
+                        echo $csv;
+                    }, 'template-import-produk-alat-kopi.csv', [
+                        'Content-Type' => 'text/csv; charset=UTF-8',
+                    ]);
+                }),
+            Action::make('importProducts')
+                ->label('Import Produk Masal')
+                ->icon('heroicon-o-arrow-up-tray')
+                ->color('success')
+                ->modalHeading('Import Produk Masal (CSV / Excel)')
+                ->modalDescription('Unduh template terlebih dahulu, isi data produk & varian Anda di Excel atau Google Sheets, lalu unggah file (.csv atau .xlsx) di sini.')
+                ->modalSubmitActionLabel('Mulai Import')
+                ->form([
+                    FileUpload::make('file')
+                        ->label('File Produk (.csv atau .xlsx)')
+                        ->disk('local')
+                        ->directory('temp-imports')
+                        ->acceptedFileTypes([
+                            'text/csv',
+                            'text/plain',
+                            'application/csv',
+                            'application/vnd.ms-excel',
+                            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                        ])
+                        ->required(),
+                    Toggle::make('update_existing')
+                        ->label('Perbarui produk jika nama / slug sudah ada')
+                        ->default(true),
+                ])
+                ->action(function (array $data, EquipmentProductImportService $importer) {
+                    $relativePath = $data['file'] ?? null;
+                    if (! $relativePath || ! Storage::disk('local')->exists($relativePath)) {
+                        Notification::make()
+                            ->title('File tidak ditemukan')
+                            ->danger()
+                            ->send();
+
+                        return;
+                    }
+
+                    $fullPath = Storage::disk('local')->path($relativePath);
+                    $result = $importer->importFromFile($fullPath, (bool) ($data['update_existing'] ?? true));
+                    Storage::disk('local')->delete($relativePath);
+
+                    Notification::make()
+                        ->title('Import Produk Masal Selesai')
+                        ->body("{$result['created']} produk baru, {$result['updated']} diperbarui, {$result['variants']} varian diproses"
+                            .($result['skipped'] > 0 ? ", {$result['skipped']} baris kosong dilewati." : '.'))
+                        ->success()
+                        ->send();
+                }),
             CreateAction::make()
                 ->label('Tambah Alat Kopi'),
         ];

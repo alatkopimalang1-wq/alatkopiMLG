@@ -126,3 +126,33 @@ test('admin can manage equipment brands and select them in equipment product for
     expect($created)->not->toBeNull();
     expect($created->origin)->toBe('Comandante');
 });
+
+test('admin can generate template and bulk import equipment products with variants from csv', function () {
+    $this->seed(EquipmentProductsSeeder::class);
+
+    $service = new \App\Services\EquipmentProductImportService();
+    $csv = $service->generateTemplateCsv();
+    expect($csv)->toContain('nama_produk');
+    expect($csv)->toContain('Timemore Chestnut C3 Grinder');
+
+    $tmpPath = sys_get_temp_dir().'/test_import_'.uniqid().'.csv';
+    file_put_contents($tmpPath, $csv);
+
+    $result = $service->importFromFile($tmpPath, true);
+    @unlink($tmpPath);
+
+    expect($result['created'])->toBe(2);
+    expect($result['variants'])->toBe(3);
+
+    $grinder = Product::where('slug', 'timemore-chestnut-c3-grinder')->first();
+    expect($grinder)->not->toBeNull();
+    expect($grinder->origin)->toBe('Timemore');
+    expect($grinder->stock)->toBe(25);
+    expect((int) $grinder->min_price)->toBe(890000);
+    expect($grinder->variants()->count())->toBe(2);
+
+    $filter = Product::where('slug', 'hario-paper-filter-v60-02-100-lembar')->first();
+    expect($filter)->not->toBeNull();
+    expect($filter->stock)->toBe(40);
+    expect((int) $filter->min_price)->toBe(68000);
+});
