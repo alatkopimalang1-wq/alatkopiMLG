@@ -84,7 +84,7 @@
         @viteReactRefresh
         @vite(['resources/css/app.css', 'resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])
         <x-inertia::head>
-            <title>Speciality Coffee Roastery in Malang — Alat Kopi Malang</title>
+            <title>Your Trust Coffee Business Partner — Alat Kopi Malang</title>
         </x-inertia::head>
 
         {{-- Meta Pixel (Facebook Pixel) Base Code --}}

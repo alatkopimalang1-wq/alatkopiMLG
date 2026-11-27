@@ -632,7 +632,7 @@ export default function Welcome({
             : defaultPlaceItems;
 
     return (
-        <PublicLayout title="Speciality Coffee Roastery in Malang">
+        <PublicLayout title="Your Trust Coffee Business Partner">
             <div className="w-full max-w-full space-y-10 overflow-x-hidden pb-4 sm:space-y-16 sm:pb-16">
                 {/* ============================================================== */}
                 {/* 1. HERO SLIDER / CAROUSEL (Artatix 1:1 Pattern)                */}

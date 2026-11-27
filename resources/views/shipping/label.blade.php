@@ -294,7 +294,7 @@
                 <tr>
                     <td style="vertical-align: top;">
                         <div class="brand-title">ALAT KOPI MALANG</div>
-                        <div class="brand-sub">Specialty Coffee Roastery in Malang</div>
+                        <div class="brand-sub">Your Trust Coffee Business Partner</div>
                         <div style="font-size: 9px; font-weight: 600; margin-top: 2px;">Tgl: {{ $created_at }}</div>
                     </td>
                     <td style="text-align: right; vertical-align: top;">
