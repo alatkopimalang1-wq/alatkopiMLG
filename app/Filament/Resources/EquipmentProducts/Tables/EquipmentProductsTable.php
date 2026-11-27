@@ -213,6 +213,9 @@ class EquipmentProductsTable
                 SelectFilter::make('categories')
                     ->label('Kategori')
                     ->relationship('categories', 'name')
+                    ->getOptionLabelFromRecordUsing(fn ($record): string => is_array($record->name)
+                        ? (string) ($record->name['id'] ?? $record->name['en'] ?? (reset($record->name) ?: $record->slug ?: 'Kategori'))
+                        : (string) ($record->name ?: $record->slug ?: 'Kategori'))
                     ->preload()
                     ->searchable(),
 
