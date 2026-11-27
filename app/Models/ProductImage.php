@@ -35,6 +35,11 @@ class ProductImage extends Model
             return $this->path;
         }
 
+        $webp = preg_replace('/\.(jpe?g|png)$/i', '.webp', $this->path);
+        if ($webp !== $this->path && file_exists(public_path('storage/'.$webp))) {
+            return Storage::url($webp);
+        }
+
         return Storage::url($this->path);
     }
 }

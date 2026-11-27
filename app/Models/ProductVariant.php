@@ -78,6 +78,11 @@ class ProductVariant extends Model
             return $this->image;
         }
 
+        $webp = preg_replace('/\.(jpe?g|png)$/i', '.webp', $this->image);
+        if ($webp !== $this->image && file_exists(public_path('storage/'.$webp))) {
+            return Storage::url($webp);
+        }
+
         return Storage::url($this->image);
     }
 

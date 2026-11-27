@@ -19,6 +19,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
@@ -50,7 +51,13 @@ class EquipmentProductsTable
                             return $raw;
                         }
 
-                        return ltrim(preg_replace('#^/?(?:(?:storage|public)/)+#', '', trim($raw)), '/');
+                        $clean = ltrim(preg_replace('#^/?(?:(?:storage|public)/)+#', '', trim($raw)), '/');
+                        $webp = preg_replace('/\.(jpe?g|png)$/i', '.webp', $clean);
+                        if ($webp !== $clean && file_exists(public_path('storage/' . $webp))) {
+                            return $webp;
+                        }
+
+                        return $clean;
                     })
                     ->defaultImageUrl(fn () => asset('brand/logo-circle.png'))
                     ->url(fn (Product $record): string => EquipmentProductResource::getUrl('edit', ['record' => $record])),
@@ -261,7 +268,7 @@ class EquipmentProductsTable
             ->filters([
                 SelectFilter::make('categories')
                     ->label('Kategori')
-                    ->options(fn (): array => Category::query()
+                    ->options(fn (): array => Cache::remember('equipment_filter_categories', 300, fn (): array => Category::query()
                         ->get(['id', 'name', 'slug'])
                         ->mapWithKeys(function (Category $cat): array {
                             $label = is_array($cat->name)
@@ -271,7 +278,7 @@ class EquipmentProductsTable
                             return [$cat->id => $label];
                         })
                         ->sort(SORT_NATURAL | SORT_FLAG_CASE)
-                        ->all())
+                        ->all()))
                     ->query(function (Builder $query, array $data): Builder {
                         $value = $data['value'] ?? null;
                         if (! $value) {
@@ -284,26 +291,14 @@ class EquipmentProductsTable
 
                 SelectFilter::make('origin')
                     ->label('Brand')
-                    ->options(fn (): array => Product::query()
+                    ->options(fn (): array => Cache::remember('equipment_filter_origins', 300, fn (): array => Product::query()
                         ->where('series', 'alat-kopi')
                         ->whereNotNull('origin')
                         ->where('origin', '!=', '')
                         ->distinct()
                         ->orderBy('origin')
                         ->pluck('origin', 'origin')
-                        ->all())
-                    ->searchable(),
-
-                SelectFilter::make('process')
-                    ->label('Tipe Alat')
-                    ->options(fn (): array => Product::query()
-                        ->where('series', 'alat-kopi')
-                        ->whereNotNull('process')
-                        ->where('process', '!=', '')
-                        ->distinct()
-                        ->orderBy('process')
-                        ->pluck('process', 'process')
-                        ->all())
+                        ->all()))
                     ->searchable(),
 
                 SelectFilter::make('status')
@@ -312,12 +307,29 @@ class EquipmentProductsTable
                         'active' => 'Aktif',
                         'archived' => 'Arsip',
                         'preorder' => 'Pre-Order',
+                        'non_preorder' => 'Non Pre-Order',
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         $value = $data['value'] ?? null;
                         if ($value === 'preorder') {
-                            return $query->where('is_preorder', true);
+                            return $query->where(function (Builder $q): Builder {
+                                return $q->where('is_preorder', true)
+                                    ->orWhere('stock_status', 'pre_order');
+                            });
                         }
+
+                        if ($value === 'non_preorder') {
+                            return $query->where(function (Builder $q): Builder {
+                                return $q->where(function (Builder $sub): Builder {
+                                    return $sub->where('is_preorder', false)
+                                        ->orWhereNull('is_preorder');
+                                })->where(function (Builder $sub): Builder {
+                                    return $sub->where('stock_status', '!=', 'pre_order')
+                                        ->orWhereNull('stock_status');
+                                });
+                            });
+                        }
+
                         if (in_array($value, ['active', 'archived'], true)) {
                             return $query->where('status', $value);
                         }

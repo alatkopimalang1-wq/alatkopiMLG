@@ -80,7 +80,7 @@ class ShopController extends Controller
                 ['path' => $request->url(), 'query' => $request->query()]
             );
         } else {
-            $query = Product::active()->forWebsite()->with(['variants', 'images', 'categories']);
+            $query = Product::active()->forWebsite()->with(['primaryImage', 'variants', 'images', 'categories']);
 
             // Search
             if ($search !== '') {
@@ -192,14 +192,14 @@ class ShopController extends Controller
         $product = Product::active()
             ->forWebsite()
             ->where('slug', $slug)
-            ->with(['variants', 'images', 'categories'])
+            ->with(['primaryImage', 'variants', 'images', 'categories'])
             ->firstOrFail();
 
         $relatedProducts = Product::active()
             ->forWebsite()
             ->where('id', '!=', $product->id)
             ->where('series', $product->series)
-            ->with(['variants', 'images'])
+            ->with(['primaryImage', 'variants', 'images'])
             ->take(4)
             ->get();
 

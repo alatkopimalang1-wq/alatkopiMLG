@@ -2229,7 +2229,7 @@ class PosController extends Controller
     {
         $products = Product::active()
             ->forPos()
-            ->with(['variants', 'images', 'categories'])
+            ->with(['primaryImage', 'variants', 'images', 'categories'])
             ->orderBy('name')
             ->get()
             ->map(function (Product $product) {
@@ -2325,19 +2325,20 @@ class PosController extends Controller
             'robusta',
         ];
 
-        $categoriesQuery = Category::query();
-        if (Category::whereIn('slug', $posAllowedCategorySlugs)->exists()) {
-            $categoriesQuery->whereIn('slug', $posAllowedCategorySlugs);
+        $categories = Category::whereIn('slug', $posAllowedCategorySlugs)
+            ->orderBy('sort_order')
+            ->get();
+
+        if ($categories->isEmpty()) {
+            $categories = Category::orderBy('sort_order')->get();
         }
 
-        return $categoriesQuery->orderBy('sort_order')
-            ->get()
-            ->map(fn (Category $c) => [
-                'id' => $c->id,
-                'name' => $c->getTranslation('name', 'id') ?? $c->slug,
-                'slug' => $c->slug,
-                'icon' => $c->icon,
-            ]);
+        return $categories->map(fn (Category $c) => [
+            'id' => $c->id,
+            'name' => $c->getTranslation('name', 'id') ?? $c->slug,
+            'slug' => $c->slug,
+            'icon' => $c->icon,
+        ]);
     }
 
     /**
@@ -2377,6 +2378,12 @@ class PosController extends Controller
                     : ($s['image_url'] ?? null);
                 if (! empty($img) && ! str_starts_with($img, 'http') && ! str_starts_with($img, '/')) {
                     $img = '/storage/'.ltrim($img, '/');
+                }
+                if (! empty($img) && str_starts_with($img, '/storage/')) {
+                    $webpImg = preg_replace('/\.(jpe?g|png)$/i', '.webp', $img);
+                    if ($webpImg !== $img && file_exists(public_path(ltrim($webpImg, '/')))) {
+                        $img = $webpImg;
+                    }
                 }
 
                 return [
