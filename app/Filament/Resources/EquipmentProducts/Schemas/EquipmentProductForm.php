@@ -85,6 +85,9 @@ class EquipmentProductForm
                             Select::make('categories')
                                 ->label('Kategori')
                                 ->relationship('categories', 'slug')
+                                ->getOptionLabelFromRecordUsing(fn (Category $record): string => is_array($record->name)
+                                    ? (string) ($record->name['id'] ?? $record->name['en'] ?? (reset($record->name) ?: $record->slug ?: 'Kategori'))
+                                    : (string) ($record->name ?: $record->slug ?: 'Kategori'))
                                 ->multiple()
                                 ->preload()
                                 ->default(function () {
