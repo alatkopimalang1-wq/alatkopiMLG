@@ -356,14 +356,10 @@ class EquipmentProductForm
                 Section::make('Deskripsi Produk')
                     ->columnSpanFull()
                     ->schema([
-                        Grid::make(2)->schema([
-                            Textarea::make('description.id')
-                                ->label('Deskripsi Lengkap (Indonesia)')
-                                ->rows(4),
-                            Textarea::make('description.en')
-                                ->label('Deskripsi Lengkap (English)')
-                                ->rows(4),
-                        ]),
+                        Textarea::make('description.id')
+                            ->label('Deskripsi Lengkap')
+                            ->rows(8)
+                            ->columnSpanFull(),
                     ]),
             ]);
     }
