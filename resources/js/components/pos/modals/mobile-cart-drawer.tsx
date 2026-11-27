@@ -170,6 +170,11 @@ export const MobileCartDrawer: React.FC<MobileCartDrawerProps> = ({
                                                 Manual
                                             </span>
                                         )}
+                                        {item.is_dp && (
+                                            <span className="py-0.2 rounded border border-sky-300 bg-sky-100 px-1.5 text-[10px] font-extrabold text-sky-800 dark:border-sky-700 dark:bg-sky-950/60 dark:text-sky-300">
+                                                DP
+                                            </span>
+                                        )}
                                     </div>
                                     <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-stone-600 dark:text-stone-300">
                                         <span className="rounded-md border border-brand-200 bg-brand-50 px-1.5 py-0.5 text-[11px] font-bold text-brand-800 dark:border-stone-700 dark:bg-stone-800 dark:text-amber-300">

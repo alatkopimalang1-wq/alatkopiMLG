@@ -64,6 +64,16 @@ export interface CartItem {
     cost_price?: number;
     notes?: string;
     is_manual?: boolean;
+    is_dp?: boolean;
+    dp_type?: 'percent' | 'nominal';
+    dp_value?: number;
+    dp_percent?: number;
+    dp_total_order?: number;
+    dp_remaining?: number;
+    dp_unit_price?: number;
+    dp_unit_cost?: number;
+    dp_qty?: number;
+    dp_base_variant?: string;
     discount_type?: 'fixed' | 'percent';
     discount_value?: number;
     discount_amount?: number;

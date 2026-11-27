@@ -453,6 +453,16 @@ interface CartItem {
     cost_price?: number;
     notes?: string;
     is_manual?: boolean;
+    is_dp?: boolean;
+    dp_type?: 'percent' | 'nominal';
+    dp_value?: number;
+    dp_percent?: number;
+    dp_total_order?: number;
+    dp_remaining?: number;
+    dp_unit_price?: number;
+    dp_unit_cost?: number;
+    dp_qty?: number;
+    dp_base_variant?: string;
     discount_type?: 'fixed' | 'percent';
     discount_value?: number;
     discount_amount?: number;
@@ -1625,6 +1635,9 @@ function PosContent({
     const [manualQuantity, setManualQuantity] = useState(1);
     const [manualVariantLabel, setManualVariantLabel] = useState('Manual');
     const [manualNotes, setManualNotes] = useState('');
+    const [manualDpEnabled, setManualDpEnabled] = useState(false);
+    const [manualDpType, setManualDpType] = useState<'percent' | 'nominal'>('percent');
+    const [manualDpValue, setManualDpValue] = useState<string | number>('');
     const [editingManualCartItemId, setEditingManualCartItemId] = useState<
         string | null
     >(null);
@@ -4187,10 +4200,23 @@ function PosContent({
         if (itemToEdit) {
             setEditingManualCartItemId(itemToEdit.id);
             setManualProductName(itemToEdit.product_name);
-            setManualCostPrice(itemToEdit.cost_price ?? '');
-            setManualPrice(itemToEdit.price);
-            setManualQuantity(itemToEdit.quantity);
-            setManualVariantLabel(itemToEdit.variant_label || 'Manual');
+            if (itemToEdit.is_dp) {
+                setManualCostPrice(itemToEdit.dp_unit_cost ?? itemToEdit.cost_price ?? '');
+                setManualPrice(itemToEdit.dp_unit_price ?? itemToEdit.price);
+                setManualQuantity(itemToEdit.dp_qty ?? itemToEdit.quantity);
+                setManualVariantLabel(itemToEdit.dp_base_variant || 'Manual');
+                setManualDpEnabled(true);
+                setManualDpType(itemToEdit.dp_type || 'percent');
+                setManualDpValue(itemToEdit.dp_value ?? '');
+            } else {
+                setManualCostPrice(itemToEdit.cost_price ?? '');
+                setManualPrice(itemToEdit.price);
+                setManualQuantity(itemToEdit.quantity);
+                setManualVariantLabel(itemToEdit.variant_label || 'Manual');
+                setManualDpEnabled(false);
+                setManualDpType('percent');
+                setManualDpValue('');
+            }
             setManualNotes('');
         } else {
             setEditingManualCartItemId(null);
@@ -4200,6 +4226,9 @@ function PosContent({
             setManualQuantity(1);
             setManualVariantLabel('Manual');
             setManualNotes('');
+            setManualDpEnabled(false);
+            setManualDpType('percent');
+            setManualDpValue('');
         }
         setIsManualOrderModalOpen(true);
     };
@@ -4221,6 +4250,70 @@ function PosContent({
             return;
         }
 
+        const baseVariant = manualVariantLabel.trim() || 'Manual';
+        const totalOrder = sellingPrice * qty;
+        const totalCost = hpp * qty;
+
+        let finalPrice = sellingPrice;
+        let finalCost = hpp;
+        let finalQty = qty;
+        let finalVariantLabel = baseVariant;
+        let finalNotes: string | undefined = undefined;
+        let dpFields: Partial<CartItem> = {
+            is_dp: false,
+            dp_type: undefined,
+            dp_value: undefined,
+            dp_percent: undefined,
+            dp_total_order: undefined,
+            dp_remaining: undefined,
+            dp_unit_price: undefined,
+            dp_unit_cost: undefined,
+            dp_qty: undefined,
+            dp_base_variant: undefined,
+        };
+
+        if (manualDpEnabled) {
+            const rawDp = Number(manualDpValue) || 0;
+            const dpPercent =
+                manualDpType === 'percent'
+                    ? Math.max(0, Math.min(100, rawDp))
+                    : totalOrder > 0
+                      ? Math.max(0, Math.min(100, (rawDp / totalOrder) * 100))
+                      : 0;
+            const dpAmount =
+                manualDpType === 'percent'
+                    ? Math.round((totalOrder * dpPercent) / 100)
+                    : Math.max(0, Math.min(totalOrder, rawDp));
+
+            if (totalOrder <= 0 || dpAmount <= 0) {
+                alert('Mohon masukkan harga jual dan nominal/persentase DP yang valid');
+                return;
+            }
+
+            const dpRemaining = Math.max(0, totalOrder - dpAmount);
+            const dpPercentLabel = Number.isInteger(dpPercent)
+                ? String(dpPercent)
+                : dpPercent.toFixed(1).replace(/\.0$/, '');
+
+            finalPrice = dpAmount;
+            finalCost = totalCost;
+            finalQty = 1;
+            finalVariantLabel = `${baseVariant} • DP ${dpPercentLabel}%`;
+            finalNotes = `Total: Rp ${formatRp(totalOrder)} | DP (${dpPercentLabel}%): Rp ${formatRp(dpAmount)} | Sisa: Rp ${formatRp(dpRemaining)}`;
+            dpFields = {
+                is_dp: true,
+                dp_type: manualDpType,
+                dp_value: rawDp,
+                dp_percent: dpPercent,
+                dp_total_order: totalOrder,
+                dp_remaining: dpRemaining,
+                dp_unit_price: sellingPrice,
+                dp_unit_cost: hpp,
+                dp_qty: qty,
+                dp_base_variant: baseVariant,
+            };
+        }
+
         if (editingManualCartItemId) {
             // Update existing cart item
             setCart((prev) =>
@@ -4229,11 +4322,12 @@ function PosContent({
                         return {
                             ...it,
                             product_name: trimmedName,
-                            variant_label:
-                                manualVariantLabel.trim() || 'Manual',
-                            price: sellingPrice,
-                            cost_price: hpp,
-                            quantity: qty,
+                            variant_label: finalVariantLabel,
+                            price: finalPrice,
+                            cost_price: finalCost,
+                            quantity: finalQty,
+                            notes: finalNotes,
+                            ...dpFields,
                         };
                     }
                     return it;
@@ -4247,12 +4341,14 @@ function PosContent({
                 product_id: 0,
                 variant_id: 0,
                 product_name: trimmedName,
-                variant_label: manualVariantLabel.trim() || 'Manual',
-                price: sellingPrice,
-                cost_price: hpp,
-                quantity: qty,
+                variant_label: finalVariantLabel,
+                price: finalPrice,
+                cost_price: finalCost,
+                quantity: finalQty,
                 image: '/images/products/manual-order.svg',
                 is_manual: true,
+                notes: finalNotes,
+                ...dpFields,
             };
 
             setCart((prev) => [...prev, newCartItem]);
@@ -5526,6 +5622,11 @@ function PosContent({
                                                         Manual
                                                     </span>
                                                 )}
+                                                {item.is_dp && (
+                                                    <span className="py-0.2 rounded border border-sky-300 bg-sky-100 px-1.5 text-[10px] font-extrabold text-sky-800 dark:border-sky-700 dark:bg-sky-950/60 dark:text-sky-300">
+                                                        DP
+                                                    </span>
+                                                )}
                                                 {item.id.startsWith('cybr-') && (
                                                     <span className="py-0.2 rounded border border-emerald-300 bg-emerald-100 px-1.5 text-[10px] font-extrabold text-emerald-800 dark:border-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
                                                         C.Y.B.R Blend
@@ -6304,6 +6405,12 @@ function PosContent({
                 setManualPrice={setManualPrice}
                 manualQuantity={manualQuantity}
                 setManualQuantity={setManualQuantity}
+                manualDpEnabled={manualDpEnabled}
+                setManualDpEnabled={setManualDpEnabled}
+                manualDpType={manualDpType}
+                setManualDpType={setManualDpType}
+                manualDpValue={String(manualDpValue)}
+                setManualDpValue={setManualDpValue}
                 handleSaveManualItem={handleSaveManualItem}
                 formatRp={formatRp}
             />

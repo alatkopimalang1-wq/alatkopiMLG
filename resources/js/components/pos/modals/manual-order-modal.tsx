@@ -1,5 +1,5 @@
 import React from 'react';
-import { PlusCircle, X, Minus, Plus, ShoppingCart, CreditCard } from 'lucide-react';
+import { PlusCircle, X, Minus, Plus, ShoppingCart, CreditCard, Percent, Banknote } from 'lucide-react';
 
 interface ManualOrderModalProps {
     isOpen: boolean;
@@ -15,6 +15,12 @@ interface ManualOrderModalProps {
     setManualPrice: (val: string) => void;
     manualQuantity: number;
     setManualQuantity: React.Dispatch<React.SetStateAction<number>>;
+    manualDpEnabled: boolean;
+    setManualDpEnabled: (val: boolean) => void;
+    manualDpType: 'percent' | 'nominal';
+    setManualDpType: (val: 'percent' | 'nominal') => void;
+    manualDpValue: string;
+    setManualDpValue: (val: string) => void;
     handleSaveManualItem: (e: React.FormEvent, payDirectly: boolean) => void;
     formatRp: (val: number) => string;
 }
@@ -33,6 +39,12 @@ export const ManualOrderModal: React.FC<ManualOrderModalProps> = ({
     setManualPrice,
     manualQuantity,
     setManualQuantity,
+    manualDpEnabled,
+    setManualDpEnabled,
+    manualDpType,
+    setManualDpType,
+    manualDpValue,
+    setManualDpValue,
     handleSaveManualItem,
     formatRp,
 }) => {
@@ -46,9 +58,25 @@ export const ManualOrderModal: React.FC<ManualOrderModalProps> = ({
     const grossProfitCalc = subtotalCalc - totalCostCalc;
     const marginPercent = subtotalCalc > 0 ? (grossProfitCalc / subtotalCalc) * 100 : 0;
 
+    const rawDpVal = Number(manualDpValue) || 0;
+    const dpPercentCalc =
+        manualDpType === 'percent'
+            ? Math.max(0, Math.min(100, rawDpVal))
+            : subtotalCalc > 0
+              ? Math.max(0, Math.min(100, (rawDpVal / subtotalCalc) * 100))
+              : 0;
+    const dpAmountCalc =
+        manualDpType === 'percent'
+            ? Math.round((subtotalCalc * dpPercentCalc) / 100)
+            : Math.max(0, Math.min(subtotalCalc, rawDpVal));
+    const dpRemainingCalc = Math.max(0, subtotalCalc - dpAmountCalc);
+    const dpPercentLabel = Number.isInteger(dpPercentCalc)
+        ? String(dpPercentCalc)
+        : dpPercentCalc.toFixed(1).replace(/\.0$/, '');
+
     return (
         <div className="pos-modal-overlay fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 p-3 sm:p-4">
-            <div className="pos-gpu-layer my-auto w-full max-w-lg animate-in space-y-4 rounded-2xl border border-stone-200 bg-white p-5 text-stone-900 shadow-2xl duration-150 zoom-in-95 sm:p-6 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-100">
+            <div className="pos-gpu-layer my-auto max-h-[92vh] w-full max-w-lg animate-in space-y-4 overflow-y-auto rounded-2xl border border-stone-200 bg-white p-5 text-stone-900 shadow-2xl duration-150 zoom-in-95 sm:p-6 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-100">
                 {/* Modal Header */}
                 <div className="flex items-center justify-between border-b border-stone-100 pb-3.5 dark:border-stone-800">
                     <div className="flex items-center gap-2.5">
@@ -225,6 +253,155 @@ export const ManualOrderModal: React.FC<ManualOrderModalProps> = ({
                                 </span>
                             </div>
                         </div>
+                    </div>
+
+                    {/* 5. Downpayment (DP) Opsional */}
+                    <div className="space-y-3 rounded-xl border border-sky-200 bg-sky-50/60 p-3.5 dark:border-sky-900/60 dark:bg-sky-950/20">
+                        <div className="flex items-center justify-between gap-3">
+                            <div>
+                                <div className="text-xs font-bold text-sky-950 dark:text-sky-100">
+                                    Downpayment (DP)
+                                </div>
+                                <div className="text-[10px] text-sky-700 dark:text-sky-300/80">
+                                    Aktifkan jika pelanggan membayar uang muka terlebih dahulu
+                                </div>
+                            </div>
+                            <label className="relative inline-flex cursor-pointer items-center">
+                                <input
+                                    type="checkbox"
+                                    checked={manualDpEnabled}
+                                    onChange={(e) => {
+                                        const checked = e.target.checked;
+                                        setManualDpEnabled(checked);
+                                        if (checked && !manualDpValue) {
+                                            setManualDpValue(manualDpType === 'percent' ? '50' : '');
+                                        }
+                                    }}
+                                    className="peer sr-only"
+                                />
+                                <div className="peer h-5 w-9 rounded-full bg-stone-300 after:absolute after:top-[2px] after:left-[2px] after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-all peer-checked:bg-sky-600 peer-checked:after:translate-x-full dark:bg-stone-700 dark:peer-checked:bg-sky-500" />
+                            </label>
+                        </div>
+
+                        {manualDpEnabled && (
+                            <div className="space-y-3 border-t border-sky-200/80 pt-3 dark:border-sky-800/60">
+                                {/* Mode Persen atau Nominal */}
+                                <div className="grid grid-cols-2 gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            if (manualDpType !== 'percent') {
+                                                setManualDpType('percent');
+                                                setManualDpValue(
+                                                    subtotalCalc > 0 && rawDpVal > 0
+                                                        ? String(
+                                                              Math.round(dpPercentCalc * 10) / 10,
+                                                          )
+                                                        : '50',
+                                                );
+                                            }
+                                        }}
+                                        className={`flex cursor-pointer items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-[11px] font-bold transition ${
+                                            manualDpType === 'percent'
+                                                ? 'border-sky-600 bg-sky-600 text-white shadow-xs dark:border-sky-500 dark:bg-sky-500'
+                                                : 'border-sky-200 bg-white text-sky-900 hover:bg-sky-100/70 dark:border-sky-800 dark:bg-stone-900 dark:text-sky-200'
+                                        }`}
+                                    >
+                                        <Percent className="h-3.5 w-3.5" />
+                                        <span>Persentase (%)</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            if (manualDpType !== 'nominal') {
+                                                setManualDpType('nominal');
+                                                setManualDpValue(
+                                                    dpAmountCalc > 0 ? String(dpAmountCalc) : '',
+                                                );
+                                            }
+                                        }}
+                                        className={`flex cursor-pointer items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-[11px] font-bold transition ${
+                                            manualDpType === 'nominal'
+                                                ? 'border-sky-600 bg-sky-600 text-white shadow-xs dark:border-sky-500 dark:bg-sky-500'
+                                                : 'border-sky-200 bg-white text-sky-900 hover:bg-sky-100/70 dark:border-sky-800 dark:bg-stone-900 dark:text-sky-200'
+                                        }`}
+                                    >
+                                        <Banknote className="h-3.5 w-3.5" />
+                                        <span>Nominal (Rp)</span>
+                                    </button>
+                                </div>
+
+                                {manualDpType === 'percent' ? (
+                                    <div className="space-y-2">
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {[20, 30, 50, 70].map((pct) => (
+                                                <button
+                                                    key={pct}
+                                                    type="button"
+                                                    onClick={() => setManualDpValue(String(pct))}
+                                                    className={`cursor-pointer rounded-md border px-2.5 py-1 text-[11px] font-bold transition ${
+                                                        Number(manualDpValue) === pct
+                                                            ? 'border-sky-600 bg-sky-600 text-white'
+                                                            : 'border-sky-200 bg-white text-sky-800 hover:bg-sky-100 dark:border-sky-800 dark:bg-stone-900 dark:text-sky-300'
+                                                    }`}
+                                                >
+                                                    {pct}%
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <div className="relative">
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                max="100"
+                                                step="any"
+                                                value={manualDpValue}
+                                                onChange={(e) => setManualDpValue(e.target.value)}
+                                                placeholder="Masukkan persentase DP (contoh: 50)"
+                                                className="w-full rounded-lg border border-sky-300 bg-white py-2 pr-9 pl-3 text-sm font-bold text-sky-950 focus:ring-1 focus:ring-sky-500 focus:outline-none dark:border-sky-800 dark:bg-stone-900 dark:text-sky-100"
+                                            />
+                                            <span className="absolute top-1/2 right-3 -translate-y-1/2 text-xs font-bold text-sky-600 dark:text-sky-400">
+                                                %
+                                            </span>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="relative">
+                                        <span className="absolute top-1/2 left-3 -translate-y-1/2 text-xs font-bold text-sky-600 dark:text-sky-400">
+                                            Rp
+                                        </span>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            max={subtotalCalc > 0 ? subtotalCalc : undefined}
+                                            step="1000"
+                                            value={manualDpValue}
+                                            onChange={(e) => setManualDpValue(e.target.value)}
+                                            placeholder="Masukkan nominal DP (contoh: 250000)"
+                                            className="w-full rounded-lg border border-sky-300 bg-white py-2 pr-3 pl-9 text-sm font-bold text-sky-950 focus:ring-1 focus:ring-sky-500 focus:outline-none dark:border-sky-800 dark:bg-stone-900 dark:text-sky-100"
+                                        />
+                                    </div>
+                                )}
+
+                                {/* Ringkasan DP & Sisa Pembayaran Otomatis */}
+                                <div className="space-y-1.5 rounded-lg border border-sky-200 bg-white p-2.5 text-[11px] dark:border-sky-800/80 dark:bg-stone-900">
+                                    <div className="flex justify-between text-stone-600 dark:text-stone-300">
+                                        <span>Total Harga Pesanan:</span>
+                                        <span className="font-bold text-stone-900 dark:text-white">
+                                            Rp {formatRp(subtotalCalc)}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between font-bold text-sky-700 dark:text-sky-300">
+                                        <span>DP Dibayar Sekarang ({dpPercentLabel}%):</span>
+                                        <span>Rp {formatRp(dpAmountCalc)}</span>
+                                    </div>
+                                    <div className="flex justify-between border-t border-dashed border-stone-200 pt-1.5 font-extrabold text-amber-700 dark:border-stone-700 dark:text-amber-400">
+                                        <span>Sisa Pembayaran (Otomatis):</span>
+                                        <span>Rp {formatRp(dpRemainingCalc)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Actions */}
