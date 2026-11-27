@@ -193,14 +193,11 @@ class ManageEquipmentBrands extends Page
                                         ->required()
                                         ->alphaDash(),
                                 ]),
-                                Grid::make(2)->schema([
-                                    TextInput::make('description')
-                                        ->label('Catatan / Deskripsi Singkat (Opsional)'),
                                     TextInput::make('image_url')
                                         ->label('URL Gambar Brand (Opsional)')
                                         ->placeholder('https://...')
-                                        ->url(),
-                                ]),
+                                        ->url()
+                                        ->columnSpanFull(),
                                 Grid::make(2)->schema([
                                     FileUpload::make('image')
                                         ->label('Upload Foto / Logo Brand (Opsional)')
