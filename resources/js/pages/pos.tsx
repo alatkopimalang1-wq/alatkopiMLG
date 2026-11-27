@@ -316,7 +316,7 @@ const defaultPaymentSettings: PaymentSettings = {
     enable_qris: true,
     enable_debit: true,
     enable_bank_transfer: true,
-    qris_instructions: 'Tunjukkan kode QRIS Kasir Sanubari di meja kasir.',
+    qris_instructions: 'Tunjukkan kode QRIS Kasir Alat Kopi Malang di meja kasir.',
     bank_info: 'BCA 123-456-7890 a/n Alat Kopi Malang',
 };
 
@@ -585,7 +585,7 @@ export const normalizePosProduct = (p: any): Product => {
 export const precacheProductImages = async (productList: Product[]) => {
     if (typeof window === 'undefined' || !('caches' in window)) return;
     try {
-        const cache = await caches.open('sanubari-pos-static-v6');
+        const cache = await caches.open('sanubari-pos-static-v7');
         for (const p of productList) {
             if (
                 p.image &&
@@ -647,7 +647,7 @@ function PosContent({
     recentOrders: initialRecentOrders = [],
     heldOrders: initialHeldOrders = [],
     queueOrders: initialQueueOrders = [],
-    cashier = { id: 0, name: 'Kasir Sanubari', email: '', role: 'kasir' },
+    cashier = { id: 0, name: 'Kasir Alat Kopi Malang', email: '', role: 'kasir' },
     staffList: initialStaffList = [],
     settings: initialSettings,
     todayCashDrawer,
@@ -4778,7 +4778,7 @@ function PosContent({
                         <div className="-mt-2 flex flex-col items-center border-b border-stone-100 px-4 pb-3.5 dark:border-stone-800">
                             <div className="mb-2 flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border border-stone-200 bg-stone-100 p-1.5 shadow-2xs dark:border-stone-700 dark:bg-stone-800">
                                 <img
-                                    src="/brand/logo-circle.png"
+                                    src="/brand/logo-circle.png?v=20261127"
                                     alt="Alat Kopi Malang"
                                     className="h-full w-full rounded-full object-contain"
                                 />
@@ -5069,14 +5069,14 @@ function PosContent({
                     <div className="flex items-center gap-2.5">
                         <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/20 bg-white/10 shadow-2xs">
                             <img
-                                src="/brand/logo-circle.png"
+                                src="/brand/logo-circle.png?v=20261127"
                                 alt="Alat Kopi Malang"
                                 className="h-full w-full object-contain p-0.5"
                             />
                         </div>
                         <div className="hidden sm:block">
                             <h1 className="text-sm font-bold tracking-wide text-white">
-                                SANUBARI POS
+                                ALAT KOPI MALANG
                             </h1>
                             <p className="flex max-w-[140px] items-center gap-1.5 truncate text-[11px] text-brand-300 sm:max-w-xs">
                                 <span>

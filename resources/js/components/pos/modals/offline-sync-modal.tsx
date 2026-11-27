@@ -316,7 +316,7 @@ export const OfflineSyncModal: React.FC<OfflineSyncModalProps> = ({
                 {/* Modal Footer */}
                 <div className="flex items-center justify-between border-t border-stone-200 bg-stone-50 p-4 dark:border-stone-800 dark:bg-stone-900">
                     <span className="text-[11px] text-stone-500 dark:text-stone-400">
-                        Sanubari POS Offline Engine • LocalStorage & Auto-Sync
+                        Alat Kopi Malang POS Offline Engine • LocalStorage & Auto-Sync
                     </span>
                     <button
                         type="button"

@@ -143,7 +143,7 @@ class PosController extends Controller
             'enable_qris' => true,
             'enable_debit' => true,
             'enable_bank_transfer' => true,
-            'qris_instructions' => 'Tunjukkan kode QRIS Kasir Sanubari di meja kasir.',
+            'qris_instructions' => 'Tunjukkan kode QRIS Kasir Alat Kopi Malang di meja kasir.',
             'bank_info' => 'BCA 123-456-7890 a/n Alat Kopi Malang',
         ];
 
@@ -232,7 +232,7 @@ class PosController extends Controller
             'todayCashDrawer' => $cashDrawerToday,
             'cashier' => [
                 'id' => auth()->id(),
-                'name' => auth()->user()?->name ?? 'Kasir Sanubari',
+                'name' => auth()->user()?->name ?? 'Kasir Alat Kopi Malang',
                 'email' => auth()->user()?->email,
                 'role' => auth()->user()?->pos_role ?: (auth()->user()?->role ?? 'kasir'),
                 'is_owner' => auth()->user() && auth()->user()->isOwner(),
@@ -1699,7 +1699,7 @@ class PosController extends Controller
         $totalDiscount = $totalItemDiscounts + $cartDiscount;
         $totalAmount = max(0, $subtotal - $totalDiscount);
 
-        $customerName = trim($validated['customer_name'] ?? '') ?: 'Pelanggan Sanubari';
+        $customerName = trim($validated['customer_name'] ?? '') ?: 'Pelanggan Alat Kopi Malang';
         $customerPhone = $validated['customer_phone'] ? trim($validated['customer_phone']) : null;
         $notes = $validated['notes'] ? trim($validated['notes']) : null;
 
@@ -1711,7 +1711,7 @@ class PosController extends Controller
             'enable_qris' => true,
             'enable_debit' => true,
             'enable_bank_transfer' => true,
-            'qris_instructions' => 'Tunjukkan kode QRIS Kasir Sanubari di meja kasir.',
+            'qris_instructions' => 'Tunjukkan kode QRIS Kasir Alat Kopi Malang di meja kasir.',
             'bank_info' => 'BCA 123-456-7890 a/n Alat Kopi Malang',
         ]);
 
@@ -1805,7 +1805,7 @@ class PosController extends Controller
             ];
 
             $paymentSettings = Setting::get('pos_payment_settings', [
-                'qris_instructions' => 'Tunjukkan kode QRIS Kasir Sanubari di meja kasir.',
+                'qris_instructions' => 'Tunjukkan kode QRIS Kasir Alat Kopi Malang di meja kasir.',
                 'bank_info' => 'BCA 123-456-7890 a/n Alat Kopi Malang',
             ]);
 
@@ -1813,7 +1813,7 @@ class PosController extends Controller
                 'id' => $held->id,
                 'order_number' => $held->invoice_token ?: $held->queue_number,
                 'queue_number' => $held->queue_number,
-                'customer_name' => $held->customer_name ?: 'Pelanggan Sanubari',
+                'customer_name' => $held->customer_name ?: 'Pelanggan Alat Kopi Malang',
                 'customer_phone' => $held->customer_phone ?: '-',
                 'customer_notes' => $held->notes,
                 'cashier_name' => $held->user?->name ?? 'Muhamad Ridwan',

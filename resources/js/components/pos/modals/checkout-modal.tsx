@@ -229,7 +229,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                         <QrCode className="mx-auto h-12 w-12 text-brand-700 dark:text-emerald-400" />
                         <p className="text-xs font-semibold text-stone-900 dark:text-stone-100">
                             {paymentForm?.qris_instructions ||
-                                'Tampilkan QRIS Kasir Sanubari kepada Pelanggan'}
+                                'Tampilkan QRIS Kasir Alat Kopi Malang kepada Pelanggan'}
                         </p>
                         <p className="text-[11px] text-stone-500 dark:text-stone-300">
                             Total bayar:{' '}

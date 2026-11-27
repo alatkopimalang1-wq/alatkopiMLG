@@ -236,7 +236,7 @@ export const ThermalReceiptPreview: React.FC<ThermalReceiptPreviewProps> = ({
                     {showLogo && (
                         <div className="flex justify-center pb-1">
                             <img
-                                src="/brand/logo-circle.png"
+                                src="/brand/logo-circle.png?v=20261127"
                                 alt="Logo"
                                 className="h-9 w-9 object-contain"
                                 onError={(e) => {

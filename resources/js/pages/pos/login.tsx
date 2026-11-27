@@ -47,7 +47,7 @@ export default function PosLogin({ status, warning, currentUser }: Props) {
 
     return (
         <div className="relative flex min-h-screen flex-col justify-between overflow-hidden bg-stone-950 font-sans text-stone-100 antialiased selection:bg-amber-600 selection:text-white">
-            <Head title="Masuk Terminal Kasir — Sanubari POS" />
+            <Head title="Masuk Terminal Kasir — Alat Kopi Malang" />
 
             {/* Background Decorative Glow */}
             <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -67,8 +67,12 @@ export default function PosLogin({ status, warning, currentUser }: Props) {
             {/* Top Bar: Store Link & Theme Toggle */}
             <header className="relative z-10 flex items-center justify-between border-b border-stone-800/80 bg-stone-900/40 px-4 py-4 backdrop-blur-md sm:px-8">
                 <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-amber-500/30 bg-gradient-to-br from-amber-600 to-amber-700 shadow-lg shadow-amber-900/40">
-                        <Coffee className="h-5 w-5 text-white" />
+                    <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl border border-amber-500/30 bg-white/10 shadow-lg shadow-amber-900/40">
+                        <img
+                            src="/brand/logo-circle.png?v=20261127"
+                            alt="Alat Kopi Malang"
+                            className="h-full w-full object-contain p-0.5"
+                        />
                     </div>
                     <div>
                         <span className="block text-sm font-bold tracking-tight text-stone-100 sm:text-base">

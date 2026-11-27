@@ -55,7 +55,7 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
                     </h2>
                     <p className="mt-0.5 text-xs text-stone-500 dark:text-stone-300 flex items-center gap-1.5">
                         <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                        <span>Tersinkronisasi otomatis dengan Website & Marketplace Sanubari</span>
+                        <span>Tersinkronisasi otomatis dengan Website & Marketplace Alat Kopi Malang</span>
                         <span className="text-stone-300 dark:text-stone-700">•</span>
                         <span>Update: {formattedSyncTime}</span>
                     </p>
