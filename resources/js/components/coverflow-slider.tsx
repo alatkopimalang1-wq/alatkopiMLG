@@ -77,6 +77,7 @@ interface CoverflowSliderProps {
     ctaLabel?: string;
     aspectRatio?: 'portrait' | 'square';
     className?: string;
+    directLinkOnClick?: boolean;
 }
 
 export const CoverflowSlider: React.FC<CoverflowSliderProps> = ({
@@ -86,6 +87,7 @@ export const CoverflowSlider: React.FC<CoverflowSliderProps> = ({
     ctaLabel = 'Kunjungi',
     aspectRatio = 'portrait',
     className = '',
+    directLinkOnClick = false,
 }) => {
     // Start centered on Lafayette (index 3 of 7)
     const [currentIndex, setCurrentIndex] = useState(3);
@@ -288,7 +290,7 @@ export const CoverflowSlider: React.FC<CoverflowSliderProps> = ({
                         const slideUrl = slide.href || slide.url;
 
                         const handleCardClick = () => {
-                            if (isCenter && slideUrl) {
+                            if ((isCenter || directLinkOnClick) && slideUrl) {
                                 if (slideUrl.startsWith('http')) {
                                     window.open(
                                         slideUrl,
@@ -343,7 +345,7 @@ export const CoverflowSlider: React.FC<CoverflowSliderProps> = ({
                                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/95 via-black/45 to-transparent" />
 
                                 {/* Center Card: External Link Badge if link exists */}
-                                {isCenter && slideUrl && (
+                                {isCenter && slideUrl && ctaLabel && (
                                     <div className="pointer-events-auto absolute top-3.5 right-3.5 z-20">
                                         <span className="inline-flex items-center gap-1 rounded-full border border-white/20 bg-black/60 px-2.5 py-1 text-[10px] font-bold text-white shadow-md backdrop-blur-md transition-all hover:scale-105 hover:bg-accent-copper">
                                             <span>{ctaLabel}</span>
@@ -357,9 +359,11 @@ export const CoverflowSlider: React.FC<CoverflowSliderProps> = ({
                                     <h3 className="line-clamp-2 text-sm leading-tight font-bold tracking-tight text-white drop-shadow-md sm:text-base md:text-lg">
                                         {slide.title}
                                     </h3>
-                                    <span className="mt-1 text-[10px] font-semibold tracking-widest text-accent-copper uppercase drop-shadow-xs sm:text-xs">
-                                        {slide.city}
-                                    </span>
+                                    {slide.city && (
+                                        <span className="mt-1 text-[10px] font-semibold tracking-widest text-accent-copper uppercase drop-shadow-xs sm:text-xs">
+                                            {slide.city}
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                         );

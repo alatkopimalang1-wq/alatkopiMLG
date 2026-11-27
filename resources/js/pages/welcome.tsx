@@ -1205,22 +1205,18 @@ export default function Welcome({
                             settings?.home_brand_pilihan_subtitle ||
                             'Kumpulan merek alat kopi terkurasi yang tersedia di Alat Kopi Malang'
                         }
-                        ctaLabel={
-                            settings?.home_brand_pilihan_cta_label ||
-                            'Lihat Produk'
-                        }
+                        ctaLabel=""
                         aspectRatio="square"
+                        directLinkOnClick={true}
                         slides={equipmentBrands.map((brand) => ({
                             id: brand.slug,
                             title: brand.name,
-                            city:
-                                settings?.home_brand_pilihan_badge ||
-                                'BRAND PILIHAN',
+                            city: '',
                             image:
                                 resolveCategoryImageUrl(brand.image) ||
                                 brand.image ||
                                 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=800&q=80',
-                            href: `/shop?q=${encodeURIComponent(brand.name)}`,
+                            href: `/shop?brand=${encodeURIComponent(brand.name)}`,
                             open_in_new_tab: false,
                         }))}
                     />
