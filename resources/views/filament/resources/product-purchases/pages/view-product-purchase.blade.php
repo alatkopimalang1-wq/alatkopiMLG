@@ -363,6 +363,21 @@
                                 @endif
                             </td>
                         </tr>
+                        <tr>
+                            <td colspan="5" class="py-2 px-4 text-right font-medium text-gray-600 dark:text-gray-400">Metode Pembayaran</td>
+                            <td class="py-2 px-4 text-right">
+                                <select
+                                    wire:model.live="selectedPaymentMethod"
+                                    @disabled($isCompleted)
+                                    class="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-2.5 py-1 text-xs font-semibold text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-70"
+                                >
+                                    @foreach(\App\Models\ProductPurchase::PAYMENT_LABELS as $pmKey => $pmLabel)
+                                        <option value="{{ $pmKey }}">{{ $pmLabel }}</option>
+                                    @endforeach
+                                </select>
+                            </td>
+                            <td></td>
+                        </tr>
                         <tr class="border-t border-gray-200 dark:border-gray-700 bg-gray-100/70 dark:bg-gray-800/60">
                             <td colspan="5" class="py-3 px-4 text-right font-bold text-gray-900 dark:text-white">Total Tagihan</td>
                             <td class="py-3 px-4 text-right font-extrabold text-base text-primary-600 dark:text-primary-400">{{ $fmt($po->total_amount) }}</td>

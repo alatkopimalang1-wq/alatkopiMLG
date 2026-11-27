@@ -27,6 +27,8 @@ class ViewProductPurchase extends ViewRecord
 
     public string $selectedStatus = '';
 
+    public string $selectedPaymentMethod = ProductPurchase::PAYMENT_REKENING;
+
     public string $purchaseDateInput = '';
 
     public function mount(int|string $record): void
@@ -37,6 +39,7 @@ class ViewProductPurchase extends ViewRecord
         $po = $this->getRecord();
         $po->load(['items.product', 'items.variant', 'user']);
         $this->selectedStatus = (string) $po->status;
+        $this->selectedPaymentMethod = (string) ($po->payment_method ?: ProductPurchase::PAYMENT_REKENING);
         $this->purchaseDateInput = $po->purchase_date?->format('Y-m-d') ?? now()->format('Y-m-d');
     }
 
@@ -200,6 +203,33 @@ class ViewProductPurchase extends ViewRecord
 
         Notification::make()
             ->title('Tanggal PO Diperbarui')
+            ->success()
+            ->send();
+    }
+
+    public function updatedSelectedPaymentMethod(string $value): void
+    {
+        /** @var ProductPurchase $po */
+        $po = $this->getRecord();
+
+        if ($this->isLockedCompleted()) {
+            $this->selectedPaymentMethod = (string) ($po->payment_method ?: ProductPurchase::PAYMENT_REKENING);
+            $this->notifyLockedCompleted();
+
+            return;
+        }
+
+        if (! array_key_exists($value, ProductPurchase::PAYMENT_LABELS)) {
+            return;
+        }
+
+        $po->payment_method = $value;
+        $po->save();
+        $po->refresh();
+
+        Notification::make()
+            ->title('Metode Pembayaran Diperbarui')
+            ->body('Metode pembayaran diubah menjadi '.(ProductPurchase::PAYMENT_LABELS[$value] ?? $value).'.')
             ->success()
             ->send();
     }
