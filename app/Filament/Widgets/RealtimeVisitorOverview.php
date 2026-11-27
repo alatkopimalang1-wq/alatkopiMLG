@@ -10,13 +10,13 @@ use Illuminate\Support\Facades\Cache;
 
 class RealtimeVisitorOverview extends BaseWidget
 {
-    protected ?string $pollingInterval = '60s';
+    protected ?string $pollingInterval = null;
 
     protected static ?int $sort = 1;
 
     protected function getStats(): array
     {
-        $data = Cache::remember('admin_widget_visitor_overview', 30, function () {
+        $data = Cache::remember('admin_widget_visitor_overview', 120, function () {
             $onlineCount = WebsiteVisit::getOnlineVisitorsCount(5);
             $todayUnique = WebsiteVisit::getTodayUniqueVisitorsCount();
             $todayViews = WebsiteVisit::getTodayPageViewsCount();

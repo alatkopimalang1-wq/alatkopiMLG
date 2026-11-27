@@ -12,7 +12,7 @@ class VisitorTrafficChart extends ChartWidget
 {
     protected ?string $heading = 'Grafik Tren Kunjungan Website (Real-Time)';
 
-    protected ?string $pollingInterval = '60s';
+    protected ?string $pollingInterval = null;
 
     protected static ?int $sort = 2;
 
@@ -31,7 +31,7 @@ class VisitorTrafficChart extends ChartWidget
     {
         $filter = $this->filter ?? 'today';
 
-        return Cache::remember("admin_widget_traffic_chart_{$filter}", 30, function () use ($filter) {
+        return Cache::remember("admin_widget_traffic_chart_{$filter}", 120, function () use ($filter) {
             if ($filter === 'week' || $filter === 'month') {
                 $days = $filter === 'week' ? 6 : 29;
                 $startDate = Carbon::today()->subDays($days)->startOfDay();

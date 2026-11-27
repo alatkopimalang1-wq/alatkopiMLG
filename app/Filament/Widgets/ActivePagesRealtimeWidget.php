@@ -13,7 +13,7 @@ class ActivePagesRealtimeWidget extends BaseWidget
 {
     protected static ?string $heading = 'Halaman Terpopuler & Aktivitas Terkini (Real-Time)';
 
-    protected ?string $pollingInterval = '60s';
+    protected ?string $pollingInterval = null;
 
     protected static ?int $sort = 3;
 
