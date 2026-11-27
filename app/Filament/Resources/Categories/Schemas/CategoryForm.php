@@ -2,9 +2,8 @@
 
 namespace App\Filament\Resources\Categories\Schemas;
 
-use App\Support\IconCatalog;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
@@ -36,39 +35,17 @@ class CategoryForm
                             TextInput::make('slug')
                                 ->required()
                                 ->unique(ignoreRecord: true),
-                            Select::make('type')
-                                ->label('Tipe Kategori')
-                                ->options([
-                                    'filter' => 'Filter Coffee',
-                                    'espresso' => 'Espresso & Blend',
-                                    'brand' => 'Series / Origin',
-                                    'merch' => 'Merchandise / Tools',
-                                ])
-                                ->required()
-                                ->default('filter'),
+                            TextInput::make('sort_order')
+                                ->label('Urutan')
+                                ->numeric()
+                                ->default(0),
                         ]),
+                        Hidden::make('type')
+                            ->default('merch'),
                         Select::make('parent_id')
                             ->label('Induk Kategori (Opsional)')
                             ->relationship('parent', 'slug')
                             ->getOptionLabelFromRecordUsing(fn ($record) => is_array($record->name) ? ($record->name['id'] ?? $record->slug) : $record->slug),
-                        Select::make('icon')
-                            ->label('Icon Visual Kategori (Lucide / Web Icon)')
-                            ->helperText('Pilih ikon visual yang akan tampil di katalog belanja dan navigasi beranda.')
-                            ->options(IconCatalog::options())
-                            ->searchable()
-                            ->prefixIcon(fn (?string $state) => IconCatalog::getPrefixIcon($state)),
-                        TextInput::make('sort_order')
-                            ->label('Urutan')
-                            ->numeric()
-                            ->default(0),
-                        Grid::make(2)->schema([
-                            Textarea::make('description.id')
-                                ->label('Deskripsi (Indonesia)')
-                                ->rows(3),
-                            Textarea::make('description.en')
-                                ->label('Deskripsi (English)')
-                                ->rows(3),
-                        ]),
                     ]),
             ]);
     }
