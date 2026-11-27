@@ -488,7 +488,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                                                         rel="noreferrer"
                                                         className="rounded-full bg-brand-900 px-4 py-2 text-xs font-bold text-white transition-transform duration-100 hover:bg-brand-800 active:scale-95"
                                                     >
-                                                        Tanya Roaster di
+                                                        Tanya Admin di
                                                         WhatsApp
                                                     </a>
                                                 </div>

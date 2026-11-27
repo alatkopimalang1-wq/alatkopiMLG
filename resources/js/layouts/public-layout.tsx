@@ -921,11 +921,11 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({
                 target="_blank"
                 rel="noreferrer"
                 className="group fixed right-8 bottom-8 z-30 hidden items-center gap-2 rounded-full bg-[#0f766e] px-5 py-3 text-white shadow-lg transition-colors hover:bg-[#115e59] active:scale-95 md:flex"
-                aria-label="Chat WhatsApp Sanubari"
+                aria-label="Chat WhatsApp Admin Alat Kopi Malang"
             >
                 <MessageCircle className="h-5 w-5 fill-white" />
                 <span className="hidden text-sm font-semibold md:inline">
-                    Tanya Roaster
+                    Tanya Admin
                 </span>
             </a>
 
