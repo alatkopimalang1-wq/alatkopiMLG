@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\EquipmentProducts\Tables;
 
 use App\Filament\Resources\EquipmentProducts\EquipmentProductResource;
+use App\Models\Category;
 use App\Models\Product;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -212,11 +213,25 @@ class EquipmentProductsTable
             ->filters([
                 SelectFilter::make('categories')
                     ->label('Kategori')
-                    ->relationship('categories', 'name')
-                    ->getOptionLabelFromRecordUsing(fn ($record): string => is_array($record->name)
-                        ? (string) ($record->name['id'] ?? $record->name['en'] ?? (reset($record->name) ?: $record->slug ?: 'Kategori'))
-                        : (string) ($record->name ?: $record->slug ?: 'Kategori'))
-                    ->preload()
+                    ->options(fn (): array => Category::query()
+                        ->get(['id', 'name', 'slug'])
+                        ->mapWithKeys(function (Category $cat): array {
+                            $label = is_array($cat->name)
+                                ? (string) ($cat->name['id'] ?? $cat->name['en'] ?? (reset($cat->name) ?: $cat->slug ?: 'Kategori'))
+                                : (string) ($cat->name ?: $cat->slug ?: 'Kategori');
+
+                            return [$cat->id => $label];
+                        })
+                        ->sort(SORT_NATURAL | SORT_FLAG_CASE)
+                        ->all())
+                    ->query(function (Builder $query, array $data): Builder {
+                        $value = $data['value'] ?? null;
+                        if (! $value) {
+                            return $query;
+                        }
+
+                        return $query->whereHas('categories', fn (Builder $cq) => $cq->where('categories.id', (int) $value));
+                    })
                     ->searchable(),
 
                 SelectFilter::make('origin')
