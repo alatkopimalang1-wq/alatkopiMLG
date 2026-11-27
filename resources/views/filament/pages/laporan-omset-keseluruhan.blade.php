@@ -19,7 +19,8 @@
                     <button
                         type="button"
                         wire:click="setPeriod('{{ $key }}')"
-                        class="cursor-pointer rounded-lg px-3.5 py-2 text-xs font-semibold transition {{ $this->period === $key ? 'bg-primary-600 text-white shadow-xs' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700' }}"
+                        style="padding: 8px 14px;"
+                        class="cursor-pointer rounded-lg text-xs font-semibold whitespace-nowrap transition {{ $this->period === $key ? 'bg-primary-600 text-white shadow-xs' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700' }}"
                     >
                         {{ $label }}
                     </button>
@@ -56,7 +57,8 @@
                 <button
                     type="button"
                     wire:click="exportCsv"
-                    class="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-emerald-600 px-3.5 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-emerald-700"
+                    style="padding: 8px 14px;"
+                    class="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-emerald-600 text-xs font-semibold text-white whitespace-nowrap shadow-xs transition hover:bg-emerald-700"
                 >
                     <x-filament::icon icon="heroicon-o-arrow-down-tray" class="h-4 w-4" />
                     <span>Export CSV</span>
