@@ -264,7 +264,7 @@ class EquipmentProductImportService
                     'name' => $name,
                     'series' => 'alat-kopi',
                     'origin' => $brand !== '' ? $brand : null,
-                    'description' => $description !== '' ? $description : ($existing?->description ?? null),
+                    'description' => $description !== '' ? ['id' => $description, 'en' => $description] : ($existing?->description ?? null),
                     'short_description' => $description !== '' ? Str::limit($description, 160) : ($existing?->short_description ?? null),
                     'warranty' => $warranty,
                     'status' => $status,
