@@ -304,7 +304,7 @@ export default function CustomerAccount({
                                 className="inline-flex items-center gap-2 rounded-xl bg-accent-copper px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-accent-copper/90 active:scale-95"
                             >
                                 <ShoppingBag className="h-4 w-4" />
-                                Belanja Kopi Lagi
+                                Belanja Alat Kopi Lagi
                             </Link>
                             <button
                                 type="button"
@@ -398,14 +398,14 @@ export default function CustomerAccount({
                                 </h3>
                                 <p className="mx-auto mb-6 max-w-sm text-sm leading-relaxed text-brand-600/80">
                                     Anda belum memiliki transaksi pesanan di
-                                    Alat Kopi Malang. Temukan kopi segar
-                                    sangrai pilihan kami sekarang.
+                                    Alat Kopi Malang. Temukan alat kopi
+                                    pilihan kami sekarang.
                                 </p>
                                 <Link
                                     href="/shop"
                                     className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-950 px-6 py-3 text-sm font-bold text-white shadow-md transition-all hover:bg-brand-900 active:scale-95"
                                 >
-                                    <span>Mulai Belanja Kopi</span>
+                                    <span>Mulai Belanja Alat Kopi</span>
                                     <ArrowRight className="h-4 w-4" />
                                 </Link>
                             </div>

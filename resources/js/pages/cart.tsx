@@ -805,7 +805,7 @@ export default function CartPage({
                         className="inline-flex items-center gap-1.5 text-xs text-brand-500 transition-colors hover:text-brand-900"
                     >
                         <ArrowLeft className="h-3.5 w-3.5" />
-                        <span>Kembali Belanja Kopi</span>
+                        <span>Kembali Belanja Alat Kopi</span>
                     </Link>
                     <h1 className="text-2xl font-extrabold text-brand-950 sm:text-3xl">
                         Checkout &amp; Pembayaran
