@@ -77,7 +77,7 @@
                         {{ $fmt($report['grand_total']) }}
                     </div>
                 </div>
-                <span class="rounded-full bg-emerald-100 px-3.5 py-1 text-xs font-bold text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200">
+                <span style="padding: 5px 14px;" class="rounded-full bg-emerald-100 text-xs font-bold text-emerald-800 whitespace-nowrap dark:bg-emerald-900/60 dark:text-emerald-200">
                     {{ number_format($report['total_count'], 0, ',', '.') }} transaksi lunas
                 </span>
             </div>
@@ -88,7 +88,7 @@
             <div class="rounded-2xl border border-blue-200 bg-blue-50/40 p-5 shadow-xs dark:border-blue-900/50 dark:bg-blue-950/20">
                 <div class="flex items-center justify-between">
                     <span class="text-xs font-semibold tracking-wider text-blue-800 uppercase dark:text-blue-300">Omset Website</span>
-                    <span class="rounded-full bg-blue-100 px-2.5 py-0.5 text-[11px] font-bold text-blue-800 dark:bg-blue-900/60 dark:text-blue-200">
+                    <span style="padding: 3px 10px;" class="rounded-full bg-blue-100 text-[11px] font-bold text-blue-800 whitespace-nowrap dark:bg-blue-900/60 dark:text-blue-200">
                         {{ $pct($report['website_total'], $report['grand_total']) }}%
                     </span>
                 </div>
@@ -103,7 +103,7 @@
             <div class="rounded-2xl border border-amber-200 bg-amber-50/40 p-5 shadow-xs dark:border-amber-900/50 dark:bg-amber-950/20">
                 <div class="flex items-center justify-between">
                     <span class="text-xs font-semibold tracking-wider text-amber-800 uppercase dark:text-amber-300">Omset Marketplace</span>
-                    <span class="rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-bold text-amber-800 dark:bg-amber-900/60 dark:text-amber-200">
+                    <span style="padding: 3px 10px;" class="rounded-full bg-amber-100 text-[11px] font-bold text-amber-800 whitespace-nowrap dark:bg-amber-900/60 dark:text-amber-200">
                         {{ $pct($report['marketplace_total'], $report['grand_total']) }}%
                     </span>
                 </div>
@@ -118,7 +118,7 @@
             <div class="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-5 shadow-xs dark:border-emerald-900/50 dark:bg-emerald-950/20">
                 <div class="flex items-center justify-between">
                     <span class="text-xs font-semibold tracking-wider text-emerald-800 uppercase dark:text-emerald-300">Omset POS</span>
-                    <span class="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[11px] font-bold text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200">
+                    <span style="padding: 3px 10px;" class="rounded-full bg-emerald-100 text-[11px] font-bold text-emerald-800 whitespace-nowrap dark:bg-emerald-900/60 dark:text-emerald-200">
                         {{ $pct($report['pos_total'], $report['grand_total']) }}%
                     </span>
                 </div>
