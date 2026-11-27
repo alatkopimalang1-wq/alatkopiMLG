@@ -140,7 +140,7 @@ export const MobileCartDrawer: React.FC<MobileCartDrawerProps> = ({
                                 key={item.id}
                                 className="dark:bg-stone-850 flex items-center gap-3 rounded-2xl border border-stone-200/90 bg-white p-3 shadow-2xs sm:p-3.5 dark:border-stone-800 dark:bg-stone-900"
                             >
-                                {item.is_manual && !item.id.startsWith('kg-custom-') ? (
+                                {item.is_manual ? (
                                     <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-xl border border-amber-300 bg-amber-500/10 text-amber-700 sm:h-16 sm:w-16 dark:border-amber-700/60 dark:bg-amber-400/10 dark:text-amber-400">
                                         <Calculator className="h-5 w-5 stroke-[2]" />
                                         <span className="mt-0.5 text-[9px] font-black tracking-wider uppercase">
@@ -165,7 +165,7 @@ export const MobileCartDrawer: React.FC<MobileCartDrawerProps> = ({
                                         <h4 className="truncate text-sm leading-snug font-bold text-stone-900 dark:text-white">
                                             {item.product_name}
                                         </h4>
-                                        {item.is_manual && !item.id.startsWith('kg-custom-') && (
+                                        {item.is_manual && (
                                             <span className="py-0.2 rounded border border-amber-300 bg-amber-100 px-1.5 text-[10px] font-extrabold text-amber-800 dark:border-amber-700 dark:bg-amber-950/60 dark:text-amber-300">
                                                 Manual
                                             </span>
@@ -178,7 +178,7 @@ export const MobileCartDrawer: React.FC<MobileCartDrawerProps> = ({
                                         <span className="font-medium text-stone-500 dark:text-stone-400">
                                             @ Rp {formatRp(item.price)}
                                         </span>
-                                        {item.is_manual && !item.id.startsWith('kg-custom-') && (
+                                        {item.is_manual && (
                                             <>
                                                 <span className="text-[11px] font-semibold text-rose-600 dark:text-rose-400">
                                                     (HPP: Rp {formatRp(item.cost_price || 0)})
@@ -198,7 +198,7 @@ export const MobileCartDrawer: React.FC<MobileCartDrawerProps> = ({
                                         )}
                                     </div>
 
-                                    {item.is_manual && !item.id.startsWith('kg-custom-') && (
+                                    {item.is_manual && (
                                         <div className="mt-1 flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
                                             <span>
                                                 Laba Kotor: +Rp{' '}

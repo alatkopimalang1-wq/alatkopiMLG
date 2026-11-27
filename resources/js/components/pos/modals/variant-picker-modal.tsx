@@ -1,12 +1,11 @@
 import React from 'react';
-import { X, Calculator } from 'lucide-react';
+import { X } from 'lucide-react';
 import { Product, ProductVariant } from '@/types/pos';
 
 interface VariantPickerModalProps {
     product: Product | null;
     onClose: () => void;
     onSelectVariant: (product: Product, variant: ProductVariant) => void;
-    onOpenCalculator: (product: Product, mode: '500g' | '1000g') => void;
     formatRp: (val: number) => string;
 }
 
@@ -14,7 +13,6 @@ export const VariantPickerModal: React.FC<VariantPickerModalProps> = ({
     product,
     onClose,
     onSelectVariant,
-    onOpenCalculator,
     formatRp,
 }) => {
     if (!product) return null;
@@ -94,44 +92,6 @@ export const VariantPickerModal: React.FC<VariantPickerModalProps> = ({
 
                 <div className="pt-2 text-center text-xs text-stone-400 dark:text-stone-400">
                     Pilihan ukuran akan langsung masuk ke keranjang kasir
-                </div>
-
-                {/* Quick Action: Hitung Otomatis 500 gr & 1 Kg */}
-                <div className="rounded-xl border border-dashed border-emerald-300 bg-emerald-50/70 p-3 dark:border-emerald-800 dark:bg-emerald-950/30">
-                    <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="flex items-center gap-2.5">
-                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300">
-                                <Calculator className="h-4 w-4" />
-                            </div>
-                            <div>
-                                <div className="text-xs font-bold text-emerald-950 dark:text-white">
-                                    Kalkulator Ukuran 500 gr & 1 Kg
-                                </div>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-1.5 self-end sm:self-auto">
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    onClose();
-                                    onOpenCalculator(product, '500g');
-                                }}
-                                className="cursor-pointer rounded-lg border border-teal-300 bg-teal-50 px-2.5 py-1.5 text-xs font-bold text-teal-800 shadow-2xs transition hover:bg-teal-100 active:scale-95 dark:border-teal-700 dark:bg-teal-950/60 dark:text-teal-300"
-                            >
-                                Hitung 500 gr →
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    onClose();
-                                    onOpenCalculator(product, '1000g');
-                                }}
-                                className="cursor-pointer rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs transition hover:bg-emerald-700 active:scale-95 dark:bg-emerald-500 dark:hover:bg-emerald-600"
-                            >
-                                Hitung 1 Kg →
-                            </button>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>

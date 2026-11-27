@@ -120,7 +120,6 @@ import { ProductCard } from '@/components/pos/product-card';
 import { VariantPickerModal } from '@/components/pos/modals/variant-picker-modal';
 import { HoldOrderModal } from '@/components/pos/modals/hold-order-modal';
 import { SharePreBillModal } from '@/components/pos/modals/share-pre-bill-modal';
-import { CalculatorModal } from '@/components/pos/modals/calculator-modal';
 import { CartDiscountModal } from '@/components/pos/modals/cart-discount-modal';
 import { ItemDiscountModal } from '@/components/pos/modals/item-discount-modal';
 import { OfflineSyncModal } from '@/components/pos/modals/offline-sync-modal';
@@ -1630,21 +1629,6 @@ function PosContent({
         string | null
     >(null);
 
-    // --- KALKULATOR CUSTOM HARGA 1 KG (200g x 5) & 500 GR (100g x 5) STATE ---
-    const [isKgCalculatorOpen, setIsKgCalculatorOpen] = useState(false);
-    const [calcTargetMode, setCalcTargetMode] = useState<'1000g' | '500g'>('1000g');
-    const [kgSelectedProductId, setKgSelectedProductId] = useState<number | 'custom'>('custom');
-    const [kgCustomProductName, setKgCustomProductName] = useState('');
-    const [kgPrice200g, setKgPrice200g] = useState<string | number>('');
-    const [kgCostPrice200g, setKgCostPrice200g] = useState<string | number>('');
-    const [kgMultiplier, setKgMultiplier] = useState<number>(5); // 200g x 5 = 1000g (1 Kg)
-    const [kgDiscountType, setKgDiscountType] = useState<'none' | 'percent' | 'nominal'>('none');
-    const [kgDiscountValue, setKgDiscountValue] = useState<string | number>('');
-    const [isKgCustomPriceOverridden, setIsKgCustomPriceOverridden] = useState(false);
-    const [kgCustomFinalPrice, setKgCustomFinalPrice] = useState<string | number>('');
-    const [kgQuantity, setKgQuantity] = useState<number>(1);
-    const [kgNotes, setKgNotes] = useState<string>('');
-
     // Search Input Auto-focus ref
     const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -1957,10 +1941,6 @@ function PosContent({
                     e.preventDefault();
                     openHoldModal();
                 }
-            } else if (e.key === 'F8') {
-                e.preventDefault();
-                setActiveTab('cashier');
-                openKgCalculatorModal();
             } else if (e.key === 'Escape') {
                 if (isSidebarOpen) {
                     setIsSidebarOpen(false);
@@ -1970,8 +1950,6 @@ function PosContent({
                     setIsHoldModalOpen(false);
                 } else if (isCheckoutModalOpen) {
                     setIsCheckoutModalOpen(false);
-                } else if (isKgCalculatorOpen) {
-                    setIsKgCalculatorOpen(false);
                 } else if (variantPickerProduct) {
                     setVariantPickerProduct(null);
                 } else if (isRefundModalOpen) {
@@ -1994,7 +1972,6 @@ function PosContent({
         isSharePreBillModalOpen,
         isHoldModalOpen,
         isManualOrderModalOpen,
-        isKgCalculatorOpen,
         variantPickerProduct,
         isReceiptModalOpen,
         isRefundModalOpen,
@@ -4293,196 +4270,6 @@ function PosContent({
         }
     };
 
-    // --- KALKULATOR CUSTOM HARGA 1 KG (5X 200 GR) & 500 GR (5X 100 GR) HANDLERS ---
-    const getVariantBaseData = (product: Product, targetMode: '1000g' | '500g') => {
-        const baseWeight = targetMode === '1000g' ? 200 : 100;
-        const baseRegex = targetMode === '1000g' ? /200\s*(g|gr|gram)?/i : /100\s*(g|gr|gram)?/i;
-
-        const vBase = product.variants?.find(
-            (v) => v.weight_grams === baseWeight || baseRegex.test(v.label)
-        );
-
-        let priceBase: number | string = '';
-        let costBase: number | string = '';
-
-        if (vBase) {
-            priceBase = vBase.price || '';
-            if (vBase.cost_price && Number(vBase.cost_price) > 0) {
-                costBase = Number(vBase.cost_price);
-            }
-        }
-
-        // Fallback for price if exact base variant not found
-        if (!priceBase && product.variants && product.variants.length > 0) {
-            const otherWithWeight = product.variants.find((v) => v.weight_grams > 0 && v.price > 0);
-            if (otherWithWeight) {
-                priceBase = Math.round((otherWithWeight.price / otherWithWeight.weight_grams) * baseWeight);
-            } else {
-                priceBase = product.variants[0].price;
-            }
-        }
-
-        // If costBase still not found, check other variants with weight_grams
-        if (!costBase && product.variants && product.variants.length > 0) {
-            for (const v of product.variants) {
-                if (v.cost_price && Number(v.cost_price) > 0 && v.weight_grams > 0) {
-                    costBase = Math.round((Number(v.cost_price) / v.weight_grams) * baseWeight);
-                    break;
-                }
-            }
-        }
-
-        // Check cost_price_per_10g on product
-        if (!costBase && (product as any).cost_price_per_10g && Number((product as any).cost_price_per_10g) > 0) {
-            costBase = Math.round(Number((product as any).cost_price_per_10g) * (baseWeight / 10));
-        }
-
-        return { vBase, priceBase, costBase, baseWeight };
-    };
-
-    const openKgCalculatorModal = (product?: Product, initialMode: '1000g' | '500g' = '1000g') => {
-        setCalcTargetMode(initialMode);
-        if (product) {
-            setKgSelectedProductId(product.id);
-            setKgCustomProductName(product.name);
-            const { priceBase, costBase } = getVariantBaseData(product, initialMode);
-            setKgPrice200g(priceBase);
-            setKgCostPrice200g(costBase);
-        } else {
-            setKgSelectedProductId('custom');
-            setKgCustomProductName('');
-            setKgPrice200g('');
-            setKgCostPrice200g('');
-        }
-        setKgMultiplier(5);
-        setKgDiscountType('none');
-        setKgDiscountValue('');
-        setIsKgCustomPriceOverridden(false);
-        setKgCustomFinalPrice('');
-        setKgQuantity(1);
-        setKgNotes('');
-        setIsKgCalculatorOpen(true);
-    };
-
-    const switchCalcMode = (newMode: '1000g' | '500g') => {
-        setCalcTargetMode(newMode);
-        setIsKgCustomPriceOverridden(false);
-        setKgCustomFinalPrice('');
-        if (kgSelectedProductId !== 'custom') {
-            const p = products.find((prod) => prod.id === kgSelectedProductId);
-            if (p) {
-                const { priceBase, costBase } = getVariantBaseData(p, newMode);
-                setKgPrice200g(priceBase);
-                setKgCostPrice200g(costBase);
-            }
-        }
-    };
-
-    const handleSelectProductInKgCalc = (productId: number | 'custom') => {
-        setKgSelectedProductId(productId);
-        setIsKgCustomPriceOverridden(false);
-        setKgCustomFinalPrice('');
-        if (productId === 'custom') {
-            setKgCustomProductName('');
-            setKgPrice200g('');
-            setKgCostPrice200g('');
-        } else {
-            const p = products.find((prod) => prod.id === productId);
-            if (p) {
-                setKgCustomProductName(p.name);
-                const { priceBase, costBase } = getVariantBaseData(p, calcTargetMode);
-                setKgPrice200g(priceBase);
-                setKgCostPrice200g(costBase);
-            }
-        }
-    };
-
-    const handleAddKgToCart = (payDirectly = false) => {
-        const is500g = calcTargetMode === '500g';
-        const baseWeight = is500g ? 100 : 200;
-        const rawPriceBase = Number(kgPrice200g) || 0;
-        if (rawPriceBase <= 0 && (!isKgCustomPriceOverridden || Number(kgCustomFinalPrice) <= 0)) {
-            showToast(`⚠️ Masukkan harga varian ${baseWeight} gr terlebih dahulu!`);
-            return;
-        }
-
-        let prodName = kgCustomProductName.trim();
-        let prodImage = '/brand/logo-circle.png';
-        let prodId = 0;
-        let varId = 0;
-
-        if (kgSelectedProductId !== 'custom') {
-            const p = products.find((prod) => prod.id === kgSelectedProductId);
-            if (p) {
-                prodName = p.name;
-                prodImage = p.image || prodImage;
-                prodId = p.id;
-                const baseRegex = is500g ? /100\s*(g|gr|gram)?/i : /200\s*(g|gr|gram)?/i;
-                const vBase = p.variants?.find(
-                    (v) => v.weight_grams === baseWeight || baseRegex.test(v.label)
-                );
-                if (vBase) varId = vBase.id;
-            }
-        }
-
-        if (!prodName) {
-            prodName = is500g ? 'Kopi 500 gr' : 'Kopi 1000 gr';
-        }
-
-        const calculatedBase = rawPriceBase * kgMultiplier;
-        let finalPrice = calculatedBase;
-        let discountAmt = 0;
-
-        if (isKgCustomPriceOverridden && Number(kgCustomFinalPrice) > 0) {
-            finalPrice = Number(kgCustomFinalPrice);
-            discountAmt = Math.max(0, calculatedBase - finalPrice);
-        } else if (kgDiscountType === 'percent') {
-            discountAmt = Math.round((calculatedBase * (Number(kgDiscountValue) || 0)) / 100);
-            finalPrice = Math.max(0, calculatedBase - discountAmt);
-        } else if (kgDiscountType === 'nominal') {
-            discountAmt = Math.min(calculatedBase, Number(kgDiscountValue) || 0);
-            finalPrice = Math.max(0, calculatedBase - discountAmt);
-        }
-
-        const packagingDiscount = is500g ? 24000 : 27000;
-        let rawCostBase = Number(kgCostPrice200g) || 0;
-        if (kgSelectedProductId !== 'custom') {
-            const p = products.find((prod) => prod.id === kgSelectedProductId);
-            if (p) {
-                const { costBase } = getVariantBaseData(p, calcTargetMode);
-                rawCostBase = Number(costBase) || 0;
-            }
-        }
-        const rawHppScaled = rawCostBase * kgMultiplier;
-        const totalCost = rawCostBase > 0 ? Math.max(0, rawHppScaled - packagingDiscount) : undefined;
-
-        const variantLabel = is500g ? '500 gr' : '1000 gr';
-
-        const newCartItem: CartItem = {
-            id: `kg-custom-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-            product_id: prodId,
-            variant_id: varId,
-            product_name: prodName,
-            variant_label: variantLabel,
-            price: finalPrice,
-            cost_price: totalCost,
-            quantity: Math.max(1, kgQuantity),
-            image: prodImage,
-            is_manual: false,
-            notes: kgNotes ? kgNotes.trim() : undefined,
-        };
-
-        setCart((prev) => [...prev, newCartItem]);
-        showToast(`✓ "${prodName} (${variantLabel})" berhasil ditambahkan ke keranjang!`);
-        setIsKgCalculatorOpen(false);
-
-        if (payDirectly) {
-            setTimeout(() => {
-                openCheckout();
-            }, 120);
-        }
-    };
-
     // --- HOLD / QUEUE ORDER HANDLERS ---
     const openHoldModal = () => {
         if (cart.length === 0) {
@@ -4865,40 +4652,6 @@ function PosContent({
                                 <span>Order Manual</span>
                                 <span className="ml-auto rounded-full border border-amber-300 bg-amber-100 px-2 py-0.5 text-[10px] font-extrabold text-amber-800 uppercase dark:border-amber-700 dark:bg-amber-950/60 dark:text-amber-300">
                                     HPP + Jual
-                                </span>
-                            </button>
-
-                            {/* Kalkulator Harga 500 gr (100g x 5) */}
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setIsSidebarOpen(false);
-                                    setActiveTab('cashier');
-                                    openKgCalculatorModal(undefined, '500g');
-                                }}
-                                className="flex w-full cursor-pointer items-center gap-4 px-5 py-3.5 text-left text-sm font-semibold text-stone-800 transition hover:bg-stone-50 dark:text-stone-200 dark:hover:bg-stone-800/60"
-                            >
-                                <Calculator className="h-5 w-5 shrink-0 stroke-[2.2] text-teal-600 dark:text-teal-400" />
-                                <span>Kalkulator 500 gr</span>
-                                <span className="ml-auto rounded-full border border-teal-300 bg-teal-100 px-2 py-0.5 text-[10px] font-extrabold text-teal-800 uppercase dark:border-teal-700 dark:bg-teal-950/60 dark:text-teal-300">
-                                    100g × 5
-                                </span>
-                            </button>
-
-                            {/* Kalkulator Custom Harga 1 Kg (200g x 5) */}
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setIsSidebarOpen(false);
-                                    setActiveTab('cashier');
-                                    openKgCalculatorModal(undefined, '1000g');
-                                }}
-                                className="flex w-full cursor-pointer items-center gap-4 px-5 py-3.5 text-left text-sm font-semibold text-stone-800 transition hover:bg-stone-50 dark:text-stone-200 dark:hover:bg-stone-800/60"
-                            >
-                                <Calculator className="h-5 w-5 shrink-0 stroke-[2.2] text-emerald-600 dark:text-emerald-400" />
-                                <span>Kalkulator 1 Kg</span>
-                                <span className="ml-auto rounded-full border border-emerald-300 bg-emerald-100 px-2 py-0.5 text-[10px] font-extrabold text-emerald-800 uppercase dark:border-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
-                                    200g × 5
                                 </span>
                             </button>
 
@@ -5734,7 +5487,7 @@ function PosContent({
                                         key={item.id}
                                         className="dark:bg-stone-850 flex items-center gap-3 rounded-2xl border border-stone-200/90 bg-white p-3 shadow-2xs transition hover:border-brand-300 sm:p-3.5 dark:border-stone-800 dark:bg-stone-900 dark:hover:border-stone-700"
                                     >
-                                        {item.is_manual && !item.id.startsWith('kg-custom-') ? (
+                                        {item.is_manual ? (
                                             <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-xl border border-amber-300 bg-amber-500/10 text-amber-700 sm:h-16 sm:w-16 dark:border-amber-700/60 dark:bg-amber-400/10 dark:text-amber-400">
                                                 <Calculator className="h-5 w-5 stroke-[2]" />
                                                 <span className="mt-0.5 text-[9px] font-black tracking-wider uppercase">
@@ -5768,7 +5521,7 @@ function PosContent({
                                                 <h4 className="truncate text-sm leading-snug font-bold text-stone-900 dark:text-white">
                                                     {item.product_name}
                                                 </h4>
-                                                {item.is_manual && !item.id.startsWith('kg-custom-') && (
+                                                {item.is_manual && (
                                                     <span className="py-0.2 rounded border border-amber-300 bg-amber-100 px-1.5 text-[10px] font-extrabold text-amber-800 dark:border-amber-700 dark:bg-amber-950/60 dark:text-amber-300">
                                                         Manual
                                                     </span>
@@ -5786,7 +5539,7 @@ function PosContent({
                                                 <span className="font-medium text-stone-500 dark:text-stone-400">
                                                     @ Rp {formatRp(item.price)}
                                                 </span>
-                                                {item.is_manual && !item.id.startsWith('kg-custom-') && (
+                                                {item.is_manual && (
                                                     <>
                                                         <span className="text-[11px] font-semibold text-rose-600 dark:text-rose-400">
                                                             (HPP: Rp{' '}
@@ -5818,13 +5571,13 @@ function PosContent({
                                                 </div>
                                             )}
 
-                                            {item.cost_price !== undefined && item.cost_price > 0 && !item.is_manual && !item.id.startsWith('kg-custom-') && (
+                                            {item.cost_price !== undefined && item.cost_price > 0 && !item.is_manual && (
                                                 <div className="mt-0.5 text-[10px] font-mono text-amber-600 dark:text-amber-400">
                                                     HPP: Rp {formatRp(item.cost_price)} | Laba: +Rp {formatRp(item.price - item.cost_price)}
                                                 </div>
                                             )}
 
-                                            {item.is_manual && !item.id.startsWith('kg-custom-') && (
+                                            {item.is_manual && (
                                                 <div className="mt-1 flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
                                                     <span>
                                                         Laba Kotor: +Rp{' '}
@@ -6421,7 +6174,6 @@ function PosContent({
                 product={variantPickerProduct}
                 onClose={() => setVariantPickerProduct(null)}
                 onSelectVariant={addToCart}
-                onOpenCalculator={openKgCalculatorModal}
                 formatRp={formatRp}
             />
 
@@ -6553,35 +6305,6 @@ function PosContent({
                 manualQuantity={manualQuantity}
                 setManualQuantity={setManualQuantity}
                 handleSaveManualItem={handleSaveManualItem}
-                formatRp={formatRp}
-            />
-
-            {/* === MODAL: KALKULATOR CUSTOM HARGA 1 KG (200 GR x 5) & 500 GR (100 GR x 5) === */}
-            <CalculatorModal
-                isOpen={isKgCalculatorOpen}
-                onClose={() => setIsKgCalculatorOpen(false)}
-                calcTargetMode={calcTargetMode}
-                switchCalcMode={switchCalcMode}
-                products={products}
-                kgSelectedProductId={kgSelectedProductId}
-                onSelectProduct={handleSelectProductInKgCalc}
-                kgCustomProductName={kgCustomProductName}
-                setKgCustomProductName={setKgCustomProductName}
-                kgPrice200g={kgPrice200g}
-                setKgPrice200g={setKgPrice200g}
-                kgCostPrice200g={kgCostPrice200g}
-                kgMultiplier={kgMultiplier}
-                kgDiscountType={kgDiscountType}
-                setKgDiscountType={setKgDiscountType}
-                kgDiscountValue={kgDiscountValue}
-                setKgDiscountValue={setKgDiscountValue}
-                isKgCustomPriceOverridden={isKgCustomPriceOverridden}
-                setIsKgCustomPriceOverridden={setIsKgCustomPriceOverridden}
-                kgCustomFinalPrice={kgCustomFinalPrice}
-                setKgCustomFinalPrice={setKgCustomFinalPrice}
-                kgQuantity={kgQuantity}
-                setKgQuantity={setKgQuantity}
-                onAddToCart={handleAddKgToCart}
                 formatRp={formatRp}
             />
 
