@@ -82,7 +82,7 @@ class ManageFooterSettings extends Page
 
             // Sosial Media
             'social_title' => 'Dapatkan Update Seputar Kopi',
-            'instagram' => 'https://instagram.com/sanubari.roastery.mlg',
+            'instagram' => 'https://instagram.com/alat_kopi_malang',
             'facebook' => 'https://facebook.com/sanubariroastery',
             'x_url' => 'https://x.com/sanubariroastery',
             'tiktok' => 'https://tiktok.com/@sanubariroastery',
@@ -337,7 +337,7 @@ class ManageFooterSettings extends Page
                         Grid::make(3)->schema([
                             TextInput::make('instagram')
                                 ->label('Instagram URL')
-                                ->placeholder('https://instagram.com/sanubari.roastery.mlg'),
+                                ->placeholder('https://instagram.com/alat_kopi_malang'),
                             TextInput::make('facebook')
                                 ->label('Facebook URL')
                                 ->placeholder('https://facebook.com/sanubariroastery'),

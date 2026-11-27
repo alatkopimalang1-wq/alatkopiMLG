@@ -74,7 +74,7 @@ export const DEFAULT_REELS: VideoReel[] = [
         productCount: 2,
         thumbnail:
             'https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=800&q=80',
-        videoUrl: 'https://www.instagram.com/sanubari.roastery.mlg/',
+        videoUrl: 'https://www.instagram.com/alat_kopi_malang/',
         products: [
             {
                 id: 1,
@@ -101,7 +101,7 @@ export const DEFAULT_REELS: VideoReel[] = [
         productCount: 2,
         thumbnail:
             'https://images.unsplash.com/photo-1517256064527-09c73fc73e38?auto=format&fit=crop&w=800&q=80',
-        videoUrl: 'https://www.instagram.com/sanubari.roastery.mlg/',
+        videoUrl: 'https://www.instagram.com/alat_kopi_malang/',
         products: [
             {
                 id: 3,
@@ -127,7 +127,7 @@ export const DEFAULT_REELS: VideoReel[] = [
         productCount: 1,
         thumbnail:
             'https://images.unsplash.com/photo-1577968897966-3d4325b36b61?auto=format&fit=crop&w=800&q=80',
-        videoUrl: 'https://www.instagram.com/sanubari.roastery.mlg/',
+        videoUrl: 'https://www.instagram.com/alat_kopi_malang/',
         products: [
             {
                 id: 5,
@@ -147,7 +147,7 @@ export const DEFAULT_REELS: VideoReel[] = [
         productCount: 2,
         thumbnail:
             'https://images.unsplash.com/photo-1589396575653-c09c794ff6a6?auto=format&fit=crop&w=800&q=80',
-        videoUrl: 'https://www.instagram.com/sanubari.roastery.mlg/',
+        videoUrl: 'https://www.instagram.com/alat_kopi_malang/',
         products: [
             {
                 id: 6,
@@ -174,7 +174,7 @@ export const DEFAULT_REELS: VideoReel[] = [
         productCount: 2,
         thumbnail:
             'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=800&q=80',
-        videoUrl: 'https://www.instagram.com/sanubari.roastery.mlg/',
+        videoUrl: 'https://www.instagram.com/alat_kopi_malang/',
         products: [
             {
                 id: 8,
@@ -200,7 +200,7 @@ export const DEFAULT_REELS: VideoReel[] = [
         productCount: 2,
         thumbnail:
             'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=800&q=80',
-        videoUrl: 'https://www.instagram.com/sanubari.roastery.mlg/',
+        videoUrl: 'https://www.instagram.com/alat_kopi_malang/',
         products: [
             {
                 id: 10,
@@ -325,7 +325,7 @@ export const VideoReelsSlider: React.FC<VideoReelsSliderProps> = ({
                         const targetUrl =
                             reel.videoUrl ||
                             reel.video_url ||
-                            'https://www.instagram.com/sanubari.roastery.mlg/';
+                            'https://www.instagram.com/alat_kopi_malang/';
 
                         return (
                             <a

@@ -496,7 +496,7 @@ class ManageContentPages extends Page
             'events_hero_image' => (! empty($pageEvents['hero_image']) && ! str_starts_with($pageEvents['hero_image'], 'http')) ? str_replace('/storage/', '', $pageEvents['hero_image']) : null,
             'events_hero_image_url' => (! empty($pageEvents['hero_image']) && str_starts_with($pageEvents['hero_image'], 'http')) ? $pageEvents['hero_image'] : null,
             'events_upcoming_title' => $pageEvents['upcoming_title'] ?? 'Acara Mendatang',
-            'events_empty_message' => $pageEvents['empty_message'] ?? 'Belum ada jadwal acara baru saat ini. Ikuti Instagram kami di @sanubari.roastery.mlg untuk kabar workshop terdekat!',
+            'events_empty_message' => $pageEvents['empty_message'] ?? 'Belum ada jadwal acara baru saat ini. Ikuti Instagram kami di @alat_kopi_malang untuk kabar workshop terdekat!',
             'events_show_past' => (bool) ($pageEvents['show_past'] ?? true),
             'events_past_title' => $pageEvents['past_title'] ?? 'Arsip & Riwayat Acara Sebelumnya',
             'events_whatsapp_number' => $pageEvents['whatsapp_number'] ?? ($settings['whatsapp'] ?? '6282132095241'),
@@ -1730,7 +1730,7 @@ class ManageContentPages extends Page
                                             ->required(),
                                         Textarea::make('events_empty_message')
                                             ->label('Pesan Jika Tidak Ada Acara Aktif')
-                                            ->default('Belum ada jadwal acara baru saat ini. Ikuti Instagram kami di @sanubari.roastery.mlg untuk kabar workshop terdekat!')
+                                            ->default('Belum ada jadwal acara baru saat ini. Ikuti Instagram kami di @alat_kopi_malang untuk kabar workshop terdekat!')
                                             ->rows(2)
                                             ->required(),
                                         Grid::make(2)->schema([

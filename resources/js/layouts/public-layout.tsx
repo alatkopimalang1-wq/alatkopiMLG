@@ -254,7 +254,7 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({
     const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent('Halo Alat Kopi Malang! Saya ingin bertanya tentang produk kopi.')}`;
 
     const instagramUrl =
-        settings?.instagram || 'https://instagram.com/sanubari.roastery.mlg';
+        settings?.instagram || 'https://instagram.com/alat_kopi_malang';
     const facebookUrl =
         settings?.facebook || 'https://facebook.com/sanubariroastery';
     const xUrl =
@@ -1190,7 +1190,7 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({
                 const footerInstagram =
                     footerSettings.instagram ||
                     settings?.instagram ||
-                    'https://instagram.com/sanubari.roastery.mlg';
+                    'https://instagram.com/alat_kopi_malang';
                 const footerFacebook =
                     footerSettings.facebook ||
                     settings?.facebook ||

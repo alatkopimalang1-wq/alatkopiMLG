@@ -139,6 +139,6 @@
     <!-- Footer Struk -->
     <div class="pt-4 text-center text-[10.5px] text-stone-500 space-y-1 dark:text-stone-400">
         <div>Terima kasih atas kunjungannya!</div>
-        <div class="font-bold text-stone-700 dark:text-stone-300">IG: @sanubariroastery</div>
+        <div class="font-bold text-stone-700 dark:text-stone-300">IG: @alat_kopi_malang</div>
     </div>
 </div>

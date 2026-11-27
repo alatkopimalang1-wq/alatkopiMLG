@@ -152,7 +152,7 @@ export default function EventsIndex({
     const upcomingTitle = page?.upcoming_title || 'Acara Mendatang';
     const emptyMessage =
         page?.empty_message ||
-        'Belum ada jadwal acara baru saat ini. Ikuti Instagram kami di @sanubari.roastery.mlg untuk kabar workshop terdekat!';
+        'Belum ada jadwal acara baru saat ini. Ikuti Instagram kami di @alat_kopi_malang untuk kabar workshop terdekat!';
     const showPast = page?.show_past ?? true;
     const pastTitle = page?.past_title || 'Arsip & Riwayat Acara Sebelumnya';
     const waNumber = page?.whatsapp_number || '6282132095241';

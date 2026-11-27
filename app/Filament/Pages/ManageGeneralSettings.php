@@ -66,7 +66,7 @@ class ManageGeneralSettings extends Page
             'hours' => $settings['hours'] ?? 'Buka setiap hari: 09.00 - 23.00 WIB',
             'maps_url' => $settings['maps_url'] ?? 'https://maps.app.goo.gl/PMuxaEtsbEvC4APy7',
 
-            'instagram' => $settings['instagram'] ?? 'https://instagram.com/sanubari.roastery.mlg',
+            'instagram' => $settings['instagram'] ?? 'https://instagram.com/alat_kopi_malang',
             'facebook' => $settings['facebook'] ?? 'https://facebook.com/sanubariroastery',
             'x_url' => $settings['x_url'] ?? $settings['twitter'] ?? 'https://x.com/sanubariroastery',
             'tiktok' => $settings['tiktok'] ?? 'https://tiktok.com/@sanubariroastery',
@@ -273,7 +273,7 @@ class ManageGeneralSettings extends Page
                         Grid::make(4)->schema([
                             TextInput::make('instagram')
                                 ->label('URL Instagram')
-                                ->placeholder('https://instagram.com/sanubari.roastery.mlg'),
+                                ->placeholder('https://instagram.com/alat_kopi_malang'),
                             TextInput::make('facebook')
                                 ->label('URL Facebook')
                                 ->placeholder('https://facebook.com/sanubariroastery'),

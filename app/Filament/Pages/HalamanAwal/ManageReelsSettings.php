@@ -45,7 +45,7 @@ class ManageReelsSettings extends Page
             'home_reels_subtitle' => $settings['home_reels_subtitle'] ?? 'Tonton tutorial seduh, bedah mesin & tips kopi langsung di Instagram Reels',
             'home_reels_view_all_text' => $settings['home_reels_view_all_text'] ?? 'Lihat Semua',
             'home_reels_view_all_url' => $settings['home_reels_view_all_url'] ?? '/video',
-            'home_reels_instagram_url' => $settings['home_reels_instagram_url'] ?? ($settings['instagram'] ?? 'https://www.instagram.com/sanubari.roastery.mlg/'),
+            'home_reels_instagram_url' => $settings['home_reels_instagram_url'] ?? ($settings['instagram'] ?? 'https://www.instagram.com/alat_kopi_malang/'),
             'reels_page_title' => $settings['reels_page_title'] ?? 'Sanubari Reels Videos',
             'reels_page_description' => $settings['reels_page_description'] ?? 'Klik salah satu video untuk langsung menonton tayangan resmi di aplikasi Instagram. Temukan tips barista, review mesin espresso, hingga tutorial seduh kopi manual.',
         ]);
@@ -104,7 +104,7 @@ class ManageReelsSettings extends Page
                             TextInput::make('home_reels_instagram_url')
                                 ->label('Tautan Akun Instagram Reels Resmi')
                                 ->url()
-                                ->placeholder('https://www.instagram.com/sanubari.roastery.mlg/'),
+                                ->placeholder('https://www.instagram.com/alat_kopi_malang/'),
                         ]),
                     ]),
 

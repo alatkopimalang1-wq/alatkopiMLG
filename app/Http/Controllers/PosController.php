@@ -96,7 +96,7 @@ class PosController extends Controller
             'tagline' => $settings['store_tagline'] ?? 'Menyentuh Hati, Merangkai Cerita',
             'address' => $settings['address'] ?? $settings['store_address'] ?? 'Jl. Candi Mendut No. 3, Lowokwaru, Kota Malang',
             'phone' => $settings['whatsapp_number'] ?? $settings['phone'] ?? '0821-3209-5241',
-            'instagram' => $settings['instagram_handle'] ?? '@sanubariroastery',
+            'instagram' => $settings['instagram_handle'] ?? '@alat_kopi_malang',
             'receipt_footer' => "Terima kasih atas kunjungan Anda!\nFreshly Roasted with Heart.",
             'auto_print' => false,
             'printer_name' => 'POS80 Printer',

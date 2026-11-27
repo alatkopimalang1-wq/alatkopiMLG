@@ -23,7 +23,7 @@ const ALL_REELS: VideoReel[] = [
         productCount: 2,
         thumbnail:
             'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=800&q=80',
-        videoUrl: 'https://www.instagram.com/sanubari.roastery.mlg/',
+        videoUrl: 'https://www.instagram.com/alat_kopi_malang/',
         products: [
             {
                 id: 12,
@@ -51,7 +51,7 @@ const ALL_REELS: VideoReel[] = [
         productCount: 2,
         thumbnail:
             'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80',
-        videoUrl: 'https://www.instagram.com/sanubari.roastery.mlg/',
+        videoUrl: 'https://www.instagram.com/alat_kopi_malang/',
         products: [
             {
                 id: 14,
@@ -90,7 +90,7 @@ export default function ReelsIndex({ reels = [] }: ReelsIndexProps) {
     const igUrl =
         settings?.home_reels_instagram_url ||
         settings?.instagram ||
-        'https://www.instagram.com/sanubari.roastery.mlg/';
+        'https://www.instagram.com/alat_kopi_malang/';
 
     const igHandle = (() => {
         try {
@@ -104,7 +104,7 @@ export default function ReelsIndex({ reels = [] }: ReelsIndexProps) {
         } catch {
             // fallback
         }
-        return '@sanubari.roastery.mlg';
+        return '@alat_kopi_malang';
     })();
 
     return (
@@ -153,7 +153,7 @@ export default function ReelsIndex({ reels = [] }: ReelsIndexProps) {
                             const targetUrl =
                                 reel.videoUrl ||
                                 reel.video_url ||
-                                'https://www.instagram.com/sanubari.roastery.mlg/';
+                                'https://www.instagram.com/alat_kopi_malang/';
 
                             return (
                                 <a

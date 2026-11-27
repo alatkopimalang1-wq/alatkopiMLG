@@ -15,7 +15,7 @@ class VideoReelSeeder extends Seeder
                 'caption' => 'Kalau mesin espresso bisa diperkecil, maka akan jadi portabel dan praktis dibawa seduh di mana saja...',
                 'badge' => 'BARISTA APPROVED! ☕🔥',
                 'thumbnail' => 'https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=800&q=80',
-                'video_url' => 'https://www.instagram.com/sanubari.roastery.mlg/',
+                'video_url' => 'https://www.instagram.com/alat_kopi_malang/',
                 'product_count' => 2,
                 'products' => [
                     [
@@ -41,7 +41,7 @@ class VideoReelSeeder extends Seeder
                 'caption' => 'Sekarang mulai paham alasan kenapa yang kesurupan selalu minta kopi hitam pekat dengan aroma tajam...',
                 'badge' => null,
                 'thumbnail' => 'https://images.unsplash.com/photo-1517256064527-09c73fc73e38?auto=format&fit=crop&w=800&q=80',
-                'video_url' => 'https://www.instagram.com/sanubari.roastery.mlg/',
+                'video_url' => 'https://www.instagram.com/alat_kopi_malang/',
                 'product_count' => 2,
                 'products' => [
                     [
@@ -67,7 +67,7 @@ class VideoReelSeeder extends Seeder
                 'caption' => 'Review tombol-tombol yg ada di mesinnya orang have. Kees Van Der Weston Spirit & Mirage commercial grade...',
                 'badge' => null,
                 'thumbnail' => 'https://images.unsplash.com/photo-1577968897966-3d4325b36b61?auto=format&fit=crop&w=800&q=80',
-                'video_url' => 'https://www.instagram.com/sanubari.roastery.mlg/',
+                'video_url' => 'https://www.instagram.com/alat_kopi_malang/',
                 'product_count' => 1,
                 'products' => [
                     [
@@ -86,7 +86,7 @@ class VideoReelSeeder extends Seeder
                 'caption' => 'Campur 2 Single Origin Buat Espresso, Rasanya Enak dan unik banget pakai fitur C.Y.B.R Sanubari...',
                 'badge' => null,
                 'thumbnail' => 'https://images.unsplash.com/photo-1589396575653-c09c794ff6a6?auto=format&fit=crop&w=800&q=80',
-                'video_url' => 'https://www.instagram.com/sanubari.roastery.mlg/',
+                'video_url' => 'https://www.instagram.com/alat_kopi_malang/',
                 'product_count' => 2,
                 'products' => [
                     [
