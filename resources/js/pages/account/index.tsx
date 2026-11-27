@@ -3,6 +3,7 @@ import { Head, Link, router, useForm } from '@inertiajs/react';
 import { PublicLayout } from '@/layouts/public-layout';
 import { BundleCartItemDetails } from '@/components/bundle-cart-item-details';
 import { groupOrderItems } from '@/lib/order-bundle-groups';
+import { formatVariantLabel } from '@/lib/variant-utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import PasswordInput from '@/components/password-input';
@@ -533,12 +534,13 @@ export default function CustomerAccount({
                                                                         </span>
                                                                     )}
                                                                 </div>
-                                                                <p className="text-xs font-medium text-accent-copper">
-                                                                    Varian: {item.variant_label}
-                                                                    {item.grind_option
-                                                                        ? ` · ${item.grind_option}`
-                                                                        : ''}
-                                                                </p>
+                                                                {(formatVariantLabel(item.variant_label) || item.grind_option) && (
+                                                                    <p className="text-xs font-medium text-accent-copper">
+                                                                        {formatVariantLabel(item.variant_label)
+                                                                            ? `Varian: ${formatVariantLabel(item.variant_label)}${item.grind_option ? ` · ${item.grind_option}` : ''}`
+                                                                            : item.grind_option}
+                                                                    </p>
+                                                                )}
                                                                 {item.custom_notes && (
                                                                     <p className="mt-1 rounded-lg border border-amber-200/50 bg-amber-50/70 p-2 text-xs font-medium text-accent-copper">
                                                                         {item.custom_notes}

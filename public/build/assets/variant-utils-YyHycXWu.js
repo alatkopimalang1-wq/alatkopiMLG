@@ -1,0 +1,1 @@
+function e(e){if(!e)return!0;let t=e.trim().toLowerCase();return t===``||t===`standard`||t===`standar`}function t(t){return e(t)?``:String(t).trim()}export{t};

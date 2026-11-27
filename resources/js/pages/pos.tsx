@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Head, Link } from '@inertiajs/react';
+import { formatVariantLabel } from '@/lib/variant-utils';
 import {
     Search,
     ShoppingCart,
@@ -1779,6 +1780,78 @@ function PosContent({
         const tendered = typeof cashTendered === 'number' ? cashTendered : 0;
         return Math.max(0, tendered - totalAmount);
     }, [paymentMethod, cashTendered, totalAmount]);
+
+    // --- SYNC STATE TO CUSTOMER FACING DISPLAY (DUAL MONITOR) ---
+    useEffect(() => {
+        const mode =
+            isReceiptModalOpen && completedReceipt
+                ? 'success'
+                : isCheckoutModalOpen && paymentMethod === 'qris'
+                  ? 'qris'
+                  : isCheckoutModalOpen
+                    ? 'checkout'
+                    : cart.length > 0
+                      ? 'cart'
+                      : 'idle';
+
+        const payload = {
+            mode,
+            cart: cart.map((i) => ({
+                id: i.id,
+                product_name: i.product_name,
+                variant_label: i.variant_label,
+                price: i.price,
+                quantity: i.quantity,
+                image: i.image,
+                discount_amount: i.discount_amount || 0,
+                notes: i.notes,
+            })),
+            subtotal,
+            discountAmount,
+            shippingCost: numericShippingCost,
+            totalAmount,
+            paymentMethod,
+            cashTendered: typeof cashTendered === 'number' ? cashTendered : 0,
+            cashChange,
+            customerName: customerName || undefined,
+            completedReceipt: completedReceipt
+                ? {
+                      order_number: completedReceipt.order_number,
+                      total_amount: completedReceipt.total_amount,
+                      payment_method_label: completedReceipt.payment_method_label,
+                      cash_change: completedReceipt.cash_change,
+                  }
+                : null,
+            updatedAt: Date.now(),
+        };
+
+        try {
+            localStorage.setItem(
+                'sanubari_pos_display_state',
+                JSON.stringify(payload),
+            );
+            if (typeof BroadcastChannel !== 'undefined') {
+                const ch = new BroadcastChannel('sanubari_pos_display');
+                ch.postMessage(payload);
+                ch.close();
+            }
+        } catch {
+            // ignore storage/channel errors
+        }
+    }, [
+        cart,
+        subtotal,
+        discountAmount,
+        numericShippingCost,
+        totalAmount,
+        paymentMethod,
+        cashTendered,
+        cashChange,
+        customerName,
+        isCheckoutModalOpen,
+        isReceiptModalOpen,
+        completedReceipt,
+    ]);
 
     // Quick cash suggestion buttons
     const quickCashOptions = useMemo(() => {
@@ -4964,6 +5037,26 @@ function PosContent({
                                 )}
                             </button>
 
+                            {/* 7b. Layar Pelanggan (Dual Monitor) */}
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    window.open(
+                                        '/pos/display',
+                                        'sanubari_customer_display',
+                                        'width=1280,height=800,menubar=no,toolbar=no,location=no,status=no',
+                                    );
+                                    setIsSidebarOpen(false);
+                                }}
+                                className="flex w-full cursor-pointer items-center gap-4 px-5 py-3.5 text-left text-sm font-semibold text-stone-800 transition hover:bg-stone-50 dark:text-stone-200 dark:hover:bg-stone-800/60"
+                            >
+                                <Monitor className="h-5 w-5 shrink-0 stroke-[2.2] text-emerald-600 dark:text-emerald-400" />
+                                <span>Layar Pelanggan</span>
+                                <span className="ml-auto rounded border border-emerald-500/30 bg-emerald-500/15 px-2 py-0.5 text-[10px] font-black text-emerald-700 uppercase dark:text-emerald-300">
+                                    Dual
+                                </span>
+                            </button>
+
                             {/* 8. Khusus Owner: Kelola Staf POS */}
                             {isOwner && (
                                 <button
@@ -5704,9 +5797,11 @@ function PosContent({
                                                 )}
                                             </div>
                                             <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-stone-600 dark:text-stone-300">
-                                                <span className="rounded-md border border-brand-200 bg-brand-50 px-1.5 py-0.5 text-[11px] font-bold text-brand-800 dark:border-stone-700 dark:bg-stone-800 dark:text-amber-300">
-                                                    {item.variant_label}
-                                                </span>
+                                                {formatVariantLabel(item.variant_label) && (
+                                                    <span className="rounded-md border border-brand-200 bg-brand-50 px-1.5 py-0.5 text-[11px] font-bold text-brand-800 dark:border-stone-700 dark:bg-stone-800 dark:text-amber-300">
+                                                        {formatVariantLabel(item.variant_label)}
+                                                    </span>
+                                                )}
                                                 <span className="font-medium text-stone-500 dark:text-stone-400">
                                                     @ Rp {formatRp(item.price)}
                                                 </span>

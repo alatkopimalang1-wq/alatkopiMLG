@@ -59,6 +59,32 @@ export default function ShopIndex({
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const loadMoreSentinelRef = useRef<HTMLDivElement>(null);
     const searchDebounceRef = useRef<NodeJS.Timeout | null>(null);
+    const filterSentinelRef = useRef<HTMLDivElement>(null);
+    const filterBarRef = useRef<HTMLDivElement>(null);
+    const [isFilterPinned, setIsFilterPinned] = useState(false);
+    const [filterBarHeight, setFilterBarHeight] = useState(0);
+
+    useEffect(() => {
+        const sentinel = filterSentinelRef.current;
+        if (!sentinel) return;
+
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (!entry.isIntersecting && entry.boundingClientRect.top < 73) {
+                    if (filterBarRef.current) {
+                        setFilterBarHeight(filterBarRef.current.offsetHeight);
+                    }
+                    setIsFilterPinned(true);
+                } else {
+                    setIsFilterPinned(false);
+                }
+            },
+            { rootMargin: '-73px 0px 0px 0px', threshold: 0 },
+        );
+
+        observer.observe(sentinel);
+        return () => observer.disconnect();
+    }, []);
 
     // Horizontal scroll navigation for category filter pills
     const pillsContainerRef = useRef<HTMLDivElement>(null);
@@ -215,7 +241,13 @@ export default function ShopIndex({
                         ? newFilters.brand
                         : selectedBrand,
             },
-            { preserveState: true, preserveScroll: true },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                onSuccess: () => {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                },
+            },
         );
     };
 
@@ -239,8 +271,20 @@ export default function ShopIndex({
             </div>
 
             <div className="mx-auto max-w-7xl space-y-4 px-2 py-4 sm:space-y-6 sm:px-6 sm:py-8 lg:px-8">
-                {/* Filter Bar */}
-                <div className="space-y-3 rounded-xl border border-sand-200/80 bg-white p-3 shadow-xs sm:space-y-4 sm:rounded-2xl sm:p-4">
+                {/* Filter Bar Sentinel & Fixed-on-Scroll Wrapper (zero-jitter on mobile) */}
+                <div ref={filterSentinelRef} className="h-px w-full" aria-hidden="true" />
+                {isFilterPinned && filterBarHeight > 0 && (
+                    <div style={{ height: filterBarHeight }} aria-hidden="true" />
+                )}
+                <div
+                    ref={filterBarRef}
+                    className={
+                        isFilterPinned
+                            ? 'fixed inset-x-0 top-[73px] z-30 mx-auto max-w-7xl px-2 sm:px-6 lg:px-8 transform-gpu'
+                            : ''
+                    }
+                >
+                <div className={`space-y-3 rounded-xl border border-sand-200/80 bg-white p-3 sm:space-y-4 sm:rounded-2xl sm:p-4 ${isFilterPinned ? 'shadow-md' : 'shadow-xs'}`}>
                     {/* Top Row: Brand Filter */}
                     <div className="flex flex-wrap items-center justify-between gap-3">
                         <div className="flex flex-shrink-0 items-center gap-2">
@@ -395,6 +439,7 @@ export default function ShopIndex({
                         )}
                     </div>
                 </div>
+                </div>
 
                 {/* Result Status */}
                 <div className="flex items-center justify-between px-1 text-xs text-brand-500">
@@ -471,8 +516,12 @@ export default function ShopIndex({
                                             key={`lazy-skeleton-${i}`}
                                             className="animate-pulse space-y-3 rounded-2xl border border-sand-200/60 bg-white p-4 sm:p-5"
                                         >
-                                            <div className="flex aspect-square w-full items-center justify-center rounded-xl bg-sand-200/50">
-                                                <CoffeeBeanIcon className="h-8 w-8 animate-bounce text-accent-copper/60" />
+                                            <div className="flex aspect-square w-full items-center justify-center rounded-xl bg-sand-200/50 p-4">
+                                                <img
+                                                    src="/images/lazy-load-kettle.png"
+                                                    alt="Memuat alat kopi..."
+                                                    className="h-24 w-24 animate-pulse object-contain opacity-85 sm:h-32 sm:w-32"
+                                                />
                                             </div>
                                             <div className="h-4 w-2/3 rounded bg-sand-200/60" />
                                             <div className="h-5 w-full rounded bg-sand-200/70" />

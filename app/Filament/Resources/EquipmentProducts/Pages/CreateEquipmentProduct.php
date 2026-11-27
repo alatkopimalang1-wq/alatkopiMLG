@@ -48,6 +48,10 @@ class CreateEquipmentProduct extends CreateRecord
             $data['stock'] = (int) ($data['stock'] ?? 0);
         }
 
+        if ($isPreorder) {
+            $data['preorder_dp_percent'] = Product::resolveMinPreorderDpPercent((float) ($data['min_price'] ?? 0));
+        }
+
         return $data;
     }
 

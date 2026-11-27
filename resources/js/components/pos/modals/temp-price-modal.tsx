@@ -41,7 +41,7 @@ export const TempPriceModal: React.FC<TempPriceModalProps> = ({
                                 Ubah Harga Sementara: {item.product_name}
                             </h3>
                             <p className="text-[11px] text-stone-300">
-                                {item.variant_label} • Qty: {item.quantity}
+                                {item.variant_label && !/^(standard|standar)$/i.test(item.variant_label.trim()) ? `${item.variant_label} • ` : ''}Qty: {item.quantity}
                             </p>
                         </div>
                     </div>

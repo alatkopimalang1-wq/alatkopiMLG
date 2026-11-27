@@ -652,3 +652,41 @@ html:not(.dark) ::-webkit-scrollbar-thumb {
     display: none !important;
 }
 
+/* Perlebar kolom search tabel & posisikan sticky di kiri (di bawah Terapkan filter) */
+.fi-ta-ctn,
+.fi-ta-main,
+.fi-ta-header-ctn {
+    overflow: visible !important;
+}
+
+.fi-ta-header-ctn:has(.fi-ta-filters-above-content-ctn) .fi-ta-header-toolbar {
+    justify-content: flex-start !important;
+    position: sticky !important;
+    top: 4rem !important;
+    z-index: 20 !important;
+    background-color: #ffffff !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
+}
+
+html.dark .fi-ta-header-ctn:has(.fi-ta-filters-above-content-ctn) .fi-ta-header-toolbar {
+    background-color: #141210 !important;
+    border-bottom-color: rgba(255, 255, 255, 0.07) !important;
+}
+
+.fi-ta-header-ctn:has(.fi-ta-filters-above-content-ctn) .fi-ta-search-field {
+    order: -1 !important;
+    margin-inline-start: 0 !important;
+    margin-left: 0 !important;
+}
+
+@media (min-width: 640px) {
+    .fi-ta-search-field {
+        width: 26rem !important;
+        max-width: 100% !important;
+    }
+
+    .fi-ta-search-field .fi-input-wrp {
+        width: 100% !important;
+    }
+}
+

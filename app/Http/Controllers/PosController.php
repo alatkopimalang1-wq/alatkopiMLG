@@ -2339,4 +2339,73 @@ class PosController extends Controller
                 'icon' => $c->icon,
             ]);
     }
+
+    /**
+     * Render Customer Facing Display (Dual Monitor) for POS.
+     */
+    public function customerDisplay(): Response
+    {
+        $settings = Setting::query()->pluck('value', 'key')->all();
+
+        $qrisImage = $settings['payment_qris_image'] ?? null;
+        $qrisImageUrl = ! empty($qrisImage)
+            ? (str_starts_with($qrisImage, 'http') ? $qrisImage : '/storage/'.ltrim($qrisImage, '/'))
+            : null;
+
+        $printerSettings = $settings['pos_printer_settings'] ?? [];
+        if (is_string($printerSettings)) {
+            $printerSettings = json_decode($printerSettings, true) ?: [];
+        }
+
+        $paymentSettings = $settings['pos_payment_settings'] ?? [];
+        if (is_string($paymentSettings)) {
+            $paymentSettings = json_decode($paymentSettings, true) ?: [];
+        }
+
+        $rawSlides = array_key_exists('pos_customer_display_slides', $settings)
+            ? ($settings['pos_customer_display_slides'] ?? [])
+            : ($settings['home_hero_slides'] ?? []);
+        if (is_string($rawSlides)) {
+            $rawSlides = json_decode($rawSlides, true) ?: [];
+        }
+
+        $promoSlides = collect(is_array($rawSlides) ? $rawSlides : [])
+            ->filter(fn ($s) => is_array($s) && ($s['is_active'] ?? true))
+            ->map(function (array $s) {
+                $img = ! empty($s['image'])
+                    ? $s['image']
+                    : ($s['image_url'] ?? null);
+                if (! empty($img) && ! str_starts_with($img, 'http') && ! str_starts_with($img, '/')) {
+                    $img = '/storage/'.ltrim($img, '/');
+                }
+
+                return [
+                    'title' => (string) (is_array($s['title'] ?? null) ? ($s['title']['id'] ?? '') : ($s['title'] ?? '')),
+                    'subtitle' => (string) (is_array($s['subtitle'] ?? null) ? ($s['subtitle']['id'] ?? '') : ($s['subtitle'] ?? '')),
+                    'badge' => (string) (is_array($s['badge'] ?? null) ? ($s['badge']['id'] ?? 'Promo Spesial') : ($s['badge'] ?? 'Promo Spesial')),
+                    'image_url' => $img,
+                ];
+            })
+            ->filter(fn ($s) => ! empty($s['image_url']) || ! empty($s['title']))
+            ->values()
+            ->all();
+
+        return Inertia::render('pos/display', [
+            'store' => [
+                'name' => $printerSettings['store_name'] ?? 'Alat Kopi Malang',
+                'tagline' => $printerSettings['tagline'] ?? 'Menyentuh Hati, Merangkai Cerita',
+                'address' => $printerSettings['address'] ?? 'Jl. Candi Mendut No. 3, Lowokwaru, Kota Malang',
+                'phone' => $printerSettings['phone'] ?? '0821-3209-5241',
+                'instagram' => $printerSettings['instagram'] ?? '@alat_kopi_malang',
+            ],
+            'qris' => [
+                'enabled' => (bool) ($settings['payment_qris_enabled'] ?? ($paymentSettings['enable_qris'] ?? true)),
+                'merchant_name' => (string) ($settings['payment_qris_merchant_name'] ?? 'ALAT KOPI MALANG'),
+                'nmid' => (string) ($settings['payment_qris_nmid'] ?? 'ID1020038829102'),
+                'image_url' => $qrisImageUrl,
+                'instructions' => (string) ($paymentSettings['qris_instructions'] ?? 'Scan kode QRIS menggunakan aplikasi e-wallet atau mobile banking Anda.'),
+            ],
+            'promo_slides' => $promoSlides,
+        ]);
+    }
 }

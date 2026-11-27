@@ -82,6 +82,10 @@ class EditEquipmentProduct extends EditRecord
             $data['max_price'] = $data['min_price'];
         }
 
+        if ($isPreorder) {
+            $data['preorder_dp_percent'] = Product::resolveMinPreorderDpPercent((float) ($data['min_price'] ?? 0));
+        }
+
         return $data;
     }
 

@@ -171,6 +171,7 @@ class ManageEquipmentBrands extends Page
                             ->label('Daftar Merek / Brand')
                             ->reorderable()
                             ->collapsible()
+                            ->collapsed()
                             ->cloneable()
                             ->itemLabel(fn (array $state): ?string => ! empty($state['name'])
                                 ? $state['name'].((isset($state['is_active']) && ! $state['is_active']) ? ' (Nonaktif)' : '')

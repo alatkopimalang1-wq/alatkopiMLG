@@ -11,6 +11,7 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\ImageColumn;
@@ -122,6 +123,37 @@ class EquipmentProductsTable
                         return new HtmlString("<div class=\"space-y-1\">{$lines}</div>");
                     }),
 
+                TextColumn::make('variants_weight')
+                    ->label('Berat')
+                    ->visibleFrom('md')
+                    ->html()
+                    ->tooltip('Klik untuk edit berat')
+                    ->extraCellAttributes(['class' => 'cursor-pointer'])
+                    ->action(static::makeVariantPriceEditAction(
+                        name: 'editWeight',
+                        heading: 'Edit Berat Produk',
+                        field: 'weight_grams',
+                        syncProductMinMax: false,
+                        unit: 'gr',
+                        isSuffix: true,
+                        successMessage: 'Berat produk berhasil diperbarui',
+                    ))
+                    ->state(function (Product $record): HtmlString {
+                        $variants = $record->variants;
+                        if ($variants->isEmpty()) {
+                            return new HtmlString('<div class="h-7 leading-7 text-sm text-gray-400">—</div>');
+                        }
+
+                        $lines = $variants->map(function ($v) {
+                            $w = (int) ($v->weight_grams ?? 0);
+                            $formatted = $w > 0 ? number_format($w, 0, ',', '.') . ' gr' : '—';
+
+                            return "<div class=\"h-7 leading-7 text-sm text-gray-600 dark:text-gray-300 hover:text-primary-600 whitespace-nowrap\"><span class=\"border-b border-dashed border-gray-400/60 pb-0.5\">{$formatted}</span></div>";
+                        })->implode('');
+
+                        return new HtmlString("<div class=\"space-y-1\">{$lines}</div>");
+                    }),
+
                 TextColumn::make('stock')
                     ->label('Qty Stok')
                     ->html()
@@ -174,16 +206,24 @@ class EquipmentProductsTable
                 TextColumn::make('variants_cost_price')
                     ->label('Harga Beli')
                     ->html()
+                    ->tooltip('Klik untuk edit harga beli')
+                    ->extraCellAttributes(['class' => 'cursor-pointer'])
+                    ->action(static::makeVariantPriceEditAction(
+                        name: 'editCostPrice',
+                        heading: 'Edit Harga Beli',
+                        field: 'cost_price',
+                        syncProductMinMax: false,
+                    ))
                     ->state(function (Product $record): HtmlString {
                         $variants = $record->variants;
                         if ($variants->isEmpty()) {
-                            return new HtmlString('<div class="h-7 leading-7 text-sm text-gray-400">0,00</div>');
+                            return new HtmlString('<div class="h-7 leading-7 text-sm text-gray-400 hover:text-primary-600"><span class="border-b border-dashed border-gray-400/60 pb-0.5">0,00</span></div>');
                         }
 
                         $lines = $variants->map(function ($v) {
                             $cost = number_format((float) ($v->cost_price ?? 0), 2, ',', '.');
 
-                            return "<div class=\"h-7 leading-7 text-sm text-gray-700 dark:text-gray-200 whitespace-nowrap\"><span class=\"border-b border-dashed border-gray-400/60 pb-0.5\">{$cost}</span></div>";
+                            return "<div class=\"h-7 leading-7 text-sm text-gray-700 dark:text-gray-200 hover:text-primary-600 whitespace-nowrap\"><span class=\"border-b border-dashed border-gray-400/60 pb-0.5\">{$cost}</span></div>";
                         })->implode('');
 
                         return new HtmlString("<div class=\"space-y-1\">{$lines}</div>");
@@ -193,18 +233,26 @@ class EquipmentProductsTable
                     ->label('Harga Jual di Toko')
                     ->html()
                     ->sortable()
+                    ->tooltip('Klik untuk edit harga jual')
+                    ->extraCellAttributes(['class' => 'cursor-pointer'])
+                    ->action(static::makeVariantPriceEditAction(
+                        name: 'editSellingPrice',
+                        heading: 'Edit Harga Jual di Toko',
+                        field: 'price',
+                        syncProductMinMax: true,
+                    ))
                     ->state(function (Product $record): HtmlString {
                         $variants = $record->variants;
                         if ($variants->isEmpty()) {
                             $price = number_format((float) ($record->min_price ?? 0), 2, ',', '.');
 
-                            return new HtmlString("<div class=\"h-7 leading-7 text-sm font-semibold text-gray-800 dark:text-gray-200 whitespace-nowrap\"><span class=\"border-b border-dashed border-gray-400/60 pb-0.5\">{$price}</span></div>");
+                            return new HtmlString("<div class=\"h-7 leading-7 text-sm font-semibold text-gray-800 dark:text-gray-200 hover:text-primary-600 whitespace-nowrap\"><span class=\"border-b border-dashed border-gray-400/60 pb-0.5\">{$price}</span></div>");
                         }
 
                         $lines = $variants->map(function ($v) {
                             $price = number_format((float) ($v->price ?? 0), 2, ',', '.');
 
-                            return "<div class=\"h-7 leading-7 text-sm font-semibold text-gray-800 dark:text-gray-200 whitespace-nowrap\"><span class=\"border-b border-dashed border-gray-400/60 pb-0.5\">{$price}</span></div>";
+                            return "<div class=\"h-7 leading-7 text-sm font-semibold text-gray-800 dark:text-gray-200 hover:text-primary-600 whitespace-nowrap\"><span class=\"border-b border-dashed border-gray-400/60 pb-0.5\">{$price}</span></div>";
                         })->implode('');
 
                         return new HtmlString("<div class=\"space-y-1\">{$lines}</div>");
@@ -359,5 +407,89 @@ class EquipmentProductsTable
                     DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    private static function makeVariantPriceEditAction(
+        string $name,
+        string $heading,
+        string $field,
+        bool $syncProductMinMax,
+        string $unit = 'Rp',
+        bool $isSuffix = false,
+        ?string $successMessage = null,
+    ): Action {
+        return Action::make($name)
+            ->modalHeading(fn (Product $record): string => "{$heading} — {$record->name}")
+            ->modalSubmitActionLabel('Simpan')
+            ->modalWidth('md')
+            ->schema(function (Product $record) use ($field, $syncProductMinMax, $unit, $isSuffix): array {
+                $variants = $record->variants;
+                if ($variants->isEmpty()) {
+                    if (! $syncProductMinMax) {
+                        return [];
+                    }
+
+                    return [
+                        TextInput::make('min_price')
+                            ->label('Harga Jual di Toko (Rp)')
+                            ->numeric()
+                            ->minValue(0)
+                            ->prefix('Rp')
+                            ->default((int) round((float) ($record->min_price ?? 0)))
+                            ->required(),
+                    ];
+                }
+
+                $singleStandard = $variants->count() === 1 && ($variants->first()->label === 'Standard' || empty($variants->first()->label));
+
+                return $variants->map(function ($variant) use ($field, $singleStandard, $unit, $isSuffix): TextInput {
+                    $baseLabel = $singleStandard ? ($field === 'weight_grams' ? 'Berat' : 'Nominal') : $variant->label;
+                    $input = TextInput::make("variant_{$variant->id}")
+                        ->label("{$baseLabel} ({$unit})")
+                        ->numeric()
+                        ->minValue(0)
+                        ->default((int) round((float) ($variant->{$field} ?? 0)))
+                        ->required();
+
+                    return $isSuffix ? $input->suffix($unit) : $input->prefix($unit);
+                })->all();
+            })
+            ->action(function (Product $record, array $data) use ($field, $syncProductMinMax, $successMessage): void {
+                $variants = $record->variants;
+
+                if ($variants->isEmpty()) {
+                    if ($syncProductMinMax && isset($data['min_price'])) {
+                        $val = (float) $data['min_price'];
+                        $record->min_price = $val;
+                        $record->max_price = $val;
+                        $record->save();
+                    }
+                } else {
+                    $castVal = $field === 'weight_grams'
+                        ? fn ($v) => (int) round((float) $v)
+                        : fn ($v) => (float) $v;
+
+                    foreach ($variants as $variant) {
+                        $key = "variant_{$variant->id}";
+                        if (array_key_exists($key, $data)) {
+                            $variant->update([$field => $castVal($data[$key])]);
+                        }
+                    }
+
+                    if ($syncProductMinMax) {
+                        $prices = $record->variants()->pluck('price')->map(fn ($p) => (float) $p)->all();
+                        if (! empty($prices)) {
+                            $record->min_price = min($prices);
+                            $record->max_price = max($prices);
+                            $record->save();
+                        }
+                    }
+                }
+
+                Notification::make()
+                    ->title($successMessage ?? ($syncProductMinMax ? 'Harga jual berhasil diperbarui' : 'Harga beli berhasil diperbarui'))
+                    ->success()
+                    ->send();
+            });
     }
 }

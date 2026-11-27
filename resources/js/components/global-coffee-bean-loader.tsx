@@ -78,9 +78,9 @@ export const GlobalCoffeeBeanLoader: React.FC = () => {
                 }`}
             >
                 <img
-                    src="/brand/coffee-beans.png"
+                    src="/images/lazy-load-kettle.png"
                     alt="Loading..."
-                    className="h-20 w-20 animate-pulse object-contain drop-shadow-[0_8px_24px_rgba(0,0,0,0.25)] select-none sm:h-24 sm:w-24 md:h-28 md:w-28"
+                    className="h-24 w-24 animate-pulse object-contain drop-shadow-[0_8px_24px_rgba(0,0,0,0.2)] select-none sm:h-28 sm:w-28 md:h-32 md:w-32"
                 />
             </div>
         </div>

@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { Head, Link } from '@inertiajs/react';
+import { formatVariantLabel } from '@/lib/variant-utils';
 import {
     ArrowLeft,
     CheckCircle2,
@@ -286,9 +287,11 @@ export default function PosDigitalInvoicePage({
                                         <div className="text-sm font-bold text-stone-900">
                                             {item.product_name}
                                         </div>
-                                        <div className="text-[11px] font-medium text-stone-500">
-                                            Varian: {item.variant_label}
-                                        </div>
+                                        {formatVariantLabel(item.variant_label) && (
+                                            <div className="text-[11px] font-medium text-stone-500">
+                                                Varian: {formatVariantLabel(item.variant_label)}
+                                            </div>
+                                        )}
                                     </td>
                                     <td className="py-3 text-right font-medium text-stone-700">
                                         Rp {formatRp(item.price)}

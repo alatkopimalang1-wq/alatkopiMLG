@@ -128,11 +128,12 @@ class EquipmentProductForm
                                 70 => 'Minimal DP 70%',
                                 100 => '100% (Wajib Lunas)',
                             ])
-                            ->default(100)
+                            ->default(30)
                             ->native(false)
+                            ->disabled()
+                            ->dehydrated(false)
                             ->visible(fn (callable $get): bool => (bool) $get('is_preorder'))
-                            ->required(fn (callable $get): bool => (bool) $get('is_preorder'))
-                            ->helperText('Pelanggan dapat memilih DP mulai dari persentase minimum ini hingga 100% (Lunas) saat memesan produk.'),
+                            ->helperText('Otomatis diterapkan berdasarkan harga produk: < Rp 30 jt (30%), Rp 30,1 - 50 jt (50%), > Rp 50 jt (70%).'),
                     ]),
 
                 Section::make('Harga, Stok & Varian Produk')

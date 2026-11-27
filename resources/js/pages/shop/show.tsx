@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Head, Link, usePage } from '@inertiajs/react';
+import { formatVariantLabel } from '@/lib/variant-utils';
 import {
     ArrowLeft,
     CheckCircle2,
@@ -421,12 +422,18 @@ export default function ProductShow({
                                                 </span>
                                             </div>
                                         )}
-                                        {imgItem.isVariant && (
+                                        {imgItem.isVariant &&
+                                            formatVariantLabel(
+                                                imgItem.variantLabel ||
+                                                    selectedVariant.label,
+                                            ) && (
                                             <span className="pointer-events-none absolute bottom-4 left-4 flex items-center gap-1.5 rounded-lg bg-brand-950/80 px-3 py-1 text-[11px] font-semibold text-white shadow-sm backdrop-blur-md">
                                                 <Package className="h-3.5 w-3.5 text-accent-copper" />
                                                 Kemasan{' '}
-                                                {imgItem.variantLabel ||
-                                                    selectedVariant.label}
+                                                {formatVariantLabel(
+                                                    imgItem.variantLabel ||
+                                                        selectedVariant.label,
+                                                )}
                                             </span>
                                         )}
                                     </div>
@@ -531,12 +538,18 @@ export default function ProductShow({
                                         Hemat {discountPercent}%
                                     </span>
                                 ) : null}
-                                {activeImageItem.isVariant && (
+                                {activeImageItem.isVariant &&
+                                    formatVariantLabel(
+                                        activeImageItem.variantLabel ||
+                                            selectedVariant.label,
+                                    ) && (
                                     <span className="pointer-events-none absolute bottom-4 left-4 flex items-center gap-1.5 rounded-lg bg-brand-950/80 px-3 py-1 text-[11px] font-semibold text-white shadow-sm backdrop-blur-md">
                                         <Package className="h-3.5 w-3.5 text-accent-copper" />
                                         Kemasan{' '}
-                                        {activeImageItem.variantLabel ||
-                                            selectedVariant.label}
+                                        {formatVariantLabel(
+                                            activeImageItem.variantLabel ||
+                                                selectedVariant.label,
+                                        )}
                                     </span>
                                 )}
                             </div>
@@ -576,9 +589,14 @@ export default function ProductShow({
                                                 alt={imgItem.alt}
                                                 className="h-full w-full object-cover"
                                             />
-                                            {imgItem.isVariant && (
+                                            {imgItem.isVariant &&
+                                                formatVariantLabel(
+                                                    imgItem.variantLabel,
+                                                ) && (
                                                 <span className="absolute inset-x-0 bottom-0 truncate bg-brand-950/80 px-1 py-0.5 text-center text-[9px] font-medium text-white">
-                                                    {imgItem.variantLabel}
+                                                    {formatVariantLabel(
+                                                        imgItem.variantLabel,
+                                                    )}
                                                 </span>
                                             )}
                                         </button>

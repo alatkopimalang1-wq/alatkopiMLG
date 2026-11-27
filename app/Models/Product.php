@@ -309,8 +309,16 @@ class Product extends Model
             $stock = (int) ($product->stock ?? 0);
             if ($product->is_preorder) {
                 $product->stock_status = $product->stock_status === 'out_of_stock' ? 'out_of_stock' : 'pre_order';
+                $price = (float) ($product->min_price ?? 0);
+                if ($price <= 0 && $product->exists) {
+                    $price = (float) ($product->variants()->min('price') ?? 0);
+                }
+                if ($price > 0) {
+                    $product->preorder_dp_percent = static::resolveMinPreorderDpPercent($price);
+                }
             } else {
                 $product->stock_status = $stock > 0 ? 'in_stock' : 'out_of_stock';
+                $product->preorder_dp_percent = 100;
             }
         });
 
@@ -614,5 +622,21 @@ class Product extends Model
             'alat-kopi' => 'info',
             default => 'gray',
         };
+    }
+
+    /**
+     * Resolve minimum pre-order DP percentage based on product price.
+     */
+    public static function resolveMinPreorderDpPercent(float $price): int
+    {
+        if ($price < 30_000_000) {
+            return 30;
+        }
+
+        if ($price <= 50_000_000) {
+            return 50;
+        }
+
+        return 70;
     }
 }

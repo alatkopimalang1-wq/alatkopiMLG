@@ -358,7 +358,7 @@ export const ThermalReceiptPreview: React.FC<ThermalReceiptPreviewProps> = ({
                             <div key={idx} className="space-y-0.5">
                                 <div className="font-semibold text-stone-900">
                                     {item.product_name}
-                                    {item.variant_label
+                                    {item.variant_label && !/^(standard|standar)$/i.test(item.variant_label.trim())
                                         ? ` (${(item.variant_label || '').replace(/\s*\(1\s*kg\s*custom[^)]*\)/gi, '').trim() || item.variant_label})`
                                         : ''}
                                 </div>

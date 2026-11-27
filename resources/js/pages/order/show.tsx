@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { BundleCartItemDetails } from '@/components/bundle-cart-item-details';
 import { groupOrderItems } from '@/lib/order-bundle-groups';
+import { formatVariantLabel } from '@/lib/variant-utils';
 import {
     AlertCircle,
     ArrowLeft,
@@ -932,9 +933,11 @@ export default function OrderShowPage({
                                                     </span>
                                                 )}
                                             </div>
-                                            <p className="text-xs font-medium text-accent-copper">
-                                                Varian: {item.variant_label}
-                                            </p>
+                                            {formatVariantLabel(item.variant_label) && (
+                                                <p className="text-xs font-medium text-accent-copper">
+                                                    Varian: {formatVariantLabel(item.variant_label)}
+                                                </p>
+                                            )}
                                             {(item.custom_notes ||
                                                 (item as any).customNotes) && (
                                                 <div className="mt-1.5 rounded-xl border border-amber-200/70 bg-amber-50/80 p-2.5 text-xs leading-snug text-brand-900">

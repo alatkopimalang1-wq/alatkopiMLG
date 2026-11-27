@@ -209,6 +209,7 @@ Route::middleware(['auth'])->group(function () {
     // POS (Point of Sale / Kasir) Routes — Hanya untuk peran Admin, Owner, dan Kasir
     Route::middleware([EnsurePosRole::class])->group(function () {
         Route::get('/pos', [PosController::class, 'index'])->name('pos.index');
+        Route::get('/pos/display', [PosController::class, 'customerDisplay'])->name('pos.display');
         Route::post('/pos/checkout', [PosController::class, 'checkout'])->name('pos.checkout');
         Route::get('/pos/orders', [PosController::class, 'orders'])->name('pos.orders');
         Route::post('/pos/orders/{id}/refund', [PosController::class, 'refundOrder'])->name('pos.orders.refund');

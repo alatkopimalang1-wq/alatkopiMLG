@@ -1,4 +1,5 @@
 import React from 'react';
+import { formatVariantLabel } from '@/lib/variant-utils';
 import {
     ShoppingCart,
     Share2,
@@ -179,9 +180,11 @@ export const MobileCartDrawer: React.FC<MobileCartDrawerProps> = ({
                                         )}
                                     </div>
                                     <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-stone-600 dark:text-stone-300">
-                                        <span className="rounded-md border border-brand-200 bg-brand-50 px-1.5 py-0.5 text-[11px] font-bold text-brand-800 dark:border-stone-700 dark:bg-stone-800 dark:text-amber-300">
-                                            {item.variant_label}
-                                        </span>
+                                        {formatVariantLabel(item.variant_label) && (
+                                            <span className="rounded-md border border-brand-200 bg-brand-50 px-1.5 py-0.5 text-[11px] font-bold text-brand-800 dark:border-stone-700 dark:bg-stone-800 dark:text-amber-300">
+                                                {formatVariantLabel(item.variant_label)}
+                                            </span>
+                                        )}
                                         <span className="font-medium text-stone-500 dark:text-stone-400">
                                             @ Rp {formatRp(item.price)}
                                         </span>

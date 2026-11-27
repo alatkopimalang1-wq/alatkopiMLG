@@ -54,7 +54,7 @@ export const ItemDiscountModal: React.FC<ItemDiscountModalProps> = ({
                                 Diskon Produk: {item.product_name}
                             </h3>
                             <p className="text-[11px] text-stone-300">
-                                {item.variant_label} • {item.quantity} x Rp {formatRp(item.price)}
+                                {item.variant_label && !/^(standard|standar)$/i.test(item.variant_label.trim()) ? `${item.variant_label} • ` : ''}{item.quantity} x Rp {formatRp(item.price)}
                             </p>
                         </div>
                     </div>

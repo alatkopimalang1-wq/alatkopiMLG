@@ -152,9 +152,11 @@ export const QueueTab: React.FC<QueueTabProps> = ({
                                                 <span className="font-semibold text-stone-900 dark:text-white">
                                                     {it.quantity}x {it.product_name}
                                                 </span>
-                                                <span className="ml-1 text-[11px] text-stone-500 dark:text-stone-300">
-                                                    ({it.variant_label})
-                                                </span>
+                                                {it.variant_label && !/^(standard|standar)$/i.test(it.variant_label.trim()) && (
+                                                    <span className="ml-1 text-[11px] text-stone-500 dark:text-stone-300">
+                                                        ({it.variant_label})
+                                                    </span>
+                                                )}
                                             </div>
                                             <span className="shrink-0 font-bold text-stone-800 dark:text-stone-200">
                                                 Rp {formatRp(it.price * it.quantity)}

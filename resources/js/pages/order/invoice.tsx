@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { Head, Link } from '@inertiajs/react';
+import { formatVariantLabel } from '@/lib/variant-utils';
 import {
     ArrowLeft,
     CheckCircle2,
@@ -404,9 +405,11 @@ export default function OrderInvoicePage({ order, settings }: InvoiceProps) {
                                                         </span>
                                                     )}
                                                 </div>
-                                                <div className="text-[11px] font-medium text-accent-copper">
-                                                    Varian: {item.variant_label}
-                                                </div>
+                                                {formatVariantLabel(item.variant_label) && (
+                                                    <div className="text-[11px] font-medium text-accent-copper">
+                                                        Varian: {formatVariantLabel(item.variant_label)}
+                                                    </div>
+                                                )}
 
                                                 {/* Prominent BYOB Blend Ratio or DP Display */}
                                                 {item.custom_notes && (() => {
