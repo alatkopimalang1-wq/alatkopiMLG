@@ -59,6 +59,7 @@ export interface CartItem {
     variant_id: number;
     variant_label: string;
     price: number;
+    original_price?: number;
     quantity: number;
     image: string;
     cost_price?: number;

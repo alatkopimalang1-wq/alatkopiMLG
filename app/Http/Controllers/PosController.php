@@ -318,7 +318,7 @@ class PosController extends Controller
                     } else {
                         $product = $variant->product;
                         $isByob = $product && ($product->slug === 'byob' || $product->series === 'cybr' || $product->series === 'custom-blend');
-                        $price = ($isByob && isset($itemData['price']) && (float) $itemData['price'] > 0)
+                        $price = (isset($itemData['price']) && $itemData['price'] !== null && $itemData['price'] !== '' && (float) $itemData['price'] >= 0)
                             ? (float) $itemData['price']
                             : (float) $variant->price;
                         $costPrice = isset($itemData['cost_price']) && $itemData['cost_price'] !== null && $itemData['cost_price'] !== ''

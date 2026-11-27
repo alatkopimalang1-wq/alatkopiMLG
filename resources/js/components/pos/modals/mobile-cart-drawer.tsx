@@ -22,6 +22,7 @@ interface MobileCartDrawerProps {
     openHoldModal: () => void;
     openManualOrderModal: (item: CartItem) => void;
     openItemDiscountModal: (item: CartItem) => void;
+    openTempPriceModal: (item: CartItem) => void;
     updateQuantity: (id: string, delta: number) => void;
     discountAmount: number;
     isDeliveryOrder: boolean;
@@ -53,6 +54,7 @@ export const MobileCartDrawer: React.FC<MobileCartDrawerProps> = ({
     openHoldModal,
     openManualOrderModal,
     openItemDiscountModal,
+    openTempPriceModal,
     updateQuantity,
     discountAmount,
     isDeliveryOrder,
@@ -256,6 +258,21 @@ export const MobileCartDrawer: React.FC<MobileCartDrawerProps> = ({
                                                     + Diskon
                                                 </button>
                                             </>
+                                        )}
+                                        {!item.is_manual && (
+                                            <button
+                                                type="button"
+                                                onClick={() => openTempPriceModal(item)}
+                                                className="flex cursor-pointer items-center gap-1 rounded border border-dashed border-amber-300 bg-amber-50/70 px-2 py-0.5 text-xs font-semibold text-amber-800 hover:bg-amber-100 dark:border-amber-700/70 dark:bg-amber-950/40 dark:text-amber-300"
+                                                title="Ubah harga sementara untuk transaksi ini"
+                                            >
+                                                <Pencil className="h-2.5 w-2.5" />
+                                                <span>
+                                                    {item.original_price !== undefined && item.original_price !== item.price
+                                                        ? 'Harga Diubah'
+                                                        : 'Ubah Harga'}
+                                                </span>
+                                            </button>
                                         )}
                                     </div>
                                 </div>

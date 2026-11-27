@@ -122,6 +122,7 @@ import { HoldOrderModal } from '@/components/pos/modals/hold-order-modal';
 import { SharePreBillModal } from '@/components/pos/modals/share-pre-bill-modal';
 import { CartDiscountModal } from '@/components/pos/modals/cart-discount-modal';
 import { ItemDiscountModal } from '@/components/pos/modals/item-discount-modal';
+import { TempPriceModal } from '@/components/pos/modals/temp-price-modal';
 import { OfflineSyncModal } from '@/components/pos/modals/offline-sync-modal';
 import { PrinterModal } from '@/components/pos/modals/printer-modal';
 import { ManualOrderModal } from '@/components/pos/modals/manual-order-modal';
@@ -448,6 +449,7 @@ interface CartItem {
     variant_id: number;
     variant_label: string;
     price: number;
+    original_price?: number;
     quantity: number;
     image: string;
     cost_price?: number;
@@ -1641,6 +1643,9 @@ function PosContent({
     const [editingManualCartItemId, setEditingManualCartItemId] = useState<
         string | null
     >(null);
+    const [editingTempPriceItem, setEditingTempPriceItem] =
+        useState<CartItem | null>(null);
+    const [tempPriceValue, setTempPriceValue] = useState<string>('');
 
     // Search Input Auto-focus ref
     const searchInputRef = useRef<HTMLInputElement>(null);
@@ -2822,6 +2827,68 @@ function PosContent({
             }),
         );
         showToast('Diskon produk dihapus');
+    };
+
+    const openTempPriceModal = (item: CartItem) => {
+        setEditingTempPriceItem(item);
+        setTempPriceValue(String(item.price));
+    };
+
+    const saveTempPrice = () => {
+        if (!editingTempPriceItem) return;
+        const newPrice = Math.max(0, Number(tempPriceValue) || 0);
+        setCart((prev) =>
+            prev.map((c) => {
+                if (c.id !== editingTempPriceItem.id) return c;
+                const orig = c.original_price ?? c.price;
+                const newGross = newPrice * c.quantity;
+                let updatedDiscountAmount = c.discount_amount || 0;
+                if (c.discount_type === 'percent' && c.discount_value) {
+                    updatedDiscountAmount = Math.round(
+                        (newGross * Math.min(100, Math.max(0, c.discount_value))) / 100,
+                    );
+                } else if (updatedDiscountAmount > newGross) {
+                    updatedDiscountAmount = newGross;
+                }
+                return {
+                    ...c,
+                    original_price: orig,
+                    price: newPrice,
+                    discount_amount: updatedDiscountAmount,
+                };
+            }),
+        );
+        showToast(
+            `Harga sementara "${editingTempPriceItem.product_name}" diubah menjadi Rp ${formatRp(newPrice)}`,
+        );
+        setEditingTempPriceItem(null);
+    };
+
+    const resetTempPrice = () => {
+        if (!editingTempPriceItem) return;
+        const orig = editingTempPriceItem.original_price ?? editingTempPriceItem.price;
+        setCart((prev) =>
+            prev.map((c) => {
+                if (c.id !== editingTempPriceItem.id) return c;
+                const newGross = orig * c.quantity;
+                let updatedDiscountAmount = c.discount_amount || 0;
+                if (c.discount_type === 'percent' && c.discount_value) {
+                    updatedDiscountAmount = Math.round(
+                        (newGross * Math.min(100, Math.max(0, c.discount_value))) / 100,
+                    );
+                } else if (updatedDiscountAmount > newGross) {
+                    updatedDiscountAmount = newGross;
+                }
+                return {
+                    ...c,
+                    price: orig,
+                    original_price: undefined,
+                    discount_amount: updatedDiscountAmount,
+                };
+            }),
+        );
+        showToast(`Harga "${editingTempPriceItem.product_name}" dikembalikan ke harga asli`);
+        setEditingTempPriceItem(null);
     };
 
     const showToast = (msg: string) => {
@@ -5781,6 +5848,28 @@ function PosContent({
                                                         </button>
                                                     </>
                                                 )}
+                                                {!item.is_manual && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            openTempPriceModal(
+                                                                item,
+                                                            )
+                                                        }
+                                                        className="flex cursor-pointer items-center gap-1 rounded border border-dashed border-amber-300 bg-amber-50/70 px-2 py-0.5 text-xs font-semibold text-amber-800 transition hover:bg-amber-100 dark:border-amber-700/70 dark:bg-amber-950/40 dark:text-amber-300 dark:hover:bg-amber-900/50"
+                                                        title="Ubah harga sementara untuk transaksi ini (tidak mengubah harga di pengaturan produk)"
+                                                    >
+                                                        <Pencil className="h-3 w-3" />
+                                                        <span>
+                                                            {item.original_price !==
+                                                                undefined &&
+                                                            item.original_price !==
+                                                                item.price
+                                                                ? 'Harga Diubah'
+                                                                : 'Ubah Harga'}
+                                                        </span>
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
 
@@ -6251,6 +6340,7 @@ function PosContent({
                 openHoldModal={openHoldModal}
                 openManualOrderModal={openManualOrderModal}
                 openItemDiscountModal={openItemDiscountModal}
+                openTempPriceModal={openTempPriceModal}
                 updateQuantity={updateQuantity}
                 discountAmount={discountAmount}
                 isDeliveryOrder={isDeliveryOrder}
@@ -6483,6 +6573,17 @@ function PosContent({
                 setItemDiscountValue={setItemDiscountValue}
                 removeItemDiscount={removeItemDiscount}
                 saveItemDiscount={saveItemDiscount}
+                formatRp={formatRp}
+            />
+
+            {/* === MODAL: UBAH HARGA SEMENTARA ITEM === */}
+            <TempPriceModal
+                item={editingTempPriceItem}
+                onClose={() => setEditingTempPriceItem(null)}
+                tempPriceValue={tempPriceValue}
+                setTempPriceValue={setTempPriceValue}
+                onSave={saveTempPrice}
+                onReset={resetTempPrice}
                 formatRp={formatRp}
             />
 
