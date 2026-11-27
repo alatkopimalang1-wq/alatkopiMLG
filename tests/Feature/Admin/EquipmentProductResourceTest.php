@@ -155,4 +155,9 @@ test('admin can generate template and bulk import equipment products with varian
     expect($filter)->not->toBeNull();
     expect($filter->stock)->toBe(40);
     expect((int) $filter->min_price)->toBe(68000);
+
+    // Also verify dedicated multi-variant template
+    $variantCsv = $service->generateVariantTemplateCsv();
+    expect($variantCsv)->toContain('Fellow Stagg EKG Electric Kettle');
+    expect($variantCsv)->toContain('One Two Cups Coffee Server Glass');
 });

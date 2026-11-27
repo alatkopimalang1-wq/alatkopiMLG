@@ -111,6 +111,75 @@ class EquipmentProductImportService
     }
 
     /**
+     * Generate UTF-8 BOM CSV template specifically structured for multi-variant products.
+     */
+    public function generateVariantTemplateCsv(): string
+    {
+        $stream = fopen('php://temp', 'r+');
+        fwrite($stream, "\xEF\xBB\xBF");
+        fputcsv($stream, self::HEADERS);
+
+        // Contoh Produk 1: 3 Varian Warna
+        foreach ([
+            ['Matte Black', 'AKM-FELLOW-STAGG-BLK', '1250', '2100000', '2650000', '2850000', '5'],
+            ['Warm White', 'AKM-FELLOW-STAGG-WHT', '1250', '2100000', '2650000', '2850000', '3'],
+            ['Brushed Steel', 'AKM-FELLOW-STAGG-STL', '1250', '2050000', '2550000', '', '4'],
+        ] as [$varian, $sku, $berat, $hpp, $jual, $coret, $stok]) {
+            fputcsv($stream, [
+                'Fellow Stagg EKG Electric Kettle',
+                '',
+                'Fellow',
+                'Kettle & Scale',
+                'Teko leher angsa elektrik dengan kontrol suhu presisi PID.',
+                '1 Tahun',
+                'active',
+                'all',
+                $varian,
+                $sku,
+                $berat,
+                $hpp,
+                $jual,
+                $coret,
+                $stok,
+                'tidak',
+                '',
+            ]);
+        }
+
+        // Contoh Produk 2: 2 Varian Kapasitas / Ukuran
+        foreach ([
+            ['360 ml', 'AKM-OTC-SERVER-360', '350', '45000', '75000', '', '12'],
+            ['600 ml', 'AKM-OTC-SERVER-600', '450', '58000', '95000', '110000', '8'],
+        ] as [$varian, $sku, $berat, $hpp, $jual, $coret, $stok]) {
+            fputcsv($stream, [
+                'One Two Cups Coffee Server Glass',
+                '',
+                'One Two Cups',
+                'Manual Brew',
+                'Server kopi kaca borosilikat tahan panas untuk seduh V60.',
+                '1 minggu',
+                'active',
+                'all',
+                $varian,
+                $sku,
+                $berat,
+                $hpp,
+                $jual,
+                $coret,
+                $stok,
+                'tidak',
+                '',
+            ]);
+        }
+
+        rewind($stream);
+        $csv = (string) stream_get_contents($stream);
+        fclose($stream);
+
+        return $csv;
+    }
+
+    /**
      * Import products and variants from a CSV or XLSX file path.
      *
      * @return array{created: int, updated: int, variants: int, skipped: int}

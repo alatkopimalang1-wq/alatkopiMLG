@@ -6,6 +6,7 @@ use App\Filament\Resources\EquipmentProducts\EquipmentProductResource;
 use App\Models\Product;
 use App\Services\EquipmentProductImportService;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Toggle;
@@ -24,19 +25,36 @@ class ListEquipmentProducts extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Action::make('downloadTemplate')
+            ActionGroup::make([
+                Action::make('downloadTemplate')
+                    ->label('Template Umum (Tunggal & Varian)')
+                    ->icon('heroicon-o-document-text')
+                    ->action(function (EquipmentProductImportService $importer) {
+                        $csv = $importer->generateTemplateCsv();
+
+                        return response()->streamDownload(function () use ($csv) {
+                            echo $csv;
+                        }, 'template-import-produk-alat-kopi.csv', [
+                            'Content-Type' => 'text/csv; charset=UTF-8',
+                        ]);
+                    }),
+                Action::make('downloadVariantTemplate')
+                    ->label('Template Khusus Produk Bervarian')
+                    ->icon('heroicon-o-squares-2x2')
+                    ->action(function (EquipmentProductImportService $importer) {
+                        $csv = $importer->generateVariantTemplateCsv();
+
+                        return response()->streamDownload(function () use ($csv) {
+                            echo $csv;
+                        }, 'template-produk-bervarian-alat-kopi.csv', [
+                            'Content-Type' => 'text/csv; charset=UTF-8',
+                        ]);
+                    }),
+            ])
                 ->label('Download Template')
                 ->icon('heroicon-o-arrow-down-tray')
                 ->color('gray')
-                ->action(function (EquipmentProductImportService $importer) {
-                    $csv = $importer->generateTemplateCsv();
-
-                    return response()->streamDownload(function () use ($csv) {
-                        echo $csv;
-                    }, 'template-import-produk-alat-kopi.csv', [
-                        'Content-Type' => 'text/csv; charset=UTF-8',
-                    ]);
-                }),
+                ->button(),
             Action::make('importProducts')
                 ->label('Import Produk Masal')
                 ->icon('heroicon-o-arrow-up-tray')
