@@ -353,17 +353,6 @@ class EquipmentProductForm
                 Section::make('Deskripsi Produk')
                     ->columnSpanFull()
                     ->schema([
-                        TextInput::make('short_description')
-                            ->label('Ringkasan Singkat')
-                            ->columnSpanFull(),
-                        Grid::make(2)->schema([
-                            Textarea::make('tagline.id')
-                                ->label('Tagline (Indonesia)')
-                                ->rows(2),
-                            Textarea::make('tagline.en')
-                                ->label('Tagline (English)')
-                                ->rows(2),
-                        ]),
                         Grid::make(2)->schema([
                             Textarea::make('description.id')
                                 ->label('Deskripsi Lengkap (Indonesia)')
