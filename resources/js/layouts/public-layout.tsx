@@ -412,8 +412,8 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({
                         <span className="h-2 w-2 flex-shrink-0 rounded-full bg-accent-copper" />
                         <span className="truncate">
                             {isEn
-                                ? 'Roastery & Showroom: Daily 09.00 – 23.00 WIB'
-                                : 'Roastery & Showroom: Buka Setiap Hari 09.00 – 23.00 WIB'}
+                                ? 'Showroom: Open Daily 09.00 – 22.00 WIB'
+                                : 'Showroom Buka setiap hari 09.00 - 22.00'}
                         </span>
                     </div>
 
