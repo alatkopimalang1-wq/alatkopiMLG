@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Categories\Tables;
 
-use App\Support\IconCatalog;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -23,16 +22,6 @@ class CategoriesTable
                     ->searchable()
                     ->sortable()
                     ->visibleFrom('md'),
-                TextColumn::make('type')
-                    ->badge()
-                    ->sortable()
-                    ->visibleFrom('md'),
-                TextColumn::make('icon')
-                    ->label('Ikon')
-                    ->icon(fn (?string $state) => IconCatalog::getPrefixIcon($state))
-                    ->badge()
-                    ->color('gray')
-                    ->sortable(),
                 TextColumn::make('sort_order')
                     ->label('Urutan')
                     ->numeric()
