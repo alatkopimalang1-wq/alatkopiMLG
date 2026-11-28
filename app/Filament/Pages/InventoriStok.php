@@ -2,14 +2,11 @@
 
 namespace App\Filament\Pages;
 
-use App\Filament\Resources\StockDocuments\StockDocumentResource;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\ProductPurchaseItem;
 use App\Models\ProductVariant;
 use App\Models\StockAdjustment;
-use App\Models\StockDocument;
-use App\Models\StockDocumentItem;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
@@ -36,17 +33,7 @@ class InventoriStok extends Page
 
     protected string $view = 'filament.pages.inventori-stok';
 
-    public string $activeTab = 'masuk'; // masuk, keluar, stok, pergerakan
-
-    public string $docSearch = '';
-
-    public string $docStatusFilter = 'all';
-
-    public string $docStartDate = '';
-
-    public string $docEndDate = '';
-
-    public int $docPerPage = 10;
+    public string $activeTab = 'stok'; // stok, pergerakan, riwayat
 
     public string $search = '';
 
@@ -64,16 +51,9 @@ class InventoriStok extends Page
 
     public function mount(): void
     {
-        $tab = (string) request()->query('tab', '');
-        if (in_array($tab, ['masuk', 'keluar', 'stok', 'pergerakan'], true)) {
-            $this->activeTab = $tab;
-        }
-
         $this->monthFilter = now()->format('Y-m');
         $this->startDate = now()->startOfMonth()->toDateString();
         $this->endDate = now()->endOfMonth()->toDateString();
-        $this->docStartDate = now()->subMonths(3)->toDateString();
-        $this->docEndDate = now()->toDateString();
     }
 
     public function updatedMonthFilter(string $value): void
@@ -90,92 +70,6 @@ class InventoriStok extends Page
         $this->monthFilter = '';
         $this->startDate = '';
         $this->endDate = '';
-    }
-
-    public function createNewDocument(string $type): void
-    {
-        $docType = $type === 'out' ? 'out' : 'in';
-
-        $this->redirect(StockDocumentResource::getUrl('create', ['type' => $docType]));
-    }
-
-    public function getStockDocumentsProperty()
-    {
-        $type = $this->activeTab === 'keluar' ? 'out' : 'in';
-
-        $query = StockDocument::query()
-            ->with(['user', 'items'])
-            ->where('type', $type);
-
-        if (in_array($this->docStatusFilter, ['draft', 'posted', 'cancelled'], true)) {
-            $query->where('status', $this->docStatusFilter);
-        }
-
-        if ($this->docStartDate !== '') {
-            $query->whereDate('document_date', '>=', $this->docStartDate);
-        }
-
-        if ($this->docEndDate !== '') {
-            $query->whereDate('document_date', '<=', $this->docEndDate);
-        }
-
-        if (trim($this->docSearch) !== '') {
-            $term = '%' . trim($this->docSearch) . '%';
-            $query->where(function ($q) use ($term) {
-                $q->where('document_number', 'like', $term)
-                    ->orWhere('supplier_name', 'like', $term)
-                    ->orWhere('transfer_to', 'like', $term)
-                    ->orWhere('reason', 'like', $term)
-                    ->orWhere('notes', 'like', $term);
-            });
-        }
-
-        return $query->orderByDesc('id')->limit(max(10, $this->docPerPage))->get();
-    }
-
-    public function getStockDocumentsCountProperty(): int
-    {
-        $type = $this->activeTab === 'keluar' ? 'out' : 'in';
-
-        return StockDocument::where('type', $type)->count();
-    }
-
-    public function createStockDocumentForVariant(int $variantId, string $mode): void
-    {
-        $type = $mode === 'out' ? 'out' : 'in';
-        $variant = ProductVariant::with('product')->find($variantId);
-
-        if (! $variant || ! $variant->product) {
-            return;
-        }
-
-        if ($variant->product->is_preorder) {
-            Notification::make()
-                ->title('Produk Pre-Order')
-                ->body('Produk Pre-Order menggunakan status Tersedia/Kosong, bukan qty stok.')
-                ->warning()
-                ->send();
-
-            return;
-        }
-
-        $doc = StockDocument::create([
-            'document_number' => StockDocument::generateNumber($type),
-            'type' => $type,
-            'status' => 'draft',
-            'document_date' => now()->toDateString(),
-            'user_id' => auth()->id(),
-        ]);
-
-        StockDocumentItem::create([
-            'stock_document_id' => $doc->id,
-            'product_id' => $variant->product_id,
-            'product_variant_id' => $variant->id,
-            'qty' => 1,
-            'unit_cost' => $type === 'in' ? (float) ($variant->cost_price ?? 0) : 0,
-        ]);
-
-        $this->redirect(StockDocumentResource::getUrl('edit', ['record' => $doc->id]));
     }
 
     public function getMaxContentWidth(): ?string
