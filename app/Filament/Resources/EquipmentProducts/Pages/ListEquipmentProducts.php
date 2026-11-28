@@ -22,6 +22,12 @@ class ListEquipmentProducts extends ListRecords
 
     protected string $view = 'filament.resources.equipment-products.pages.list-equipment-products';
 
+    public function updatedTableRecordsPerPage(): void
+    {
+        $this->flushCachedTableRecords();
+        parent::updatedTableRecordsPerPage();
+    }
+
     protected function getHeaderActions(): array
     {
         return [

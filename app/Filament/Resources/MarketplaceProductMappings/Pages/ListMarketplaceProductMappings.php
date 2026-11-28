@@ -25,6 +25,12 @@ class ListMarketplaceProductMappings extends ListRecords
         return '';
     }
 
+    public function updatedTableRecordsPerPage(): void
+    {
+        $this->flushCachedTableRecords();
+        parent::updatedTableRecordsPerPage();
+    }
+
     public function getBreadcrumbs(): array
     {
         return [];
