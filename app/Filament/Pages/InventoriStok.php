@@ -35,7 +35,17 @@ class InventoriStok extends Page
 
     protected string $view = 'filament.pages.inventori-stok';
 
-    public string $activeTab = 'stok'; // stok, pergerakan, riwayat
+    public string $activeTab = 'masuk'; // masuk, keluar, stok, pergerakan
+
+    public string $docSearch = '';
+
+    public string $docStatusFilter = 'all';
+
+    public string $docStartDate = '';
+
+    public string $docEndDate = '';
+
+    public int $docPerPage = 10;
 
     public string $search = '';
 
@@ -53,9 +63,16 @@ class InventoriStok extends Page
 
     public function mount(): void
     {
+        $tab = (string) request()->query('tab', '');
+        if (in_array($tab, ['masuk', 'keluar', 'stok', 'pergerakan'], true)) {
+            $this->activeTab = $tab;
+        }
+
         $this->monthFilter = now()->format('Y-m');
         $this->startDate = now()->startOfMonth()->toDateString();
         $this->endDate = now()->endOfMonth()->toDateString();
+        $this->docStartDate = now()->subMonths(3)->toDateString();
+        $this->docEndDate = now()->toDateString();
     }
 
     public function updatedMonthFilter(string $value): void
@@ -72,6 +89,62 @@ class InventoriStok extends Page
         $this->monthFilter = '';
         $this->startDate = '';
         $this->endDate = '';
+    }
+
+    public function createNewDocument(string $type): void
+    {
+        $docType = $type === 'out' ? 'out' : 'in';
+
+        $doc = StockDocument::create([
+            'document_number' => StockDocument::generateNumber($docType),
+            'type' => $docType,
+            'status' => 'draft',
+            'document_date' => now()->toDateString(),
+            'user_id' => auth()->id(),
+        ]);
+
+        $this->redirect(ManageStockDocument::getUrl(['record' => $doc->id]));
+    }
+
+    public function getStockDocumentsProperty()
+    {
+        $type = $this->activeTab === 'keluar' ? 'out' : 'in';
+
+        $query = StockDocument::query()
+            ->with(['user', 'items'])
+            ->where('type', $type);
+
+        if (in_array($this->docStatusFilter, ['draft', 'posted', 'cancelled'], true)) {
+            $query->where('status', $this->docStatusFilter);
+        }
+
+        if ($this->docStartDate !== '') {
+            $query->whereDate('document_date', '>=', $this->docStartDate);
+        }
+
+        if ($this->docEndDate !== '') {
+            $query->whereDate('document_date', '<=', $this->docEndDate);
+        }
+
+        if (trim($this->docSearch) !== '') {
+            $term = '%' . trim($this->docSearch) . '%';
+            $query->where(function ($q) use ($term) {
+                $q->where('document_number', 'like', $term)
+                    ->orWhere('supplier_name', 'like', $term)
+                    ->orWhere('transfer_to', 'like', $term)
+                    ->orWhere('reason', 'like', $term)
+                    ->orWhere('notes', 'like', $term);
+            });
+        }
+
+        return $query->orderByDesc('id')->limit(max(10, $this->docPerPage))->get();
+    }
+
+    public function getStockDocumentsCountProperty(): int
+    {
+        $type = $this->activeTab === 'keluar' ? 'out' : 'in';
+
+        return StockDocument::where('type', $type)->count();
     }
 
     public function createStockDocumentForVariant(int $variantId, string $mode): void

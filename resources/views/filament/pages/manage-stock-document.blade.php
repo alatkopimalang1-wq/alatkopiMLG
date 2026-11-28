@@ -7,7 +7,7 @@
         $isCancelled = $doc?->isCancelled() ?? false;
         $searchResults = $this->searchResults;
         $fmt = fn ($val) => 'Rp ' . number_format((float) $val, 0, ',', '.');
-        $backUrl = $isOut ? \App\Filament\Pages\StokKeluarPage::getUrl() : \App\Filament\Pages\StokMasukPage::getUrl();
+        $backUrl = \App\Filament\Pages\InventoriStok::getUrl(['tab' => $isOut ? 'keluar' : 'masuk']);
     @endphp
 
     @if($doc)

@@ -9,11 +9,7 @@ use Filament\Support\Icons\Heroicon;
 
 class StokMasukPage extends Page
 {
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::ArrowDownTray;
-
-    protected static string|\UnitEnum|null $navigationGroup = 'Katalog & Toko';
-
-    protected static ?string $navigationLabel = 'Stok Masuk';
+    protected static bool $shouldRegisterNavigation = false;
 
     protected static ?string $title = 'Daftar Stok Masuk';
 

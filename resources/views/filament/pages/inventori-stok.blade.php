@@ -1,66 +1,184 @@
 <x-filament-panels::page>
     @php
         $stats = $this->stats;
-        $variants = $this->variants;
+        $variants = $this->activeTab === 'stok' ? $this->variants : collect();
         $movements = $this->activeTab === 'pergerakan' ? $this->movements : collect();
-        $adjustments = $this->activeTab === 'riwayat' ? $this->adjustments : collect();
+        $documents = in_array($this->activeTab, ['masuk', 'keluar'], true) ? $this->stockDocuments : collect();
+        $documentsTotal = in_array($this->activeTab, ['masuk', 'keluar'], true) ? $this->stockDocumentsCount : 0;
         $fmt = fn ($val) => 'Rp ' . number_format((float) $val, 0, ',', '.');
     @endphp
 
     <div class="space-y-4">
-        {{-- Summary Cards --}}
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-xs">
-                <div class="text-xs font-medium text-gray-500 dark:text-gray-400">Total Varian Produk</div>
-                <div class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{{ number_format($stats['total_variants']) }}</div>
-            </div>
-            <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-xs">
-                <div class="text-xs font-medium text-gray-500 dark:text-gray-400">Total Stok Tersedia</div>
-                <div class="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{{ number_format($stats['total_stock']) }} <span class="text-xs font-medium">pcs</span></div>
-            </div>
-            <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-xs">
-                <div class="text-xs font-medium text-gray-500 dark:text-gray-400">Stok Menipis (1–5 pcs)</div>
-                <div class="mt-1 text-2xl font-bold text-amber-600 dark:text-amber-400">{{ number_format($stats['low_stock']) }}</div>
-            </div>
-            <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-xs">
-                <div class="text-xs font-medium text-gray-500 dark:text-gray-400">Stok Habis (0 pcs)</div>
-                <div class="mt-1 text-2xl font-bold text-rose-600 dark:text-rose-400">{{ number_format($stats['out_of_stock']) }}</div>
-            </div>
+        {{-- Olsera-style Full-Width Top Navigation Tabs (4 tabs: Stok Masuk, Stok Keluar, Stok Opname, Pergerakan Stok) --}}
+        <div class="grid grid-cols-2 sm:grid-cols-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 overflow-hidden shadow-xs">
+            @foreach([
+                'masuk' => 'Stok Masuk',
+                'keluar' => 'Stok Keluar',
+                'stok' => 'Stok Opname',
+                'pergerakan' => 'Pergerakan Stok',
+            ] as $tabKey => $tabLabel)
+                <button type="button"
+                        wire:click="$set('activeTab', '{{ $tabKey }}')"
+                        class="py-3.5 px-4 text-center text-xs sm:text-sm font-semibold border-b-2 transition cursor-pointer {{ $activeTab === $tabKey ? 'bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border-sky-600' : 'border-transparent text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/60' }}">
+                    {{ $tabLabel }}
+                </button>
+            @endforeach
         </div>
 
-        {{-- Tabs: Cek Data Stok, Riwayat Pergerakan Stok, Riwayat Penyesuaian --}}
-        <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-4 py-2.5 shadow-xs">
-            <div class="flex flex-wrap items-center gap-2">
-                <button type="button"
-                        wire:click="$set('activeTab', 'stok')"
-                        class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition cursor-pointer {{ $activeTab === 'stok' ? 'bg-primary-600 text-white' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800' }}">
-                    Cek & Kelola Stok
-                </button>
-                <button type="button"
-                        wire:click="$set('activeTab', 'pergerakan')"
-                        class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition cursor-pointer {{ $activeTab === 'pergerakan' ? 'bg-primary-600 text-white' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800' }}">
-                    Riwayat Pergerakan Stok
-                </button>
-                <button type="button"
-                        wire:click="$set('activeTab', 'riwayat')"
-                        class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition cursor-pointer {{ $activeTab === 'riwayat' ? 'bg-primary-600 text-white' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800' }}">
-                    Riwayat Penyesuaian Manual
-                </button>
-            </div>
+        @if(in_array($activeTab, ['masuk', 'keluar'], true))
+            @php
+                $isOut = $activeTab === 'keluar';
+            @endphp
+            <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-xs space-y-4">
+                {{-- Header Row: Title + Count | Date Range + + Tambah --}}
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-base font-bold text-gray-900 dark:text-white">
+                            Daftar {{ $isOut ? 'Stok Keluar' : 'Stok Masuk' }}
+                        </h2>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">
+                            {{ number_format($documentsTotal) }} {{ $isOut ? 'Stok Keluar' : 'Stok Masuk' }}
+                        </p>
+                    </div>
 
-            <div class="flex flex-wrap items-center gap-2">
-                <a href="{{ \App\Filament\Pages\StokMasukPage::getUrl() }}"
-                   class="inline-flex items-center gap-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white transition">
-                    + Stok Masuk
-                </a>
-                <a href="{{ \App\Filament\Pages\StokKeluarPage::getUrl() }}"
-                   class="inline-flex items-center gap-1 rounded-lg bg-rose-600 hover:bg-rose-700 px-3 py-1.5 text-xs font-semibold text-white transition">
-                    - Stok Keluar
-                </a>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <div class="flex items-center gap-1.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-2.5 py-1.5 text-xs">
+                            <input type="date"
+                                   wire:model.live="docStartDate"
+                                   class="border-0 bg-transparent p-0 text-xs text-gray-700 dark:text-gray-200 focus:ring-0" />
+                            <span class="text-gray-400">-</span>
+                            <input type="date"
+                                   wire:model.live="docEndDate"
+                                   class="border-0 bg-transparent p-0 text-xs text-gray-700 dark:text-gray-200 focus:ring-0" />
+                        </div>
+
+                        <button type="button"
+                                wire:click="createNewDocument('{{ $isOut ? 'out' : 'in' }}')"
+                                class="inline-flex items-center gap-1.5 rounded-lg bg-sky-600 hover:bg-sky-700 px-4 py-2 text-xs font-semibold text-white shadow-xs transition cursor-pointer">
+                            + Tambah
+                        </button>
+                    </div>
+                </div>
+
+                {{-- Table Controls: Rows per page | Status + Search --}}
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <select wire:model.live="docPerPage"
+                                class="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-200 focus:border-sky-500 focus:ring-sky-500">
+                            <option value="10">10 Baris</option>
+                            <option value="25">25 Baris</option>
+                            <option value="50">50 Baris</option>
+                            <option value="100">100 Baris</option>
+                        </select>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        <select wire:model.live="docStatusFilter"
+                                class="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-200 focus:border-sky-500 focus:ring-sky-500">
+                            <option value="all">Semua Status</option>
+                            <option value="draft">Draft</option>
+                            <option value="posted">Posted</option>
+                            <option value="cancelled">Batal</option>
+                        </select>
+
+                        <input type="text"
+                               wire:model.live.debounce.300ms="docSearch"
+                               placeholder="Cari No. {{ $isOut ? 'Stok Keluar' : 'Stok Masuk' }}..."
+                               class="w-56 sm:w-64 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-1.5 text-xs text-gray-900 dark:text-white focus:border-sky-500 focus:ring-sky-500" />
+                    </div>
+                </div>
+
+                {{-- Documents Table --}}
+                <div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-800">
+                    <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                        <thead>
+                            <tr class="border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/60 text-gray-600 dark:text-gray-300 font-semibold">
+                                <th class="py-3 px-4">No.</th>
+                                @if($isOut)
+                                    <th class="py-3 px-4">Transfer ke</th>
+                                    <th class="py-3 px-4">Alasan</th>
+                                @else
+                                    <th class="py-3 px-4">Supplier</th>
+                                @endif
+                                <th class="py-3 px-4">Tanggal</th>
+                                <th class="py-3 px-4">Catatan</th>
+                                <th class="py-3 px-4 text-center">Status</th>
+                                <th class="py-3 px-4 text-center">Total Qty</th>
+                                <th class="py-3 px-4">{{ $isOut ? 'Dibuat Oleh' : 'Diterima Oleh' }}</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
+                            @forelse($documents as $doc)
+                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/40 transition">
+                                    <td class="py-3 px-4 font-semibold">
+                                        <a href="{{ \App\Filament\Pages\ManageStockDocument::getUrl(['record' => $doc->id]) }}"
+                                           class="text-sky-600 hover:underline">
+                                            {{ $doc->document_number }}
+                                        </a>
+                                    </td>
+                                    @if($isOut)
+                                        <td class="py-3 px-4 text-gray-700 dark:text-gray-300">{{ $doc->transfer_to ?: '-' }}</td>
+                                        <td class="py-3 px-4 text-gray-700 dark:text-gray-300">{{ $doc->reason ?: '-' }}</td>
+                                    @else
+                                        <td class="py-3 px-4 text-gray-700 dark:text-gray-300">{{ $doc->supplier_name ?: '-' }}</td>
+                                    @endif
+                                    <td class="py-3 px-4 text-gray-700 dark:text-gray-300">{{ $doc->document_date?->format('d-M-Y') ?? '-' }}</td>
+                                    <td class="py-3 px-4 text-gray-600 dark:text-gray-400">{{ $doc->notes ?: '-' }}</td>
+                                    <td class="py-3 px-4 text-center">
+                                        @if($doc->status === 'draft')
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded border border-amber-300 bg-amber-50 text-amber-700 text-xs font-medium">
+                                                Draft
+                                            </span>
+                                        @elseif($doc->status === 'posted')
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded border border-emerald-300 bg-emerald-50 text-emerald-700 text-xs font-medium">
+                                                Posted
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded border border-rose-300 bg-rose-50 text-rose-700 text-xs font-medium">
+                                                Batal
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td class="py-3 px-4 text-center font-semibold {{ $isOut ? 'text-rose-600' : 'text-emerald-600' }}">
+                                        {{ $doc->items->sum('qty') }} pcs
+                                    </td>
+                                    <td class="py-3 px-4 text-gray-600 dark:text-gray-300 text-xs">
+                                        {{ $doc->user?->email ?? $doc->user?->name ?? '-' }}
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="{{ $isOut ? 8 : 7 }}" class="py-10 text-center text-sm text-gray-500">
+                                        Belum ada data {{ $isOut ? 'stok keluar' : 'stok masuk' }}. Klik tombol <strong>+ Tambah</strong> di pojok kanan atas untuk membuat dokumen baru.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
+        @endif
 
         @if($activeTab === 'stok')
+            {{-- Summary Cards for Stok Opname --}}
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-xs">
+                    <div class="text-xs font-medium text-gray-500 dark:text-gray-400">Total Varian Produk</div>
+                    <div class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{{ number_format($stats['total_variants']) }}</div>
+                </div>
+                <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-xs">
+                    <div class="text-xs font-medium text-gray-500 dark:text-gray-400">Total Stok Tersedia</div>
+                    <div class="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{{ number_format($stats['total_stock']) }} <span class="text-xs font-medium">pcs</span></div>
+                </div>
+                <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-xs">
+                    <div class="text-xs font-medium text-gray-500 dark:text-gray-400">Stok Menipis (1–5 pcs)</div>
+                    <div class="mt-1 text-2xl font-bold text-amber-600 dark:text-amber-400">{{ number_format($stats['low_stock']) }}</div>
+                </div>
+                <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-xs">
+                    <div class="text-xs font-medium text-gray-500 dark:text-gray-400">Stok Habis (0 pcs)</div>
+                    <div class="mt-1 text-2xl font-bold text-rose-600 dark:text-rose-400">{{ number_format($stats['out_of_stock']) }}</div>
+                </div>
+            </div>
             {{-- Search & Stock Filters --}}
             <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-xs space-y-3">
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
