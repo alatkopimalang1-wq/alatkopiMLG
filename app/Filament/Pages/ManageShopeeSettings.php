@@ -43,7 +43,7 @@ class ManageShopeeSettings extends Page
     {
         $account = ShopeeService::getOrCreateAccount();
 
-        $partnerId = ($account->app_key === '1255048') ? '' : ($account->app_key ?? '');
+        $partnerId = ($account->app_key === '1255048') ? '2056512' : ($account->app_key ?: '2056512');
 
         $this->form->fill([
             'partner_id' => $partnerId,
@@ -54,7 +54,7 @@ class ManageShopeeSettings extends Page
             'is_active' => (bool) $account->is_active,
             'auto_sync_stock' => (bool) $account->auto_sync_stock,
             'auto_sync_orders' => (bool) $account->auto_sync_orders,
-            'redirect_url_domain' => 'https://sanubariroastery.co.id',
+            'redirect_url_domain' => 'https://alatkopimalang.co.id',
             'callback_url' => url('/api/marketplace/shopee/callback'),
             'webhook_url' => url('/api/marketplace/shopee/webhook'),
         ]);
@@ -77,7 +77,7 @@ class ManageShopeeSettings extends Page
                     if (! $account || empty($account->app_key) || empty($account->app_secret) || $account->app_key === '1255048') {
                         Notification::make()
                             ->title('Kredensial Belum Lengkap')
-                            ->body('Pastikan Anda sudah mengisi Partner ID dengan 2055519 dan Live Partner Key dari Shopee Console.')
+                            ->body('Pastikan Anda sudah mengisi Partner ID dengan 2056512 dan Live Partner Key dari Shopee Console.')
                             ->danger()
                             ->send();
 
@@ -195,22 +195,23 @@ class ManageShopeeSettings extends Page
                                 ])
                                 ->default('production')
                                 ->required()
-                                ->helperText('Pilih Live / Production jika ingin menghubungkan toko asli Sanubari.'),
+                                ->helperText('Pilih Live / Production jika ingin menghubungkan toko asli Alat Kopi Malang.'),
 
                             TextInput::make('partner_id')
                                 ->label('Partner ID')
-                                ->placeholder('Contoh: 2055519')
+                                ->placeholder('Contoh: 2056512')
+                                ->default('2056512')
                                 ->required()
-                                ->helperText('Didapatkan dari Shopee Console -> APP Key (Gunakan Live Partner_id).'),
+                                ->helperText('Didapatkan dari Shopee Console -> APP Key (Gunakan Live Partner_id: 2056512).'),
                         ]),
 
                         TextInput::make('partner_key')
                             ->label('Partner Key (Secret Key)')
                             ->password()
                             ->revealable()
-                            ->placeholder('Masukkan Partner Key dari Shopee Console')
+                            ->placeholder('Masukkan Live API Partner Key dari Shopee Console')
                             ->required()
-                            ->helperText('Klik ikon mata pada Shopee Console untuk melihat dan menyalin kunci ini.'),
+                            ->helperText('Klik ikon mata (eye) pada baris Live API Partner Key di Shopee Console untuk melihat dan menyalin kunci ini.'),
 
                         Grid::make(2)->schema([
                             TextInput::make('shop_id')
@@ -231,7 +232,7 @@ class ManageShopeeSettings extends Page
                     ->schema([
                         TextInput::make('redirect_url_domain')
                             ->label('Test / Live Redirect URL Domain (Shopee Console)')
-                            ->default('https://sanubariroastery.co.id')
+                            ->default('https://alatkopimalang.co.id')
                             ->readOnly()
                             ->copyable()
                             ->helperText('Masukkan domain ini pada kolom "Test / Live Redirect URL Domain" di Shopee Console.'),
