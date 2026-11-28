@@ -80,6 +80,7 @@ class ManageStockDocument extends Page
             Select::make('variant_id')
                 ->label('Produk')
                 ->placeholder('Ketik nama produk atau SKU...')
+                ->options(fn (): array => static::searchVariantsForSelect(''))
                 ->searchable()
                 ->allowHtml()
                 ->getSearchResultsUsing(fn (string $search): array => static::searchVariantsForSelect($search))
