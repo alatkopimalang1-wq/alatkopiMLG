@@ -36,7 +36,7 @@ class ManageStockDocument extends Page
     public function mount(): void
     {
         $this->recordId = (int) Request::query('record', 0);
-        $doc = $this->document;
+        $doc = $this->getFreshDocument();
 
         if (! $doc) {
             $this->redirect(InventoriStok::getUrl(['tab' => 'masuk']));
@@ -57,7 +57,7 @@ class ManageStockDocument extends Page
         return 'full';
     }
 
-    public function getDocumentProperty(): ?StockDocument
+    public function getFreshDocument(): ?StockDocument
     {
         if ($this->recordId <= 0) {
             return null;
@@ -67,30 +67,30 @@ class ManageStockDocument extends Page
             ->find($this->recordId);
     }
 
+    public function getDocumentProperty(): ?StockDocument
+    {
+        return $this->getFreshDocument();
+    }
+
     public function addForm(Schema $schema): Schema
     {
-        $isOut = $this->document?->type === 'out';
+        $isOut = $this->getFreshDocument()?->type === 'out';
 
         $fields = [
             Select::make('variant_id')
                 ->label('Produk')
                 ->placeholder('Ketik nama produk atau SKU...')
-                ->options(static::getVariantSelectOptions())
-                ->allowHtml()
                 ->searchable()
-                ->reactive()
-                ->afterStateUpdated(function ($state, callable $set) use ($isOut) {
-                    if (! $isOut && $state) {
-                        $variant = ProductVariant::find((int) $state);
-                        $set('unit_cost', (float) ($variant?->cost_price ?? 0));
-                    }
-                })
+                ->allowHtml()
+                ->getSearchResultsUsing(fn (string $search): array => static::searchVariantsForSelect($search))
+                ->getOptionLabelUsing(fn ($value): ?string => static::formatVariantOptionHtml((int) $value))
                 ->columnSpan($isOut ? 9 : 6),
         ];
 
         if (! $isOut) {
             $fields[] = TextInput::make('unit_cost')
                 ->label('Harga Beli (Rp)')
+                ->helperText('Kosongkan / 0 untuk pakai harga beli terakhir.')
                 ->numeric()
                 ->minValue(0)
                 ->default(0)
@@ -113,54 +113,74 @@ class ManageStockDocument extends Page
     }
 
     /**
-     * Build preloaded HTML options (thumbnail + name + variant + SKU + stock) for normal instant Filament Select.
+     * Search top 25 variants for the Select dropdown (avoids loading 800+ options on every request).
      *
      * @return array<int, string>
      */
-    protected static function getVariantSelectOptions(): array
+    protected static function searchVariantsForSelect(string $search): array
     {
+        $term = '%' . trim($search) . '%';
+
         return ProductVariant::query()
             ->with(['product.primaryImage', 'product.images'])
             ->whereHas('product', fn ($q) => $q->where('series', 'alat-kopi'))
+            ->where(function ($q) use ($term) {
+                $q->where('sku', 'like', $term)
+                    ->orWhere('label', 'like', $term)
+                    ->orWhereHas('product', fn ($pq) => $pq->where('name', 'like', $term));
+            })
             ->orderBy('product_id')
             ->orderBy('id')
+            ->limit(25)
             ->get()
-            ->mapWithKeys(function (ProductVariant $v): array {
-                $p = $v->product;
-                $raw = $v->image ?: ($p?->primaryImage?->path ?? $p?->images?->first()?->path);
-                $imgUrl = $raw
-                    ? (str_starts_with($raw, 'http') ? $raw : asset('storage/' . ltrim(preg_replace('#^/?(?:(?:storage|public)/)+#', '', trim($raw)), '/')))
-                    : asset('brand/logo-circle.png');
-
-                $vLabel = ($v->label && strcasecmp($v->label, 'Standard') !== 0) ? $v->label : null;
-                $sub = [];
-                if ($vLabel) {
-                    $sub[] = "Varian: {$vLabel}";
-                }
-                if ($v->sku) {
-                    $sub[] = "SKU: {$v->sku}";
-                }
-                $sub[] = 'Stok: ' . (int) ($v->stock ?? 0) . ' pcs';
-
-                $safeName = e($p?->name ?? '-');
-                $safeSub = e(implode(' • ', $sub));
-                $safeImg = e($imgUrl);
-
-                $html = "<div style=\"display:flex;align-items:center;gap:10px;\">"
-                    . "<img src=\"{$safeImg}\" alt=\"\" style=\"width:30px;height:30px;border-radius:6px;object-fit:cover;flex-shrink:0;border:1px solid rgba(0,0,0,0.08);\" />"
-                    . "<div style=\"min-width:0;line-height:1.25;\">"
-                    . "<div style=\"font-weight:600;\">{$safeName}</div>"
-                    . "<div style=\"font-size:11px;opacity:0.7;\">{$safeSub}</div>"
-                    . "</div></div>";
-
-                return [$v->id => $html];
-            })
+            ->mapWithKeys(fn (ProductVariant $v): array => [$v->id => static::renderVariantHtml($v)])
             ->all();
+    }
+
+    protected static function formatVariantOptionHtml(int $variantId): ?string
+    {
+        if ($variantId <= 0) {
+            return null;
+        }
+
+        $variant = ProductVariant::with(['product.primaryImage', 'product.images'])->find($variantId);
+
+        return $variant ? static::renderVariantHtml($variant) : null;
+    }
+
+    protected static function renderVariantHtml(ProductVariant $v): string
+    {
+        $p = $v->product;
+        $raw = $v->image ?: ($p?->primaryImage?->path ?? $p?->images?->first()?->path);
+        $imgUrl = $raw
+            ? (str_starts_with($raw, 'http') ? $raw : asset('storage/' . ltrim(preg_replace('#^/?(?:(?:storage|public)/)+#', '', trim($raw)), '/')))
+            : asset('brand/logo-circle.png');
+
+        $vLabel = ($v->label && strcasecmp($v->label, 'Standard') !== 0) ? $v->label : null;
+        $sub = [];
+        if ($vLabel) {
+            $sub[] = "Varian: {$vLabel}";
+        }
+        if ($v->sku) {
+            $sub[] = "SKU: {$v->sku}";
+        }
+        $sub[] = 'Stok: ' . (int) ($v->stock ?? 0) . ' pcs';
+
+        $safeName = e($p?->name ?? '-');
+        $safeSub = e(implode(' • ', $sub));
+        $safeImg = e($imgUrl);
+
+        return "<div style=\"display:flex;align-items:center;gap:10px;\">"
+            . "<img src=\"{$safeImg}\" alt=\"\" style=\"width:30px;height:30px;border-radius:6px;object-fit:cover;flex-shrink:0;border:1px solid rgba(0,0,0,0.08);\" />"
+            . "<div style=\"min-width:0;line-height:1.25;\">"
+            . "<div style=\"font-weight:600;\">{$safeName}</div>"
+            . "<div style=\"font-size:11px;opacity:0.7;\">{$safeSub}</div>"
+            . "</div></div>";
     }
 
     public function addItemToDocument(): void
     {
-        $doc = $this->document;
+        $doc = $this->getFreshDocument();
         if (! $doc || ! $doc->isDraft()) {
             return;
         }
@@ -181,7 +201,10 @@ class ManageStockDocument extends Page
         }
 
         $qty = max(1, (int) ($data['qty'] ?? 1));
-        $cost = $doc->type === 'in' ? max(0, (float) ($data['unit_cost'] ?? 0)) : 0;
+        $inputCost = (float) ($data['unit_cost'] ?? 0);
+        $cost = $doc->type === 'in'
+            ? ($inputCost > 0 ? $inputCost : max(0, (float) ($variant->cost_price ?? 0)))
+            : 0;
 
         $existing = StockDocumentItem::where('stock_document_id', $doc->id)
             ->where('product_variant_id', $variant->id)
@@ -203,6 +226,9 @@ class ManageStockDocument extends Page
             ]);
         }
 
+        // Clear any Livewire computed property cache so the new item renders immediately
+        unset($this->document);
+
         $this->addForm->fill([
             'variant_id' => null,
             'unit_cost' => 0,
@@ -217,7 +243,7 @@ class ManageStockDocument extends Page
 
     public function updateItemQty(int $itemId, int $newQty): void
     {
-        $doc = $this->document;
+        $doc = $this->getFreshDocument();
         if (! $doc || ! $doc->isDraft()) {
             return;
         }
@@ -232,16 +258,19 @@ class ManageStockDocument extends Page
         } else {
             $item->update(['qty' => $newQty]);
         }
+
+        unset($this->document);
     }
 
     public function removeItem(int $itemId): void
     {
-        $doc = $this->document;
+        $doc = $this->getFreshDocument();
         if (! $doc || ! $doc->isDraft()) {
             return;
         }
 
         StockDocumentItem::where('stock_document_id', $doc->id)->where('id', $itemId)->delete();
+        unset($this->document);
     }
 
     public function saveAsDraft(): void
@@ -255,13 +284,14 @@ class ManageStockDocument extends Page
 
     public function postNow(): void
     {
-        $doc = $this->document;
+        $doc = $this->getFreshDocument();
         if (! $doc) {
             return;
         }
 
         try {
             $doc->postDocument(auth()->id());
+            unset($this->document);
             Notification::make()
                 ->title('Dokumen Berhasil Diposting!')
                 ->body("Stok produk telah diperbarui sesuai dokumen {$doc->document_number}.")
@@ -278,7 +308,7 @@ class ManageStockDocument extends Page
 
     public function cancelDocument(): void
     {
-        $doc = $this->document;
+        $doc = $this->getFreshDocument();
         if (! $doc) {
             return;
         }
@@ -286,6 +316,7 @@ class ManageStockDocument extends Page
         try {
             $wasPosted = $doc->isPosted();
             $doc->cancelDocument(auth()->id());
+            unset($this->document);
             Notification::make()
                 ->title('Dokumen Dibatalkan')
                 ->body($wasPosted ? 'Dokumen dibatalkan dan perubahan stok telah dikembalikan.' : 'Dokumen draf telah dibatalkan.')
@@ -314,7 +345,7 @@ class ManageStockDocument extends Page
                 };
             })
             ->fillForm(function (array $arguments): array {
-                $doc = $this->document;
+                $doc = $this->getFreshDocument();
                 $field = $arguments['field'] ?? '';
 
                 return [
@@ -369,7 +400,7 @@ class ManageStockDocument extends Page
                 };
             })
             ->action(function (array $data, array $arguments): void {
-                $doc = $this->document;
+                $doc = $this->getFreshDocument();
                 if (! $doc || ! $doc->isDraft()) {
                     return;
                 }
@@ -377,6 +408,7 @@ class ManageStockDocument extends Page
                 $field = $arguments['field'] ?? '';
                 if (in_array($field, ['document_date', 'supplier_name', 'transfer_to', 'reason', 'notes'], true)) {
                     $doc->update([$field => $data['value'] ?? null]);
+                    unset($this->document);
                     Notification::make()
                         ->title('Informasi Diperbarui')
                         ->success()

@@ -108,7 +108,7 @@ test('inventori page renders without errors on all tabs', function () {
     }
 });
 
-test('manage stock document page renders with normal searchable product select', function () {
+test('manage stock document page renders with normal searchable product select and shows added item immediately', function () {
     $doc = StockDocument::create([
         'document_number' => StockDocument::generateNumber('in'),
         'type' => 'in',
@@ -120,5 +120,11 @@ test('manage stock document page renders with normal searchable product select',
     \Livewire\Livewire::withQueryParams(['record' => $doc->id])
         ->test(\App\Filament\Pages\ManageStockDocument::class)
         ->assertStatus(200)
-        ->assertSee($doc->document_number);
+        ->assertSee($doc->document_number)
+        ->set('addFormData.variant_id', $this->variant->id)
+        ->set('addFormData.unit_cost', 180000)
+        ->set('addFormData.qty', 3)
+        ->call('addItemToDocument')
+        ->assertSee('Kettle Test Stok')
+        ->assertSee('Produk Stok Masuk (1)');
 });

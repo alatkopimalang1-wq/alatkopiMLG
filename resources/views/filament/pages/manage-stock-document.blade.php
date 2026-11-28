@@ -1,6 +1,6 @@
 <x-filament-panels::page>
     @php
-        $doc = $this->document;
+        $doc = $this->getFreshDocument();
         $isOut = $doc?->type === 'out';
         $isDraft = $doc?->isDraft() ?? false;
         $isPosted = $doc?->isPosted() ?? false;
@@ -257,15 +257,32 @@
                                                 {{ $fmt($item->unit_cost) }}
                                             </td>
                                         @endif
-                                        <td class="py-3 px-4 text-center">
+                                        <td class="py-3 px-4 text-center"
+                                            x-data="{
+                                                qty: {{ (int) $item->qty }},
+                                                cost: {{ (float) $item->unit_cost }},
+                                                timer: null,
+                                                syncQty(val) {
+                                                    const parsed = Math.max(0, parseInt(val || 0, 10));
+                                                    this.qty = parsed;
+                                                    clearTimeout(this.timer);
+                                                    this.timer = setTimeout(() => {
+                                                        $wire.updateItemQty({{ $item->id }}, parsed);
+                                                    }, 350);
+                                                }
+                                            }">
                                             @if($isDraft)
                                                 <div class="inline-flex items-center rounded-lg border border-gray-300 dark:border-gray-700 overflow-hidden">
                                                     <button type="button"
-                                                            wire:click="updateItemQty({{ $item->id }}, {{ max(0, $item->qty - 1) }})"
+                                                            @click="syncQty(Math.max(0, qty - 1))"
                                                             class="px-2.5 py-1 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 text-xs font-bold cursor-pointer">-</button>
-                                                    <span class="px-3 py-1 text-xs font-bold text-gray-900 dark:text-white">{{ $item->qty }}</span>
+                                                    <input type="number"
+                                                           min="1"
+                                                           x-model.number="qty"
+                                                           @change="syncQty(qty)"
+                                                           class="w-14 border-0 text-center text-xs font-bold text-gray-900 dark:text-white bg-white dark:bg-gray-950 focus:ring-0 py-1" />
                                                     <button type="button"
-                                                            wire:click="updateItemQty({{ $item->id }}, {{ $item->qty + 1 }})"
+                                                            @click="syncQty(qty + 1)"
                                                             class="px-2.5 py-1 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 text-xs font-bold cursor-pointer">+</button>
                                                 </div>
                                             @else
