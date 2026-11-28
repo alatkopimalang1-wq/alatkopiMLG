@@ -3,6 +3,8 @@
         $rows = $this->rows;
         $summary = $this->summary;
         $categories = $this->categories;
+        $consignors = $this->consignors;
+        $isConsignmentView = $this->consignmentFilter === 'consignment' || str_starts_with($this->consignmentFilter, 'consignor_');
         $fmt = fn (float|int $val): string => 'Rp ' . number_format((float) $val, 0, ',', '.');
     @endphp
 
@@ -14,7 +16,9 @@
                 <div class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">
                     {{ number_format($summary['total_variants'], 0, ',', '.') }}
                 </div>
-                <div class="mt-1 text-[11px] text-gray-400">Produk Pre-Order tidak disertakan</div>
+                <div class="mt-1 text-[11px] text-gray-400">
+                    {{ $isConsignmentView ? 'Produk konsinyasi terfilter' : 'Produk Pre-Order tidak disertakan' }}
+                </div>
             </div>
 
             <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-xs dark:border-gray-800 dark:bg-gray-900">
@@ -22,19 +26,23 @@
                 <div class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">
                     {{ number_format($summary['total_stock'], 0, ',', '.') }} <span class="text-sm font-medium text-gray-500">pcs</span>
                 </div>
-                <div class="mt-1 text-[11px] text-gray-400">Akumulasi stok fisik seluruh varian</div>
+                <div class="mt-1 text-[11px] text-gray-400">Akumulasi stok fisik varian terfilter</div>
             </div>
 
             <div class="rounded-xl border border-amber-200 bg-amber-50/50 p-4 shadow-xs dark:border-amber-900/50 dark:bg-amber-950/20">
-                <div class="text-xs font-semibold text-amber-800 dark:text-amber-300">Total Barang (Harga Beli)</div>
+                <div class="text-xs font-semibold text-amber-800 dark:text-amber-300">
+                    {{ $isConsignmentView ? 'Total Setoran Mitra (HPP)' : 'Total Barang (Harga Beli)' }}
+                </div>
                 <div class="mt-1 text-xl font-extrabold text-amber-900 dark:text-amber-200">
                     {{ $fmt($summary['total_buy_value']) }}
                 </div>
-                <div class="mt-1 text-[11px] text-amber-700/80 dark:text-amber-400/80">Akumulasi (Stok × Harga Beli)</div>
+                <div class="mt-1 text-[11px] text-amber-700/80 dark:text-amber-400/80">
+                    {{ $isConsignmentView ? 'Estimasi kewajiban setor ke mitra' : 'Akumulasi (Stok × Harga Beli)' }}
+                </div>
             </div>
 
             <div class="rounded-xl border border-emerald-200 bg-emerald-50/50 p-4 shadow-xs dark:border-emerald-900/50 dark:bg-emerald-950/20">
-                <div class="text-xs font-semibold text-emerald-800 dark:text-emerald-300">Total Barang (Harga Jual)</div>
+                <div class="text-xs font-semibold text-emerald-800 dark:text-emerald-300">Total Nilai Jual di Toko</div>
                 <div class="mt-1 text-xl font-extrabold text-emerald-900 dark:text-emerald-200">
                     {{ $fmt($summary['total_sell_value']) }}
                 </div>
@@ -42,26 +50,30 @@
             </div>
 
             <div class="rounded-xl border border-blue-200 bg-blue-50/50 p-4 shadow-xs dark:border-blue-900/50 dark:bg-blue-950/20">
-                <div class="text-xs font-semibold text-blue-800 dark:text-blue-300">Potensi Margin Kotor</div>
+                <div class="text-xs font-semibold text-blue-800 dark:text-blue-300">
+                    {{ $isConsignmentView ? 'Potensi Komisi Toko' : 'Potensi Margin Kotor' }}
+                </div>
                 <div class="mt-1 text-xl font-extrabold text-blue-900 dark:text-blue-200">
                     {{ $fmt($summary['potential_profit']) }}
                 </div>
-                <div class="mt-1 text-[11px] text-blue-700/80 dark:text-blue-400/80">Harga Jual − Harga Beli</div>
+                <div class="mt-1 text-[11px] text-blue-700/80 dark:text-blue-400/80">
+                    {{ $isConsignmentView ? 'Harga Jual − Setoran Mitra' : 'Harga Jual − Harga Beli' }}
+                </div>
             </div>
         </div>
 
         {{-- Filter & Export Toolbar --}}
         <div class="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-xs sm:flex-row sm:items-center sm:justify-between dark:border-gray-800 dark:bg-gray-900">
-            <div class="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
-                <div class="w-full sm:max-w-xs">
+            <div class="flex flex-1 flex-wrap gap-2.5 sm:items-center">
+                <div class="w-full sm:w-64">
                     <input
                         type="text"
                         wire:model.live.debounce.300ms="search"
-                        placeholder="Cari nama produk, brand, variasi, atau SKU..."
+                        placeholder="Cari produk, brand, mitra, SKU..."
                         class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-2xs focus:border-primary-500 focus:ring-1 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
                     />
                 </div>
-                <div class="w-full sm:w-52">
+                <div class="w-full sm:w-44">
                     <select
                         wire:model.live="categoryFilter"
                         class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-2xs focus:border-primary-500 focus:ring-1 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
@@ -72,7 +84,7 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="w-full sm:w-52">
+                <div class="w-full sm:w-44">
                     <select
                         wire:model.live="stockFilter"
                         class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-2xs focus:border-primary-500 focus:ring-1 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
@@ -81,6 +93,23 @@
                         <option value="in_stock">Stok Tersedia (&gt; 0)</option>
                         <option value="low_stock">Stok Menipis (1 - 5)</option>
                         <option value="out_of_stock">Stok Habis (0)</option>
+                    </select>
+                </div>
+                <div class="w-full sm:w-56">
+                    <select
+                        wire:model.live="consignmentFilter"
+                        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-2xs focus:border-primary-500 focus:ring-1 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                    >
+                        <option value="all">Semua Kepemilikan</option>
+                        <option value="owned">Milik Toko (Stok Sendiri)</option>
+                        <option value="consignment">Konsinyasi (Semua Titip Jual)</option>
+                        @if ($consignors->isNotEmpty())
+                            <optgroup label="Berdasarkan Mitra:">
+                                @foreach ($consignors as $c)
+                                    <option value="consignor_{{ $c->id }}">Konsinyasi: {{ $c->name }}</option>
+                                @endforeach
+                            </optgroup>
+                        @endif
                     </select>
                 </div>
             </div>
@@ -120,7 +149,14 @@
                                     {{ $idx + 1 }}
                                 </td>
                                 <td class="px-4 py-3">
-                                    <div class="font-semibold text-gray-900 dark:text-white">{{ $row['product_name'] }}</div>
+                                    <div class="flex flex-wrap items-center gap-1.5">
+                                        <span class="font-semibold text-gray-900 dark:text-white">{{ $row['product_name'] }}</span>
+                                        @if ($row['is_consignment'])
+                                            <span class="inline-flex items-center rounded bg-purple-100 px-1.5 py-0.5 text-[10px] font-semibold text-purple-800 dark:bg-purple-950/70 dark:text-purple-300">
+                                                Titip Jual{{ $row['consignor_name'] ? ' • ' . $row['consignor_name'] : '' }}
+                                            </span>
+                                        @endif
+                                    </div>
                                     @if ($row['brand'] !== '-')
                                         <div class="text-xs text-gray-500 dark:text-gray-400">{{ $row['brand'] }}</div>
                                     @endif

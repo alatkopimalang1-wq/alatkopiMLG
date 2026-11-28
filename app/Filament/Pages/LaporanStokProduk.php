@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Models\Category;
+use App\Models\Consignor;
 use App\Models\ProductVariant;
 use BackedEnum;
 use Filament\Pages\Page;
@@ -29,6 +30,8 @@ class LaporanStokProduk extends Page
     public string $categoryFilter = 'all';
 
     public string $stockFilter = 'all'; // all, in_stock, low_stock, out_of_stock
+
+    public string $consignmentFilter = 'all'; // all, owned, consignment, or consignor_{id}
 
     protected string $view = 'filament.pages.laporan-stok-produk';
 
@@ -68,6 +71,13 @@ class LaporanStokProduk extends Page
             ->values();
     }
 
+    public function getConsignorsProperty(): Collection
+    {
+        return Consignor::query()
+            ->orderBy('name')
+            ->get(['id', 'name']);
+    }
+
     /**
      * All non-preorder product variants with product & stock valuation.
      */
@@ -78,8 +88,8 @@ class LaporanStokProduk extends Page
 
         return ProductVariant::query()
             ->with([
-                'product' => fn ($q) => $q->select(['id', 'name', 'origin', 'series', 'is_preorder', 'stock_status', 'status'])
-                    ->with(['categories:id,name']),
+                'product' => fn ($q) => $q->select(['id', 'name', 'origin', 'series', 'is_preorder', 'stock_status', 'status', 'is_consignment', 'consignor_id'])
+                    ->with(['categories:id,name', 'consignor:id,name']),
             ])
             ->whereHas('product', function ($q) use ($categoryId) {
                 $q->where(fn ($pq) => $pq->where('is_preorder', false)->orWhereNull('is_preorder'))
@@ -89,6 +99,15 @@ class LaporanStokProduk extends Page
 
                 if ($categoryId) {
                     $q->whereHas('categories', fn ($cq) => $cq->where('categories.id', $categoryId));
+                }
+
+                if ($this->consignmentFilter === 'consignment') {
+                    $q->where('is_consignment', true);
+                } elseif ($this->consignmentFilter === 'owned') {
+                    $q->where(fn ($sub) => $sub->where('is_consignment', false)->orWhereNull('is_consignment'));
+                } elseif (str_starts_with($this->consignmentFilter, 'consignor_')) {
+                    $consignorId = (int) substr($this->consignmentFilter, 10);
+                    $q->where('is_consignment', true)->where('consignor_id', $consignorId);
                 }
             })
             ->get()
@@ -109,6 +128,7 @@ class LaporanStokProduk extends Page
                     $haystack = mb_strtolower(implode(' ', array_filter([
                         $variant->product?->name,
                         $variant->product?->origin,
+                        $variant->product?->consignor?->name,
                         $variant->label,
                         $variant->sku,
                     ])));
@@ -134,6 +154,8 @@ class LaporanStokProduk extends Page
                     'product_id' => $variant->product_id,
                     'product_name' => $variant->product?->name ?? '-',
                     'brand' => $variant->product?->origin ?: '-',
+                    'is_consignment' => (bool) ($variant->product?->is_consignment ?? false),
+                    'consignor_name' => $variant->product?->consignor?->name ?: null,
                     'variant_label' => $variant->label ?: 'Standard',
                     'sku' => $variant->sku ?: '-',
                     'stock' => $stock,
@@ -179,6 +201,8 @@ class LaporanStokProduk extends Page
                 'No',
                 'Produk',
                 'Brand',
+                'Kepemilikan',
+                'Mitra Konsinyasi',
                 'Variasi',
                 'SKU',
                 'Stok',
@@ -193,6 +217,8 @@ class LaporanStokProduk extends Page
                     $idx + 1,
                     $row['product_name'],
                     $row['brand'],
+                    $row['is_consignment'] ? 'Konsinyasi (Titip Jual)' : 'Milik Toko',
+                    $row['consignor_name'] ?: '-',
                     $row['variant_label'],
                     $row['sku'],
                     $row['stock'],
@@ -206,6 +232,8 @@ class LaporanStokProduk extends Page
             fputcsv($out, [
                 '',
                 'TOTAL',
+                '',
+                '',
                 '',
                 '',
                 '',
