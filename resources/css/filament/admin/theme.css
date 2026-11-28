@@ -652,7 +652,7 @@ html:not(.dark) ::-webkit-scrollbar-thumb {
     display: none !important;
 }
 
-/* Perlebar kolom search tabel & posisikan sticky di kiri (di bawah Terapkan filter) */
+/* Perlebar kolom search tabel & posisikan sticky di kanan */
 .fi-ta-ctn,
 .fi-ta-main,
 .fi-ta-header-ctn {
@@ -665,7 +665,7 @@ html:not(.dark) ::-webkit-scrollbar-thumb {
 }
 
 .fi-ta-header-ctn:has(.fi-ta-filters-above-content-ctn) .fi-ta-header-toolbar {
-    justify-content: flex-start !important;
+    justify-content: flex-end !important;
     position: sticky !important;
     top: 4rem !important;
     z-index: 10 !important;
@@ -679,16 +679,15 @@ html.dark .fi-ta-header-ctn:has(.fi-ta-filters-above-content-ctn) .fi-ta-header-
 }
 
 .fi-ta-header-ctn:has(.fi-ta-filters-above-content-ctn) .fi-ta-header-toolbar > div:has(.fi-ta-search-field) {
-    order: -1 !important;
-    margin-inline-start: 0 !important;
-    margin-left: 0 !important;
-    margin-inline-end: auto !important;
-    margin-right: auto !important;
+    margin-inline-start: auto !important;
+    margin-left: auto !important;
+    margin-inline-end: 0 !important;
+    margin-right: 0 !important;
 }
 
 .fi-ta-header-ctn:has(.fi-ta-filters-above-content-ctn) .fi-ta-search-field {
-    margin-inline-start: 0 !important;
-    margin-left: 0 !important;
+    margin-inline-start: auto !important;
+    margin-left: auto !important;
 }
 
 @media (min-width: 640px) {
