@@ -128,3 +128,25 @@ test('manage stock document page renders with normal searchable product select a
         ->assertSee('Kettle Test Stok')
         ->assertSee('Produk Stok Masuk (1)');
 });
+
+test('standard filament stock document create, edit, and view pages render without errors', function () {
+    \Livewire\Livewire::withQueryParams(['type' => 'in'])
+        ->test(\App\Filament\Resources\StockDocuments\Pages\CreateStockDocument::class)
+        ->assertStatus(200);
+
+    $doc = StockDocument::create([
+        'document_number' => StockDocument::generateNumber('out'),
+        'type' => 'out',
+        'status' => 'draft',
+        'document_date' => now()->toDateString(),
+        'user_id' => $this->user->id,
+    ]);
+
+    \Livewire\Livewire::test(\App\Filament\Resources\StockDocuments\Pages\EditStockDocument::class, ['record' => $doc->getRouteKey()])
+        ->assertStatus(200)
+        ->assertSee($doc->document_number);
+
+    \Livewire\Livewire::test(\App\Filament\Resources\StockDocuments\Pages\ViewStockDocument::class, ['record' => $doc->getRouteKey()])
+        ->assertStatus(200)
+        ->assertSee($doc->document_number);
+});

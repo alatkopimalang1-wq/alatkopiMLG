@@ -112,7 +112,7 @@
                             @forelse($documents as $doc)
                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/40 transition">
                                     <td class="py-3 px-4 font-semibold">
-                                        <a href="{{ \App\Filament\Pages\ManageStockDocument::getUrl(['record' => $doc->id]) }}"
+                                        <a href="{{ \App\Filament\Resources\StockDocuments\StockDocumentResource::getUrl($doc->isDraft() ? 'edit' : 'view', ['record' => $doc->id]) }}"
                                            class="text-sky-600 hover:underline">
                                             {{ $doc->document_number }}
                                         </a>

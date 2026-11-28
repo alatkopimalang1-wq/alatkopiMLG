@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Resources\StockDocuments\StockDocumentResource;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\ProductPurchaseItem;
@@ -95,15 +96,7 @@ class InventoriStok extends Page
     {
         $docType = $type === 'out' ? 'out' : 'in';
 
-        $doc = StockDocument::create([
-            'document_number' => StockDocument::generateNumber($docType),
-            'type' => $docType,
-            'status' => 'draft',
-            'document_date' => now()->toDateString(),
-            'user_id' => auth()->id(),
-        ]);
-
-        $this->redirect(ManageStockDocument::getUrl(['record' => $doc->id]));
+        $this->redirect(StockDocumentResource::getUrl('create', ['type' => $docType]));
     }
 
     public function getStockDocumentsProperty()
@@ -182,7 +175,7 @@ class InventoriStok extends Page
             'unit_cost' => $type === 'in' ? (float) ($variant->cost_price ?? 0) : 0,
         ]);
 
-        $this->redirect(ManageStockDocument::getUrl(['record' => $doc->id]));
+        $this->redirect(StockDocumentResource::getUrl('edit', ['record' => $doc->id]));
     }
 
     public function getMaxContentWidth(): ?string
