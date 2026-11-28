@@ -20,6 +20,27 @@ class ListMarketplaceProductMappings extends ListRecords
 {
     protected static string $resource = MarketplaceProductMappingResource::class;
 
+    protected string $view = 'filament.resources.marketplace-product-mappings.pages.list-marketplace-product-mappings';
+
+    public function getStoreSummary(): array
+    {
+        $mpCount = MarketplaceProductMapping::where('marketplace_status', 'ACTIVATE')->count();
+        $webCount = \App\Models\Product::where('series', 'alat-kopi')->count();
+        $latestSync = MarketplaceProductMapping::where('marketplace_status', 'ACTIVATE')
+            ->max('last_synced_at');
+
+        return [
+            'store_name' => 'ALAT KOPI MALANG',
+            'mp_count' => $mpCount,
+            'mp_status_text' => $latestSync ? 'Diperbarui' : 'Belum ditarik',
+            'web_count' => $webCount,
+            'auto_sync' => (bool) \App\Models\Setting::get('marketplace_auto_sync_stock', false),
+            'last_synced_at' => $latestSync
+                ? \Illuminate\Support\Carbon::parse($latestSync)->timezone('Asia/Jakarta')->format('d M Y H:i')
+                : 'Belum pernah',
+        ];
+    }
+
     public function getHeading(): string
     {
         return '';
