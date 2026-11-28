@@ -27,8 +27,11 @@ class MarketplaceProductMappingsTable
                 // 1. FOTO PRODUK MARKETPLACE
                 ImageColumn::make('marketplace_image_url')
                     ->label('')
-                    ->circular()
-                    ->size(36)
+                    ->square()
+                    ->imageSize(44)
+                    ->extraImgAttributes([
+                        'class' => 'rounded-md object-cover aspect-square',
+                    ])
                     ->grow(false)
                     ->defaultImageUrl(asset('brand/logo-circle.png')),
 

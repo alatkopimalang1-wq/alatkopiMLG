@@ -35,8 +35,11 @@ class EquipmentProductsTable
                 ImageColumn::make('primaryImage.path')
                     ->label('Foto')
                     ->disk('public')
-                    ->circular()
-                    ->imageSize(40)
+                    ->square()
+                    ->imageSize(44)
+                    ->extraImgAttributes([
+                        'class' => 'rounded-md object-cover aspect-square',
+                    ])
                     ->checkFileExistence(false)
                     ->state(function (Product $record): ?string {
                         $raw = $record->primaryImage?->path

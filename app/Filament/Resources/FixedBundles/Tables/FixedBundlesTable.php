@@ -18,7 +18,11 @@ class FixedBundlesTable
                 ImageColumn::make('banner_image')
                     ->label('Foto')
                     ->disk('public')
-                    ->circular(),
+                    ->square()
+                    ->imageSize(44)
+                    ->extraImgAttributes([
+                        'class' => 'rounded-md object-cover aspect-square',
+                    ]),
 
                 TextColumn::make('name')
                     ->label('Nama Produk Bundling')
