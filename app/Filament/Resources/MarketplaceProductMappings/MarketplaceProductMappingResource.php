@@ -32,7 +32,7 @@ class MarketplaceProductMappingResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->with(['product', 'variant'])
+            ->with(['product.primaryImage', 'product.images', 'variant'])
             ->where('marketplace_status', 'ACTIVATE');
     }
 

@@ -79,7 +79,19 @@ class MarketplaceProductMappingsTable
                     ->alignCenter()
                     ->grow(false),
 
-                // 5. PRODUK WEBSITE SANUBARI (Nama + Varian + SKU)
+                // 5. FOTO PRODUK WEBSITE
+                ImageColumn::make('website_image_url')
+                    ->label('')
+                    ->square()
+                    ->imageSize(44)
+                    ->extraImgAttributes([
+                        'class' => 'rounded-md object-cover aspect-square',
+                    ])
+                    ->grow(false)
+                    ->defaultImageUrl(fn (MarketplaceProductMapping $record) => $record->is_connected ? asset('brand/logo-circle.png') : null)
+                    ->visibleFrom('md'),
+
+                // 6. PRODUK WEBSITE SANUBARI (Nama + Varian + SKU)
                 TextColumn::make('product.name')
                     ->label('Produk Website Sanubari')
                     ->searchable()

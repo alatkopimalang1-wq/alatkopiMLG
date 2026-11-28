@@ -87,6 +87,30 @@ class MarketplaceProductMapping extends Model
         return $this->real_website_stock;
     }
 
+    public function getWebsiteImageUrlAttribute(): ?string
+    {
+        if (! $this->is_connected) {
+            return null;
+        }
+
+        $raw = $this->variant?->image
+            ?: ($this->product?->primaryImage?->path
+                ?? $this->product?->images?->first(fn ($img) => ! empty($img->path))?->path
+                ?? $this->product?->variants?->first(fn ($v) => ! empty($v->image))?->image);
+
+        if (empty($raw)) {
+            return null;
+        }
+
+        if (str_starts_with($raw, 'http://') || str_starts_with($raw, 'https://')) {
+            return $raw;
+        }
+
+        $cleanPath = ltrim(preg_replace('#^/?(?:(?:storage|public)/)+#', '', trim($raw)), '/');
+
+        return $cleanPath !== '' ? asset('storage/' . $cleanPath) : null;
+    }
+
     public function getIsWebsiteOutOfStockAttribute(): bool
     {
         if (! $this->is_connected) {
