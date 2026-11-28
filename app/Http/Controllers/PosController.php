@@ -2086,6 +2086,8 @@ class PosController extends Controller
                     $order->items()->create($line);
                 }
 
+                $order->deductStockIfNeeded();
+
                 $syncedOrders[] = [
                     'offline_id' => $offlineId,
                     'order_number' => $order->order_number,

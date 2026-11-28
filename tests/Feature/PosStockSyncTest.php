@@ -118,3 +118,58 @@ test('pos checkout decrements website stock and syncs inventory', function () {
     $product->refresh();
     expect($product->stock)->toBe(47);
 });
+
+test('pos checkout of 1 pcs decrements variant and product stock by exactly 1 without double deduction', function () {
+    $user = User::factory()->kasir()->create();
+
+    $category = Category::firstOrCreate(['slug' => 'alat-seduh'], [
+        'name' => ['id' => 'Alat Seduh', 'en' => 'Alat Seduh'],
+        'sort_order' => 1,
+    ]);
+
+    $product = Product::create([
+        'name' => 'V60 Dripper Ceramic 01',
+        'slug' => 'v60-dripper-ceramic-01',
+        'min_price' => 150000,
+        'max_price' => 150000,
+        'stock' => 10,
+        'stock_status' => 'in_stock',
+        'status' => 'active',
+        'channel' => 'all',
+    ]);
+    $product->categories()->attach($category->id);
+
+    $variant = ProductVariant::create([
+        'product_id' => $product->id,
+        'label' => 'White Ceramic',
+        'weight_grams' => 300,
+        'price' => 150000,
+        'stock' => 10,
+        'sku' => 'V60-WHT-01',
+    ]);
+
+    $payload = [
+        'items' => [
+            [
+                'product_id' => $product->id,
+                'variant_id' => $variant->id,
+                'quantity' => 1,
+                'price' => 150000,
+                'product_name' => $product->name,
+                'variant_label' => $variant->label,
+            ],
+        ],
+        'payment_method' => 'cash',
+        'cash_tendered' => 150000,
+        'customer_name' => 'Pelanggan Uji POS',
+    ];
+
+    $res = $this->actingAs($user)->postJson('/pos/checkout', $payload);
+    $res->assertOk();
+
+    $variant->refresh();
+    expect($variant->stock)->toBe(9);
+
+    $product->refresh();
+    expect($product->stock)->toBe(9);
+});

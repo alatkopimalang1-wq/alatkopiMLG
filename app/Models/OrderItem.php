@@ -23,13 +23,6 @@ class OrderItem extends Model
         'consignment_settled_at' => 'datetime',
     ];
 
-    protected static function booted(): void
-    {
-        static::created(function (OrderItem $item) {
-            \App\Services\MarketplaceStockSyncService::handleLocalOrderItemDeduction($item);
-        });
-    }
-
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
