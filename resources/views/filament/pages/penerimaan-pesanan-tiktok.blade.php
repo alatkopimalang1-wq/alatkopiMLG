@@ -325,16 +325,28 @@
 
                             <div class="flex items-center gap-1.5 shrink-0">
                                 @if (empty($order['is_saved']))
-                                    <x-filament::button
-                                        size="xs"
-                                        color="warning"
-                                        icon="heroicon-m-arrow-down-tray"
-                                        wire:click="saveOrder('{{ $order['id'] }}')"
-                                        wire:loading.attr="disabled"
-                                        wire:target="saveOrder('{{ $order['id'] }}')"
-                                    >
-                                        Simpan
-                                    </x-filament::button>
+                                    @if (! empty($order['has_connected_products']))
+                                        <x-filament::button
+                                            size="xs"
+                                            color="warning"
+                                            icon="heroicon-m-arrow-down-tray"
+                                            wire:click="saveOrder('{{ $order['id'] }}')"
+                                            wire:loading.attr="disabled"
+                                            wire:target="saveOrder('{{ $order['id'] }}')"
+                                        >
+                                            Simpan
+                                        </x-filament::button>
+                                    @else
+                                        <button
+                                            type="button"
+                                            disabled
+                                            class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed border border-gray-200 dark:border-gray-700"
+                                            title="Belum dapat disimpan: produk belum terhubung ke katalog website"
+                                        >
+                                            <x-filament::icon icon="heroicon-m-lock-closed" class="w-3.5 h-3.5" />
+                                            <span>Belum Terhubung</span>
+                                        </button>
+                                    @endif
                                 @endif
 
                                 <x-filament::button
@@ -432,11 +444,16 @@
                                             $remaining = count($items) - 2;
                                         @endphp
                                         @forelse ($displayItems as $it)
-                                            <div class="text-xs text-gray-800 dark:text-gray-200 truncate" title="{{ $it['product_name'] ?? '' }}">
-                                                <span class="font-bold text-primary-600 dark:text-primary-400">{{ $it['quantity'] ?? 1 }}x</span>
-                                                {{ $it['product_name'] ?? 'Produk' }}
+                                            <div class="text-xs text-gray-800 dark:text-gray-200 truncate flex items-center gap-1.5" title="{{ $it['product_name'] ?? '' }}">
+                                                <span class="font-bold text-primary-600 dark:text-primary-400 shrink-0">{{ $it['quantity'] ?? 1 }}x</span>
+                                                <span class="truncate">{{ $it['product_name'] ?? 'Produk' }}</span>
                                                 @if (!empty($it['sku_name']))
-                                                    <span class="text-[11px] text-gray-500 dark:text-gray-400">({{ $it['sku_name'] }})</span>
+                                                    <span class="text-[11px] text-gray-500 dark:text-gray-400 shrink-0">({{ $it['sku_name'] }})</span>
+                                                @endif
+                                                @if (empty($it['is_connected']))
+                                                    <span class="inline-flex items-center px-1.5 py-0.5 text-[9px] font-medium rounded bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400 border border-rose-200 dark:border-rose-800 shrink-0" title="Belum terhubung ke produk website">
+                                                        Belum Terhubung
+                                                    </span>
                                                 @endif
                                             </div>
                                         @empty
@@ -519,17 +536,29 @@
                                 <td class="py-3.5 px-4 whitespace-nowrap align-top text-center">
                                     <div class="flex items-center justify-center gap-1.5">
                                         @if (empty($order['is_saved']))
-                                            <x-filament::button
-                                                size="xs"
-                                                color="warning"
-                                                icon="heroicon-m-arrow-down-tray"
-                                                wire:click="saveOrder('{{ $order['id'] }}')"
-                                                wire:loading.attr="disabled"
-                                                wire:target="saveOrder('{{ $order['id'] }}')"
-                                                title="Simpan pesanan ini ke pesanan website"
-                                            >
-                                                Simpan
-                                            </x-filament::button>
+                                            @if (! empty($order['has_connected_products']))
+                                                <x-filament::button
+                                                    size="xs"
+                                                    color="warning"
+                                                    icon="heroicon-m-arrow-down-tray"
+                                                    wire:click="saveOrder('{{ $order['id'] }}')"
+                                                    wire:loading.attr="disabled"
+                                                    wire:target="saveOrder('{{ $order['id'] }}')"
+                                                    title="Simpan pesanan ini ke pesanan website"
+                                                >
+                                                    Simpan
+                                                </x-filament::button>
+                                            @else
+                                                <button
+                                                    type="button"
+                                                    disabled
+                                                    class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed border border-gray-200 dark:border-gray-700"
+                                                    title="Belum dapat disimpan: produk belum terhubung ke katalog website"
+                                                >
+                                                    <x-filament::icon icon="heroicon-m-lock-closed" class="w-3.5 h-3.5" />
+                                                    <span>Belum Terhubung</span>
+                                                </button>
+                                            @endif
                                         @endif
 
                                         <x-filament::button
@@ -688,9 +717,22 @@
                                             @endif
 
                                             <div class="flex-1 min-w-0">
-                                                <h5 class="text-xs font-bold text-gray-900 dark:text-white truncate">
-                                                    {{ $item['product_name'] }}
-                                                </h5>
+                                                <div class="flex items-start justify-between gap-2">
+                                                    <h5 class="text-xs font-bold text-gray-900 dark:text-white truncate">
+                                                        {{ $item['product_name'] }}
+                                                    </h5>
+                                                    @if (! empty($item['is_connected']))
+                                                        <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-medium rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 shrink-0">
+                                                            <x-filament::icon icon="heroicon-m-check-circle" class="w-3 h-3" />
+                                                            Terhubung
+                                                        </span>
+                                                    @else
+                                                        <span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-medium rounded bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400 border border-rose-200 dark:border-rose-800 shrink-0">
+                                                            <x-filament::icon icon="heroicon-m-exclamation-circle" class="w-3 h-3" />
+                                                            Belum Terhubung
+                                                        </span>
+                                                    @endif
+                                                </div>
                                                 <p class="text-[11px] text-amber-600 dark:text-amber-400 font-semibold mt-0.5">
                                                     Varian: {{ $item['sku_name'] }}
                                                 </p>
@@ -794,19 +836,50 @@
                         {{-- Drawer Sticky Footer --}}
                         <div class="p-4 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 space-y-2">
                             @if (! $selectedOrder['is_saved'])
-                                <x-filament::button
-                                    wire:click="saveOrder('{{ $selectedOrder['id'] }}')"
-                                    wire:loading.attr="disabled"
-                                    color="warning"
-                                    icon="heroicon-m-arrow-down-tray"
-                                    size="md"
-                                    class="w-full justify-center"
-                                >
-                                    Simpan ke Pesanan Website
-                                </x-filament::button>
-                                <p class="text-[10px] text-center text-gray-400">
-                                    Fungsi Simpan hanya mencatat pesanan ke data website. Tidak akan merubah status penerimaan dan pengiriman di marketplace.
-                                </p>
+                                @if (! empty($selectedOrder['has_connected_products']))
+                                    <x-filament::button
+                                        wire:click="saveOrder('{{ $selectedOrder['id'] }}')"
+                                        wire:loading.attr="disabled"
+                                        color="warning"
+                                        icon="heroicon-m-arrow-down-tray"
+                                        size="md"
+                                        class="w-full justify-center"
+                                    >
+                                        Simpan ke Pesanan Website
+                                    </x-filament::button>
+                                    <p class="text-[10px] text-center text-gray-400">
+                                        Fungsi Simpan hanya mencatat pesanan ke data website. Tidak akan merubah status penerimaan dan pengiriman di marketplace.
+                                    </p>
+                                @else
+                                    <div class="rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 p-3 space-y-2">
+                                        <div class="flex items-start gap-2">
+                                            <x-filament::icon icon="heroicon-m-exclamation-triangle" class="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                                            <div class="text-xs text-amber-800 dark:text-amber-200">
+                                                <p class="font-bold">Aksi Simpan Terkunci</p>
+                                                <p class="mt-0.5 text-[11px] text-amber-700 dark:text-amber-300">
+                                                    Belum ada produk di pesanan ini yang terhubung ke katalog website. Silakan hubungkan produk terlebih dahulu di menu <strong>Pemetaan Produk Marketplace</strong> agar stok dan transaksi tercatat dengan benar.
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <a
+                                            href="{{ \App\Filament\Resources\MarketplaceProductMappings\MarketplaceProductMappingResource::getUrl() }}"
+                                            target="_blank"
+                                            class="inline-flex items-center justify-center gap-1 w-full px-3 py-1.5 text-xs font-semibold rounded-md bg-amber-600 hover:bg-amber-700 text-white transition shadow-sm"
+                                        >
+                                            <x-filament::icon icon="heroicon-m-arrows-right-left" class="w-3.5 h-3.5" />
+                                            <span>Buka Pemetaan Produk Marketplace</span>
+                                        </a>
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        disabled
+                                        class="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed border border-gray-200 dark:border-gray-700"
+                                    >
+                                        <x-filament::icon icon="heroicon-m-lock-closed" class="w-4 h-4" />
+                                        <span>Simpan Terkunci (Produk Belum Terhubung)</span>
+                                    </button>
+                                @endif
                             @else
                                 <div class="flex items-center gap-2">
                                     <x-filament::button

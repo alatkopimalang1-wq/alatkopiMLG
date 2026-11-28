@@ -358,23 +358,22 @@ class TikTokShopService
                     return false;
                 });
 
-                if ($mapping) {
-                    $itemQty = (int) ($item['quantity'] ?? 1);
-                    $itemPrice = (float) ($item['sale_price'] ?? 0);
-                    $activeItems[] = [
-                        'item' => $item,
-                        'mapping_id' => $mapping->id,
-                        'product_id' => $mapping->product_id,
-                        'product_variant_id' => $mapping->product_variant_id,
-                        'product_name' => $item['product_name'] ?? $mapping->marketplace_product_name,
-                        'sku_name' => $item['sku_name'] ?? ($mapping->marketplace_sku_name ?: 'Default'),
-                        'seller_sku' => $item['seller_sku'] ?? $mapping->seller_sku,
-                        'sku_image' => $item['sku_image'] ?? $mapping->image_url ?? $mapping->product?->image_url,
-                        'price' => $itemPrice,
-                        'quantity' => $itemQty,
-                        'subtotal' => $itemPrice * $itemQty,
-                    ];
-                }
+                $itemQty = (int) ($item['quantity'] ?? 1);
+                $itemPrice = (float) ($item['sale_price'] ?? 0);
+                $activeItems[] = [
+                    'item' => $item,
+                    'mapping_id' => $mapping?->id,
+                    'product_id' => $mapping?->product_id,
+                    'product_variant_id' => $mapping?->product_variant_id,
+                    'is_connected' => ! empty($mapping?->product_id),
+                    'product_name' => $item['product_name'] ?? ($mapping?->marketplace_product_name ?: 'Produk TikTok'),
+                    'sku_name' => $item['sku_name'] ?? ($mapping?->marketplace_sku_name ?: 'Default'),
+                    'seller_sku' => $item['seller_sku'] ?? $mapping?->seller_sku,
+                    'sku_image' => $item['sku_image'] ?? $mapping?->image_url ?? $mapping?->product?->image_url,
+                    'price' => $itemPrice,
+                    'quantity' => $itemQty,
+                    'subtotal' => $itemPrice * $itemQty,
+                ];
             }
 
             if (empty($activeItems)) {
@@ -532,6 +531,33 @@ class TikTokShopService
         $ttsOrderId = (string) $ttsOrder['id'];
         $orderNumber = "TTS-{$ttsOrderId}";
 
+        // Preload active mappings and check if at least one product is connected BEFORE creating order
+        $activeMappings = MarketplaceProductMapping::where('platform', 'tiktok')
+            ->where('marketplace_status', 'ACTIVATE')
+            ->get();
+
+        $lineItems = $ttsOrder['line_items'] ?? [];
+        $hasAnyConnected = false;
+        foreach ($lineItems as $item) {
+            $ttsProdId = (string) ($item['product_id'] ?? '');
+            $ttsSkuId = (string) ($item['sku_id'] ?? '');
+            $sellerSku = $item['seller_sku'] ?? '';
+            $m = $activeMappings->first(function ($m) use ($ttsProdId, $ttsSkuId, $sellerSku) {
+                if ($ttsSkuId && (string) $m->marketplace_sku_id === $ttsSkuId) return true;
+                if ($ttsProdId && (string) $m->marketplace_product_id === $ttsProdId) return true;
+                if ($sellerSku && $m->seller_sku === $sellerSku) return true;
+                return false;
+            });
+            if ($m && ! empty($m->product_id)) {
+                $hasAnyConnected = true;
+                break;
+            }
+        }
+
+        if (! $hasAnyConnected) {
+            throw new \Exception("Aksi simpan tidak dapat dijalankan karena pesanan TikTok #{$ttsOrderId} belum memiliki produk yang terhubung ke katalog website.");
+        }
+
         $ttsStatus = $ttsOrder['status'] ?? 'UNPAID';
         $mappedStatus = match ($ttsStatus) {
             'UNPAID' => 'pending',
@@ -591,12 +617,6 @@ class TikTokShopService
             ]
         );
 
-        // Preload active mappings
-        $activeMappings = MarketplaceProductMapping::where('platform', 'tiktok')
-            ->where('marketplace_status', 'ACTIVATE')
-            ->get();
-
-        $lineItems = $ttsOrder['line_items'] ?? [];
         foreach ($lineItems as $item) {
             $ttsProdId = (string) ($item['product_id'] ?? '');
             $ttsSkuId = (string) ($item['sku_id'] ?? '');

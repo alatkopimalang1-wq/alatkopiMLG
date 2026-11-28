@@ -928,6 +928,7 @@ class ShopeeService
                     'mapping_id' => $mapping?->id,
                     'product_id' => $mapping?->product_id,
                     'product_variant_id' => $mapping?->product_variant_id,
+                    'is_connected' => ! empty($mapping?->product_id),
                     'product_name' => $item['item_name'] ?? $mapping?->marketplace_product_name ?? 'Produk Shopee',
                     'sku_name' => $item['model_name'] ?? ($mapping?->marketplace_sku_name ?: 'Default'),
                     'seller_sku' => $itemSku,
@@ -1086,6 +1087,33 @@ class ShopeeService
         $orderSn = (string) ($shopeeOrder['order_sn'] ?? '');
         $orderNumber = "SP-{$orderSn}";
 
+        // Preload active mappings and check if at least one product is connected BEFORE creating order
+        $activeMappings = MarketplaceProductMapping::where('platform', 'shopee')
+            ->where('marketplace_status', 'ACTIVATE')
+            ->get();
+
+        $itemList = $shopeeOrder['item_list'] ?? [];
+        $hasAnyConnected = false;
+        foreach ($itemList as $item) {
+            $itemId = (string) ($item['item_id'] ?? '');
+            $modelId = (string) ($item['model_id'] ?? '');
+            $itemSku = $item['model_sku'] ?? $item['item_sku'] ?? '';
+            $m = $activeMappings->first(function ($m) use ($itemId, $modelId, $itemSku) {
+                if ($modelId && (string) $m->marketplace_sku_id === $modelId) return true;
+                if ($itemId && (string) $m->marketplace_product_id === $itemId) return true;
+                if ($itemSku && $m->seller_sku === $itemSku) return true;
+                return false;
+            });
+            if ($m && ! empty($m->product_id)) {
+                $hasAnyConnected = true;
+                break;
+            }
+        }
+
+        if (! $hasAnyConnected) {
+            throw new \Exception("Aksi simpan tidak dapat dijalankan karena pesanan Shopee #{$orderSn} belum memiliki produk yang terhubung ke katalog website.");
+        }
+
         $shopeeStatus = $shopeeOrder['order_status'] ?? 'UNPAID';
         $mappedStatus = match ($shopeeStatus) {
             'UNPAID' => 'pending',
@@ -1143,12 +1171,6 @@ class ShopeeService
             ]
         );
 
-        // Preload active mappings
-        $activeMappings = MarketplaceProductMapping::where('platform', 'shopee')
-            ->where('marketplace_status', 'ACTIVATE')
-            ->get();
-
-        $itemList = $shopeeOrder['item_list'] ?? [];
         foreach ($itemList as $item) {
             $itemId = (string) ($item['item_id'] ?? '');
             $modelId = (string) ($item['model_id'] ?? '');

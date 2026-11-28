@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\MarketplaceProductMapping;
 use App\Services\ShopeeService;
 use App\Services\TikTokShopService;
 use BackedEnum;
@@ -105,6 +106,57 @@ class PenerimaanPesananTikTok extends Page
 
         // Sort by create_time DESC
         usort($orders, fn ($a, $b) => ($b['create_time'] ?? 0) <=> ($a['create_time'] ?? 0));
+
+        // Preload active mappings with connected product_id for fast lookup
+        $activeMappings = MarketplaceProductMapping::whereNotNull('product_id')->get();
+
+        foreach ($orders as &$order) {
+            $platform = $order['platform'] ?? 'tiktok';
+            $connectedCount = 0;
+            $totalCount = count($order['items'] ?? []);
+
+            if (! empty($order['items'])) {
+                foreach ($order['items'] as &$it) {
+                    $isConnected = ! empty($it['product_id']);
+                    if (! $isConnected) {
+                        $rawItem = $it['item'] ?? [];
+                        if ($platform === 'shopee') {
+                            $itemId = (string) ($rawItem['item_id'] ?? '');
+                            $modelId = (string) ($rawItem['model_id'] ?? '');
+                            $itemSku = $rawItem['model_sku'] ?? $rawItem['item_sku'] ?? ($it['seller_sku'] ?? '');
+                            $m = $activeMappings->where('platform', 'shopee')->first(function ($map) use ($itemId, $modelId, $itemSku) {
+                                if ($modelId && (string) $map->marketplace_sku_id === $modelId) return true;
+                                if ($itemId && (string) $map->marketplace_product_id === $itemId) return true;
+                                if ($itemSku && $map->seller_sku === $itemSku) return true;
+                                return false;
+                            });
+                            $isConnected = $m && ! empty($m->product_id);
+                        } else {
+                            $ttsProdId = (string) ($rawItem['product_id'] ?? '');
+                            $ttsSkuId = (string) ($rawItem['sku_id'] ?? '');
+                            $sellerSku = $rawItem['seller_sku'] ?? ($it['seller_sku'] ?? '');
+                            $m = $activeMappings->where('platform', 'tiktok')->first(function ($map) use ($ttsProdId, $ttsSkuId, $sellerSku) {
+                                if ($ttsSkuId && (string) $map->marketplace_sku_id === $ttsSkuId) return true;
+                                if ($ttsProdId && (string) $map->marketplace_product_id === $ttsProdId) return true;
+                                if ($sellerSku && $map->seller_sku === $sellerSku) return true;
+                                return false;
+                            });
+                            $isConnected = $m && ! empty($m->product_id);
+                        }
+                    }
+                    $it['is_connected'] = (bool) $isConnected;
+                    if ($isConnected) {
+                        $connectedCount++;
+                    }
+                }
+                unset($it);
+            }
+
+            $order['connected_products_count'] = $connectedCount;
+            $order['total_products_count'] = $totalCount;
+            $order['has_connected_products'] = ($connectedCount > 0);
+        }
+        unset($order);
 
         return $orders;
     }
@@ -289,6 +341,19 @@ class PenerimaanPesananTikTok extends Page
     {
         try {
             $order = collect($this->orders)->firstWhere('id', $orderId);
+            if (! $order) {
+                return;
+            }
+
+            if (empty($order['has_connected_products'])) {
+                Notification::make()
+                    ->title('Produk Belum Terhubung')
+                    ->body('Aksi simpan tidak dapat dijalankan karena belum ada produk di pesanan ini yang terhubung ke katalog website.')
+                    ->warning()
+                    ->send();
+                return;
+            }
+
             $platform = $order['platform'] ?? 'tiktok';
 
             if ($platform === 'shopee') {
@@ -327,11 +392,23 @@ class PenerimaanPesananTikTok extends Page
             return;
         }
 
+        $eligibleList = array_filter($unsavedList, fn ($o) => ! empty($o['has_connected_products']));
+        $skippedCount = count($unsavedList) - count($eligibleList);
+
+        if (empty($eligibleList)) {
+            Notification::make()
+                ->title('Tidak Ada Pesanan yang Dapat Disimpan')
+                ->body('Semua pesanan belum memiliki produk yang terhubung ke katalog website. Silakan hubungkan produk terlebih dahulu di Pemetaan Produk.')
+                ->warning()
+                ->send();
+            return;
+        }
+
         $ttsService = new TikTokShopService();
         $shopeeService = new ShopeeService();
         $savedCount = 0;
 
-        foreach ($unsavedList as $item) {
+        foreach ($eligibleList as $item) {
             try {
                 if (($item['platform'] ?? 'tiktok') === 'shopee') {
                     $shopeeService->saveSingleShopeeOrder($item['id']);
@@ -344,9 +421,14 @@ class PenerimaanPesananTikTok extends Page
             }
         }
 
+        $bodyMessage = "Berhasil menyimpan {$savedCount} pesanan marketplace ke database website.";
+        if ($skippedCount > 0) {
+            $bodyMessage .= " ({$skippedCount} pesanan dilewati karena produk belum terhubung ke katalog website)";
+        }
+
         Notification::make()
             ->title('Sinkronisasi Selesai')
-            ->body("Berhasil menyimpan {$savedCount} pesanan marketplace ke database website.")
+            ->body($bodyMessage)
             ->success()
             ->send();
     }
