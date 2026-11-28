@@ -12,6 +12,8 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Request;
 
 class ManageStockDocument extends Page
@@ -26,15 +28,10 @@ class ManageStockDocument extends Page
 
     public int $recordId = 0;
 
-    public string $productSearch = '';
-
-    public ?int $selectedVariantId = null;
-
-    public string $selectedProductLabel = '';
-
-    public float $unitCost = 0;
-
-    public int $addQty = 1;
+    /**
+     * @var array<string, mixed> | null
+     */
+    public ?array $addFormData = [];
 
     public function mount(): void
     {
@@ -42,11 +39,17 @@ class ManageStockDocument extends Page
         $doc = $this->document;
 
         if (! $doc) {
-            $this->redirect(StokMasukPage::getUrl());
+            $this->redirect(InventoriStok::getUrl(['tab' => 'masuk']));
             return;
         }
 
         static::$title = ($doc->type === 'out' ? 'Stok Keluar ' : 'Stok Masuk ') . $doc->document_number;
+
+        $this->addForm->fill([
+            'variant_id' => null,
+            'unit_cost' => 0,
+            'qty' => 1,
+        ]);
     }
 
     public function getMaxContentWidth(): ?string
@@ -64,84 +67,107 @@ class ManageStockDocument extends Page
             ->find($this->recordId);
     }
 
-    public function getSearchResultsProperty()
+    public function addForm(Schema $schema): Schema
     {
-        $term = trim($this->productSearch);
-        if (mb_strlen($term) < 1) {
-            return collect();
+        $isOut = $this->document?->type === 'out';
+
+        $fields = [
+            Select::make('variant_id')
+                ->label('Produk')
+                ->placeholder('Ketik nama produk atau SKU...')
+                ->options(static::getVariantSelectOptions())
+                ->allowHtml()
+                ->searchable()
+                ->reactive()
+                ->afterStateUpdated(function ($state, callable $set) use ($isOut) {
+                    if (! $isOut && $state) {
+                        $variant = ProductVariant::find((int) $state);
+                        $set('unit_cost', (float) ($variant?->cost_price ?? 0));
+                    }
+                })
+                ->columnSpan($isOut ? 9 : 6),
+        ];
+
+        if (! $isOut) {
+            $fields[] = TextInput::make('unit_cost')
+                ->label('Harga Beli (Rp)')
+                ->numeric()
+                ->minValue(0)
+                ->default(0)
+                ->columnSpan(3);
         }
 
-        $like = '%' . $term . '%';
+        $fields[] = TextInput::make('qty')
+            ->label('Qty')
+            ->numeric()
+            ->minValue(1)
+            ->default(1)
+            ->required()
+            ->columnSpan(3);
 
+        return $schema
+            ->statePath('addFormData')
+            ->components([
+                Grid::make(12)->schema($fields),
+            ]);
+    }
+
+    /**
+     * Build preloaded HTML options (thumbnail + name + variant + SKU + stock) for normal instant Filament Select.
+     *
+     * @return array<int, string>
+     */
+    protected static function getVariantSelectOptions(): array
+    {
         return ProductVariant::query()
             ->with(['product.primaryImage', 'product.images'])
             ->whereHas('product', fn ($q) => $q->where('series', 'alat-kopi'))
-            ->where(function ($q) use ($like) {
-                $q->where('sku', 'like', $like)
-                    ->orWhere('label', 'like', $like)
-                    ->orWhereHas('product', fn ($pq) => $pq->where('name', 'like', $like));
-            })
+            ->orderBy('product_id')
             ->orderBy('id')
-            ->limit(15)
-            ->get();
+            ->get()
+            ->mapWithKeys(function (ProductVariant $v): array {
+                $p = $v->product;
+                $raw = $v->image ?: ($p?->primaryImage?->path ?? $p?->images?->first()?->path);
+                $imgUrl = $raw
+                    ? (str_starts_with($raw, 'http') ? $raw : asset('storage/' . ltrim(preg_replace('#^/?(?:(?:storage|public)/)+#', '', trim($raw)), '/')))
+                    : asset('brand/logo-circle.png');
+
+                $vLabel = ($v->label && strcasecmp($v->label, 'Standard') !== 0) ? $v->label : null;
+                $sub = [];
+                if ($vLabel) {
+                    $sub[] = "Varian: {$vLabel}";
+                }
+                if ($v->sku) {
+                    $sub[] = "SKU: {$v->sku}";
+                }
+                $sub[] = 'Stok: ' . (int) ($v->stock ?? 0) . ' pcs';
+
+                $safeName = e($p?->name ?? '-');
+                $safeSub = e(implode(' • ', $sub));
+                $safeImg = e($imgUrl);
+
+                $html = "<div style=\"display:flex;align-items:center;gap:10px;\">"
+                    . "<img src=\"{$safeImg}\" alt=\"\" style=\"width:30px;height:30px;border-radius:6px;object-fit:cover;flex-shrink:0;border:1px solid rgba(0,0,0,0.08);\" />"
+                    . "<div style=\"min-width:0;line-height:1.25;\">"
+                    . "<div style=\"font-weight:600;\">{$safeName}</div>"
+                    . "<div style=\"font-size:11px;opacity:0.7;\">{$safeSub}</div>"
+                    . "</div></div>";
+
+                return [$v->id => $html];
+            })
+            ->all();
     }
 
-    public function selectProductForIn(int $variantId): void
-    {
-        $variant = ProductVariant::with('product')->find($variantId);
-        if (! $variant || ! $variant->product) {
-            return;
-        }
-
-        $vLabel = ($variant->label && strcasecmp($variant->label, 'Standard') !== 0) ? " ({$variant->label})" : '';
-        $this->selectedVariantId = $variant->id;
-        $this->selectedProductLabel = $variant->product->name . $vLabel . ($variant->sku ? " — {$variant->sku}" : '');
-        $this->unitCost = (float) ($variant->cost_price ?? 0);
-        $this->productSearch = '';
-        if ($this->addQty < 1) {
-            $this->addQty = 1;
-        }
-    }
-
-    public function clearSelectedProduct(): void
-    {
-        $this->selectedVariantId = null;
-        $this->selectedProductLabel = '';
-        $this->unitCost = 0;
-    }
-
-    public function addItemFromQuickOut(int $variantId): void
-    {
-        $doc = $this->document;
-        if (! $doc || ! $doc->isDraft()) {
-            return;
-        }
-
-        $variant = ProductVariant::with('product')->find($variantId);
-        if (! $variant || ! $variant->product) {
-            return;
-        }
-
-        $qty = max(1, (int) $this->addQty);
-        $this->upsertDocumentItem($doc, $variant, $qty, 0);
-
-        $this->productSearch = '';
-        $this->addQty = 1;
-
-        Notification::make()
-            ->title('Produk ditambahkan ke draf')
-            ->success()
-            ->send();
-    }
-
-    public function addItemFromInForm(): void
+    public function addItemToDocument(): void
     {
         $doc = $this->document;
         if (! $doc || ! $doc->isDraft()) {
             return;
         }
 
-        if (! $this->selectedVariantId) {
+        $data = $this->addForm->getState();
+        $variantId = (int) ($data['variant_id'] ?? 0);
+        if ($variantId <= 0) {
             Notification::make()
                 ->title('Pilih Produk Terlebih Dahulu')
                 ->warning()
@@ -149,35 +175,22 @@ class ManageStockDocument extends Page
             return;
         }
 
-        $variant = ProductVariant::with('product')->find($this->selectedVariantId);
+        $variant = ProductVariant::with('product')->find($variantId);
         if (! $variant || ! $variant->product) {
             return;
         }
 
-        $qty = max(1, (int) $this->addQty);
-        $cost = max(0, (float) $this->unitCost);
+        $qty = max(1, (int) ($data['qty'] ?? 1));
+        $cost = $doc->type === 'in' ? max(0, (float) ($data['unit_cost'] ?? 0)) : 0;
 
-        $this->upsertDocumentItem($doc, $variant, $qty, $cost);
-
-        $this->clearSelectedProduct();
-        $this->addQty = 1;
-
-        Notification::make()
-            ->title('Produk ditambahkan ke draf')
-            ->success()
-            ->send();
-    }
-
-    protected function upsertDocumentItem(StockDocument $doc, ProductVariant $variant, int $qty, float $unitCost): void
-    {
         $existing = StockDocumentItem::where('stock_document_id', $doc->id)
             ->where('product_variant_id', $variant->id)
             ->first();
 
         if ($existing) {
             $existing->qty += $qty;
-            if ($doc->type === 'in' && $unitCost > 0) {
-                $existing->unit_cost = $unitCost;
+            if ($doc->type === 'in' && $cost > 0) {
+                $existing->unit_cost = $cost;
             }
             $existing->save();
         } else {
@@ -186,9 +199,20 @@ class ManageStockDocument extends Page
                 'product_id' => $variant->product_id,
                 'product_variant_id' => $variant->id,
                 'qty' => $qty,
-                'unit_cost' => $unitCost,
+                'unit_cost' => $cost,
             ]);
         }
+
+        $this->addForm->fill([
+            'variant_id' => null,
+            'unit_cost' => 0,
+            'qty' => 1,
+        ]);
+
+        Notification::make()
+            ->title('Produk ditambahkan ke draf')
+            ->success()
+            ->send();
     }
 
     public function updateItemQty(int $itemId, int $newQty): void

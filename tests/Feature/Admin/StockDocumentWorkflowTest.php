@@ -107,3 +107,18 @@ test('inventori page renders without errors on all tabs', function () {
             ->assertStatus(200);
     }
 });
+
+test('manage stock document page renders with normal searchable product select', function () {
+    $doc = StockDocument::create([
+        'document_number' => StockDocument::generateNumber('in'),
+        'type' => 'in',
+        'status' => 'draft',
+        'document_date' => now()->toDateString(),
+        'user_id' => $this->user->id,
+    ]);
+
+    \Livewire\Livewire::withQueryParams(['record' => $doc->id])
+        ->test(\App\Filament\Pages\ManageStockDocument::class)
+        ->assertStatus(200)
+        ->assertSee($doc->document_number);
+});

@@ -5,7 +5,6 @@
         $isDraft = $doc?->isDraft() ?? false;
         $isPosted = $doc?->isPosted() ?? false;
         $isCancelled = $doc?->isCancelled() ?? false;
-        $searchResults = $this->searchResults;
         $fmt = fn ($val) => 'Rp ' . number_format((float) $val, 0, ',', '.');
         $backUrl = \App\Filament\Pages\InventoriStok::getUrl(['tab' => $isOut ? 'keluar' : 'masuk']);
     @endphp
@@ -173,155 +172,38 @@
                 @endif
             </div>
 
-            {{-- Add Product Section (for Draft) --}}
-            @if($isDraft && ! $isOut)
-                {{-- Stok Masuk: Tambah Produk Card (Produk + Harga Beli + Qty + Add) --}}
-                <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-xs space-y-3">
-                    <div class="text-sm font-bold text-gray-800 dark:text-gray-100 border-b border-gray-100 dark:border-gray-800 pb-2">
-                        Tambah Produk
+            {{-- Add Product Card (Normal Filament Searchable Select) --}}
+            @if($isDraft)
+                <form wire:submit="addItemToDocument"
+                      class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-xs space-y-3">
+                    <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-2">
+                        <span class="text-sm font-bold text-gray-800 dark:text-gray-100">
+                            Tambah Produk {{ $isOut ? 'Stok Keluar' : 'Stok Masuk' }}
+                        </span>
                     </div>
-                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 items-end">
-                        {{-- Product Search --}}
-                        <div class="lg:col-span-6 relative">
-                            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Produk</label>
-                            @if($selectedVariantId)
-                                <div class="flex items-center justify-between gap-2 rounded-lg border border-primary-500 bg-primary-50/40 dark:bg-primary-950/30 px-3 py-2 text-sm text-gray-900 dark:text-white">
-                                    <span class="truncate font-medium">{{ $selectedProductLabel }}</span>
-                                    <button type="button" wire:click="clearSelectedProduct" class="text-xs text-rose-600 hover:underline shrink-0 cursor-pointer">
-                                        Ganti
-                                    </button>
-                                </div>
-                            @else
-                                <input type="text"
-                                       wire:model.live.debounce.250ms="productSearch"
-                                       placeholder="Cari Produk / SKU..."
-                                       class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-primary-500 focus:ring-primary-500" />
-                            @endif
 
-                            @if(! $selectedVariantId && $searchResults->isNotEmpty())
-                                <div class="absolute z-30 left-0 right-0 mt-1 max-h-72 overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg divide-y divide-gray-100 dark:divide-gray-800">
-                                    @foreach($searchResults as $res)
-                                        @php
-                                            $rawImg = $res->image ?: ($res->product?->primaryImage?->path ?? $res->product?->images?->first()?->path);
-                                            $imgUrl = $rawImg ? (str_starts_with($rawImg, 'http') ? $rawImg : asset('storage/' . ltrim(preg_replace('#^/?(?:(?:storage|public)/)+#', '', trim($rawImg)), '/'))) : asset('brand/logo-circle.png');
-                                            $vLabel = ($res->label && strcasecmp($res->label, 'Standard') !== 0) ? $res->label : null;
-                                        @endphp
-                                        <button type="button"
-                                                wire:click="selectProductForIn({{ $res->id }})"
-                                                class="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer">
-                                            <img src="{{ $imgUrl }}" alt="" class="w-9 h-9 rounded-md object-cover border border-gray-200 shrink-0" />
-                                            <div class="min-w-0 flex-1">
-                                                <div class="text-sm font-semibold text-gray-900 dark:text-white truncate">{{ $res->product?->name }}</div>
-                                                <div class="text-xs text-gray-500">
-                                                    @if($vLabel) Varian: {{ $vLabel }} &bull; @endif
-                                                    @if($res->sku) SKU: {{ $res->sku }} &bull; @endif
-                                                    Stok: {{ (int) ($res->stock ?? 0) }} pcs
-                                                </div>
-                                            </div>
-                                        </button>
-                                    @endforeach
-                                </div>
-                            @endif
+                    <div class="flex flex-col md:flex-row md:items-end gap-3">
+                        <div class="flex-1 min-w-0">
+                            {{ $this->addForm }}
                         </div>
-
-                        {{-- Harga Beli --}}
-                        <div class="lg:col-span-3">
-                            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Harga Beli</label>
-                            <input type="number"
-                                   wire:model="unitCost"
-                                   min="0"
-                                   step="100"
-                                   class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-primary-500 focus:ring-primary-500" />
-                        </div>
-
-                        {{-- Qty + Add --}}
-                        <div class="lg:col-span-3 flex items-end gap-2">
-                            <div class="flex-1">
-                                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Qty</label>
-                                <div class="flex items-center rounded-lg border border-gray-300 dark:border-gray-700 overflow-hidden">
-                                    <button type="button"
-                                            wire:click="$set('addQty', {{ max(1, $addQty - 1) }})"
-                                            class="px-3 py-2 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 text-sm font-bold text-gray-700 dark:text-gray-200 cursor-pointer">-</button>
-                                    <input type="number"
-                                           wire:model="addQty"
-                                           min="1"
-                                           class="w-full border-0 text-center text-sm font-semibold bg-white dark:bg-gray-950 text-gray-900 dark:text-white focus:ring-0 py-2" />
-                                    <button type="button"
-                                            wire:click="$set('addQty', {{ $addQty + 1 }})"
-                                            class="px-3 py-2 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 text-sm font-bold text-gray-700 dark:text-gray-200 cursor-pointer">+</button>
-                                </div>
-                            </div>
-                            <button type="button"
-                                    wire:click="addItemFromInForm"
-                                    class="rounded-lg bg-sky-600 hover:bg-sky-700 px-4 py-2 text-sm font-bold text-white cursor-pointer transition shrink-0">
-                                +
-                            </button>
-                        </div>
+                        <button type="submit"
+                                class="inline-flex items-center justify-center gap-1.5 rounded-lg bg-sky-600 hover:bg-sky-700 px-5 py-2.5 text-sm font-semibold text-white shadow-xs transition cursor-pointer shrink-0">
+                            + Tambah Produk
+                        </button>
                     </div>
-                </div>
+                </form>
             @endif
 
             {{-- Items Table Card --}}
-            <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-xs overflow-visible">
-                @if($isOut)
-                    {{-- Blue Header Bar for Stok Keluar --}}
-                    <div class="flex flex-wrap items-center justify-between gap-3 bg-sky-600 px-5 py-3 rounded-t-xl text-white">
-                        <div class="text-sm font-bold">
-                            Produk Stok Keluar ({{ $doc->items->count() }})
-                        </div>
-                        @if($isDraft)
-                            <div class="flex flex-wrap items-center gap-2">
-                                <div class="flex items-center rounded-lg bg-white text-gray-900 overflow-hidden">
-                                    <input type="number"
-                                           wire:model="addQty"
-                                           min="1"
-                                           class="w-16 border-0 px-2.5 py-1.5 text-sm font-semibold focus:ring-0" />
-                                    <span class="px-2.5 py-1.5 text-xs font-medium text-gray-500 bg-gray-100 border-l border-gray-200">Qty</span>
-                                </div>
-                                <div class="relative w-64 sm:w-80">
-                                    <input type="text"
-                                           wire:model.live.debounce.250ms="productSearch"
-                                           placeholder="Cari Produk / SKU..."
-                                           class="w-full rounded-lg border-0 bg-white px-3 py-1.5 text-sm text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-white/60" />
-
-                                    @if($searchResults->isNotEmpty())
-                                        <div class="absolute z-30 left-0 right-0 mt-1 max-h-72 overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 shadow-xl divide-y divide-gray-100 dark:divide-gray-800">
-                                            @foreach($searchResults as $res)
-                                                @php
-                                                    $rawImg = $res->image ?: ($res->product?->primaryImage?->path ?? $res->product?->images?->first()?->path);
-                                                    $imgUrl = $rawImg ? (str_starts_with($rawImg, 'http') ? $rawImg : asset('storage/' . ltrim(preg_replace('#^/?(?:(?:storage|public)/)+#', '', trim($rawImg)), '/'))) : asset('brand/logo-circle.png');
-                                                    $vLabel = ($res->label && strcasecmp($res->label, 'Standard') !== 0) ? $res->label : null;
-                                                @endphp
-                                                <button type="button"
-                                                        wire:click="addItemFromQuickOut({{ $res->id }})"
-                                                        class="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-sky-50 dark:hover:bg-gray-800 transition cursor-pointer">
-                                                    <img src="{{ $imgUrl }}" alt="" class="w-9 h-9 rounded-md object-cover border border-gray-200 shrink-0" />
-                                                    <div class="min-w-0 flex-1">
-                                                        <div class="text-sm font-semibold text-gray-900 dark:text-white truncate">{{ $res->product?->name }}</div>
-                                                        <div class="text-xs text-gray-500">
-                                                            @if($vLabel) Varian: {{ $vLabel }} &bull; @endif
-                                                            @if($res->sku) SKU: {{ $res->sku }} &bull; @endif
-                                                            Stok: {{ (int) ($res->stock ?? 0) }} pcs
-                                                        </div>
-                                                    </div>
-                                                </button>
-                                            @endforeach
-                                        </div>
-                                    @endif
-                                </div>
-                            </div>
-                        @endif
-                    </div>
-                @else
-                    <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-800 text-sm font-bold text-gray-800 dark:text-gray-100">
-                        Produk Stok Masuk ({{ $doc->items->count() }})
-                    </div>
-                @endif
+            <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-xs overflow-hidden">
+                <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-800 text-sm font-bold {{ $isOut ? 'bg-sky-600 text-white' : 'text-gray-800 dark:text-gray-100' }}">
+                    Produk {{ $isOut ? 'Stok Keluar' : 'Stok Masuk' }} ({{ $doc->items->count() }})
+                </div>
 
                 @if($doc->items->isEmpty())
                     <div class="py-16 text-center text-sm text-gray-500 dark:text-gray-400">
                         <div class="text-base font-semibold text-gray-700 dark:text-gray-300">Belum ada produk</div>
-                        <div class="mt-1 text-xs text-gray-400">Gunakan kolom pencarian di atas untuk menambahkan produk ke dalam draf.</div>
+                        <div class="mt-1 text-xs text-gray-400">Pilih produk pada form di atas lalu klik "+ Tambah Produk".</div>
                     </div>
                 @else
                     <div class="overflow-x-auto">
