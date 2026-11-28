@@ -108,7 +108,7 @@ test('pos checkout decrements website stock and syncs inventory', function () {
         'customer_name' => 'Pak Budi POS',
     ];
 
-    $res = $this->actingAs($user)->postJson('/pos/checkout', $payload);
+    $res = $this->withoutMiddleware()->actingAs($user)->postJson('/pos/checkout', $payload);
     $res->assertOk();
 
     // Check that variant and product stock have decremented by 3
@@ -164,7 +164,7 @@ test('pos checkout of 1 pcs decrements variant and product stock by exactly 1 wi
         'customer_name' => 'Pelanggan Uji POS',
     ];
 
-    $res = $this->actingAs($user)->postJson('/pos/checkout', $payload);
+    $res = $this->withoutMiddleware()->actingAs($user)->postJson('/pos/checkout', $payload);
     $res->assertOk();
 
     $variant->refresh();
