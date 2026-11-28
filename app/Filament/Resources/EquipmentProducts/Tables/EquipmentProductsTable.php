@@ -11,11 +11,13 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -276,19 +278,28 @@ class EquipmentProductsTable
                     }),
             ])
             ->filters([
-                SelectFilter::make('categories')
-                    ->label('Kategori')
-                    ->options(fn (): array => Cache::remember('equipment_filter_categories', 300, fn (): array => Category::query()
-                        ->get(['id', 'name', 'slug'])
-                        ->mapWithKeys(function (Category $cat): array {
-                            $label = is_array($cat->name)
-                                ? (string) ($cat->name['id'] ?? $cat->name['en'] ?? (reset($cat->name) ?: $cat->slug ?: 'Kategori'))
-                                : (string) ($cat->name ?: $cat->slug ?: 'Kategori');
+                Filter::make('categories')
+                    ->schema(function (): array {
+                        $options = Cache::remember('equipment_filter_categories', 300, fn (): array => Category::query()
+                            ->get(['id', 'name', 'slug'])
+                            ->mapWithKeys(function (Category $cat): array {
+                                $label = is_array($cat->name)
+                                    ? (string) ($cat->name['id'] ?? $cat->name['en'] ?? (reset($cat->name) ?: $cat->slug ?: 'Kategori'))
+                                    : (string) ($cat->name ?: $cat->slug ?: 'Kategori');
 
-                            return [$cat->id => $label];
-                        })
-                        ->sort(SORT_NATURAL | SORT_FLAG_CASE)
-                        ->all()))
+                                return [$cat->id => $label];
+                            })
+                            ->sort(SORT_NATURAL | SORT_FLAG_CASE)
+                            ->all());
+
+                        return [
+                            Select::make('value')
+                                ->label('Kategori')
+                                ->placeholder('Semua')
+                                ->options($options)
+                                ->searchable(),
+                        ];
+                    })
                     ->query(function (Builder $query, array $data): Builder {
                         $value = $data['value'] ?? null;
                         if (! $value) {
@@ -297,19 +308,53 @@ class EquipmentProductsTable
 
                         return $query->whereHas('categories', fn (Builder $cq) => $cq->where('categories.id', (int) $value));
                     })
-                    ->searchable(),
+                    ->indicateUsing(function (array $data): array {
+                        $value = $data['value'] ?? null;
+                        if (! $value) {
+                            return [];
+                        }
 
-                SelectFilter::make('origin')
-                    ->label('Brand')
-                    ->options(fn (): array => Cache::remember('equipment_filter_origins', 300, fn (): array => Product::query()
-                        ->where('series', 'alat-kopi')
-                        ->whereNotNull('origin')
-                        ->where('origin', '!=', '')
-                        ->distinct()
-                        ->orderBy('origin')
-                        ->pluck('origin', 'origin')
-                        ->all()))
-                    ->searchable(),
+                        $options = Cache::get('equipment_filter_categories', []);
+                        $label = $options[$value] ?? $value;
+
+                        return ["Kategori: {$label}"];
+                    }),
+
+                Filter::make('origin')
+                    ->schema(function (): array {
+                        $options = Cache::remember('equipment_filter_origins', 300, fn (): array => Product::query()
+                            ->where('series', 'alat-kopi')
+                            ->whereNotNull('origin')
+                            ->where('origin', '!=', '')
+                            ->distinct()
+                            ->orderBy('origin')
+                            ->pluck('origin', 'origin')
+                            ->all());
+
+                        return [
+                            Select::make('value')
+                                ->label('Brand')
+                                ->placeholder('Semua')
+                                ->options($options)
+                                ->searchable(),
+                        ];
+                    })
+                    ->query(function (Builder $query, array $data): Builder {
+                        $value = $data['value'] ?? null;
+                        if (! $value) {
+                            return $query;
+                        }
+
+                        return $query->where('origin', $value);
+                    })
+                    ->indicateUsing(function (array $data): array {
+                        $value = $data['value'] ?? null;
+                        if (! $value) {
+                            return [];
+                        }
+
+                        return ["Brand: {$value}"];
+                    }),
 
                 SelectFilter::make('status')
                     ->label('Status')
