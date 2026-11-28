@@ -17,135 +17,145 @@ use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use Illuminate\Support\HtmlString;
 
 class MarketplaceProductMappingsTable
 {
     public static function configure(Table $table): Table
     {
         return $table
-            ->searchPlaceholder('Cari')
             ->columns([
-                // 1. PRODUK MARKETPLACE (Foto 1:1 + Nama + Varian)
+                // 1. FOTO PRODUK MARKETPLACE
+                ImageColumn::make('marketplace_image_url')
+                    ->label('')
+                    ->square()
+                    ->imageSize(44)
+                    ->extraImgAttributes([
+                        'class' => 'rounded-md object-cover aspect-square',
+                    ])
+                    ->grow(false)
+                    ->defaultImageUrl(asset('brand/logo-circle.png')),
+
+                // 2. PLATFORM MARKETPLACE
+                TextColumn::make('platform')
+                    ->label('Marketplace')
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state) => match ($state) {
+                        'shopee' => 'Shopee',
+                        'tiktok' => 'TikTok Shop',
+                        default => ucfirst((string) $state),
+                    })
+                    ->color(fn (?string $state) => match ($state) {
+                        'shopee' => 'warning',
+                        'tiktok' => 'info',
+                        default => 'gray',
+                    })
+                    ->sortable()
+                    ->grow(false),
+
+                // 3. PRODUK MARKETPLACE (Nama + Varian + SKU)
                 TextColumn::make('marketplace_product_name')
                     ->label('Produk Marketplace')
                     ->searchable()
                     ->sortable()
-                    ->formatStateUsing(function (MarketplaceProductMapping $record): HtmlString {
-                        $img = e($record->marketplace_image_url ?: asset('brand/logo-circle.png'));
-                        $name = e($record->marketplace_product_name);
-                        $variant = '';
+                    ->weight('bold')
+                    ->description(function (MarketplaceProductMapping $record) {
+                        $parts = [];
                         if ($record->marketplace_sku_name && ! (is_numeric($record->marketplace_sku_name) && strlen((string) $record->marketplace_sku_name) > 10)) {
-                            $variant = '<div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Varian: ' . e($record->marketplace_sku_name) . '</div>';
+                            $parts[] = "Varian: {$record->marketplace_sku_name}";
                         }
-                        $platform = $record->platform === 'shopee'
-                            ? '<span class="inline-block text-[10px] font-semibold px-1.5 py-0.5 rounded bg-orange-50 text-orange-700 dark:bg-orange-950/60 dark:text-orange-300 mr-1">Shopee</span>'
-                            : '<span class="inline-block text-[10px] font-semibold px-1.5 py-0.5 rounded bg-sky-50 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300 mr-1">TikTok</span>';
-
-                        return new HtmlString(
-                            '<div class="flex items-center gap-2.5 min-w-[220px] max-w-[340px]">'
-                            . '<img src="' . $img . '" alt="" class="w-10 h-10 rounded-md object-cover aspect-square shrink-0 border border-gray-200 dark:border-white/10 bg-gray-50">'
-                            . '<div class="min-w-0 flex-1">'
-                            . '<div class="text-xs font-medium text-gray-900 dark:text-white leading-snug line-clamp-2">' . $platform . $name . '</div>'
-                            . $variant
-                            . '</div>'
-                            . '</div>'
-                        );
+                        if ($record->seller_sku) {
+                            $parts[] = "SKU: {$record->seller_sku}";
+                        }
+                        return ! empty($parts) ? implode(' • ', $parts) : null;
                     })
-                    ->html(),
+                    ->wrap(),
 
-                // 2. SKU MARKETPLACE
-                TextColumn::make('seller_sku')
-                    ->label('SKU')
-                    ->searchable()
-                    ->sortable()
-                    ->placeholder('')
-                    ->extraAttributes(['class' => 'text-xs text-gray-700 dark:text-gray-300 font-mono'])
-                    ->grow(false),
-
-                // 3. STOK MARKETPLACE
+                // 4. STOK MARKETPLACE
                 TextColumn::make('marketplace_stock')
-                    ->label('Stok')
+                    ->label('Stok MP')
+                    ->badge()
+                    ->color('info')
                     ->sortable()
                     ->alignCenter()
-                    ->extraAttributes(['class' => 'text-xs font-medium text-gray-900 dark:text-white'])
                     ->grow(false),
 
-                // 4. PRODUK WEBSITE (Foto 1:1 + Nama + Varian atau Belum dihubungkan)
+                // 5. FOTO PRODUK WEBSITE
+                ImageColumn::make('website_image_url')
+                    ->label('')
+                    ->square()
+                    ->imageSize(44)
+                    ->extraImgAttributes([
+                        'class' => 'rounded-md object-cover aspect-square',
+                    ])
+                    ->grow(false)
+                    ->defaultImageUrl(fn (MarketplaceProductMapping $record) => $record->is_connected ? asset('brand/logo-circle.png') : null)
+                    ->visibleFrom('md'),
+
+                // 6. PRODUK WEBSITE SANUBARI (Nama + Varian + SKU)
                 TextColumn::make('product.name')
-                    ->label('Produk Website')
+                    ->label('Produk Website Sanubari')
                     ->searchable()
                     ->sortable()
-                    ->default('Belum dihubungkan')
-                    ->formatStateUsing(function (MarketplaceProductMapping $record): HtmlString {
-                        if (! $record->is_connected || ! $record->product) {
-                            return new HtmlString('<span class="text-xs text-gray-400 dark:text-gray-500">Belum dihubungkan</span>');
+                    ->weight('bold')
+                    ->color('warning')
+                    ->description(function (MarketplaceProductMapping $record) {
+                        if (! $record->is_connected) {
+                            return 'Belum dipasangkan';
                         }
-
-                        $img = e($record->website_image_url ?: asset('brand/logo-circle.png'));
-                        $name = e($record->product->name);
-                        $variant = '';
+                        $parts = [];
                         if ($record->variant?->label) {
-                            $variant = '<div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Varian: ' . e($record->variant->label) . '</div>';
+                            $parts[] = "Varian: {$record->variant->label}";
                         }
-
-                        return new HtmlString(
-                            '<div class="flex items-center gap-2.5 min-w-[200px] max-w-[320px]">'
-                            . '<img src="' . $img . '" alt="" class="w-10 h-10 rounded-md object-cover aspect-square shrink-0 border border-gray-200 dark:border-white/10 bg-gray-50">'
-                            . '<div class="min-w-0 flex-1">'
-                            . '<div class="text-xs font-medium text-gray-900 dark:text-white leading-snug line-clamp-2">' . $name . '</div>'
-                            . $variant
-                            . '</div>'
-                            . '</div>'
-                        );
+                        if ($record->variant?->sku) {
+                            $parts[] = "SKU: {$record->variant->sku}";
+                        }
+                        return ! empty($parts) ? implode(' • ', $parts) : 'Produk Utama';
                     })
-                    ->html()
+                    ->placeholder('Belum Dipasangkan')
+                    ->wrap()
                     ->visibleFrom('md'),
 
-                // 5. SKU WEBSITE
-                TextColumn::make('variant.sku')
-                    ->label('SKU')
-                    ->searchable()
-                    ->placeholder('')
-                    ->extraAttributes(['class' => 'text-xs text-gray-700 dark:text-gray-300 font-mono'])
-                    ->grow(false)
-                    ->visibleFrom('md'),
-
-                // 6. STOK WEBSITE
+                // 6. STOK WEBSITE REAL
                 TextColumn::make('website_stock')
-                    ->label('Stok')
-                    ->getStateUsing(fn (MarketplaceProductMapping $record) => $record->is_connected ? (string) ((int) $record->website_stock) : '-')
-                    ->extraAttributes(fn (MarketplaceProductMapping $record): array => [
-                        'class' => $record->is_connected && $record->is_stock_conflict
-                            ? 'text-xs font-bold text-amber-600 dark:text-amber-400'
-                            : 'text-xs font-medium text-gray-700 dark:text-gray-300',
-                    ])
+                    ->label('Stok Web')
+                    ->badge()
+                    ->getStateUsing(fn (MarketplaceProductMapping $record) => $record->website_stock_label)
+                    ->color(function (MarketplaceProductMapping $record) {
+                        if (! $record->is_connected) {
+                            return 'gray';
+                        }
+                        $webStock = (int) $record->website_stock;
+                        if ($webStock <= 0) {
+                            return 'danger';
+                        }
+                        if ((int) $record->marketplace_stock !== $webStock) {
+                            return 'warning';
+                        }
+                        return 'success';
+                    })
                     ->tooltip(function (MarketplaceProductMapping $record) {
                         if (! $record->is_connected) {
                             return 'Belum terhubung ke website';
                         }
                         if ((int) $record->marketplace_stock !== (int) $record->website_stock) {
-                            return "Stok MP: {$record->marketplace_stock} | Stok Web: {$record->website_stock}";
+                            return "Stok MP: {$record->marketplace_stock} | Stok Web: {$record->website_stock}. Klik Atur untuk menyamakan.";
                         }
                         return "Stok sama ({$record->website_stock} pcs)";
                     })
                     ->alignCenter()
                     ->grow(false)
                     ->visibleFrom('md'),
+
+                // 7. STATUS
+                TextColumn::make('status')
+                    ->label('Status')
+                    ->badge()
+                    ->getStateUsing(fn (MarketplaceProductMapping $record) => $record->is_connected ? 'Terhubung' : 'Belum')
+                    ->color(fn (MarketplaceProductMapping $record) => $record->is_connected ? 'success' : 'gray')
+                    ->alignCenter()
+                    ->grow(false),
             ])
             ->defaultSort('updated_at', 'desc')
-            ->actionsColumnLabel(function (): HtmlString {
-                $conflictCount = MarketplaceProductMapping::where('marketplace_status', 'ACTIVATE')
-                    ->whereNotNull('product_id')
-                    ->with(['variant', 'product'])
-                    ->get()
-                    ->filter(fn ($m) => $m->is_stock_conflict)
-                    ->count();
-
-                return new HtmlString(
-                    '<button type="button" wire:click="mountAction(\'syncWebToMpAll\')" class="inline-flex items-center justify-center rounded-full bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold px-3.5 py-1.5 shadow-xs transition cursor-pointer whitespace-nowrap">Samakan Stock (' . $conflictCount . ')</button>'
-                );
-            })
             ->filters([
                 SelectFilter::make('platform')
                     ->label('Marketplace')
@@ -163,49 +173,20 @@ class MarketplaceProductMappingsTable
                     ]),
             ])
             ->actions([
-                // Tombol langsung jika belum terhubung (pill merah muda seperti referensi)
+                // Tombol langsung jika belum terhubung
                 Action::make('pairQuick')
                     ->label('Hubungkan')
                     ->icon(Heroicon::Link)
-                    ->color('danger')
+                    ->color('warning')
                     ->size('xs')
                     ->button()
-                    ->extraAttributes([
-                        'class' => '!rounded-full !bg-rose-500 hover:!bg-rose-600 !text-white !px-4 !py-1.5 !font-semibold !shadow-xs',
-                    ])
                     ->visible(fn (MarketplaceProductMapping $record) => ! $record->is_connected)
                     ->modalHeading("Pasangkan Produk TikTok ke Website")
                     ->modalDescription(function (MarketplaceProductMapping $record) {
                         $variantInfo = $record->marketplace_sku_name ? " (Varian Kemasan: {$record->marketplace_sku_name})" : '';
                         return "Produk TikTok: {$record->marketplace_product_name}{$variantInfo}\nStok di TikTok saat ini: {$record->marketplace_stock}";
                     })
-                    ->form([
-                        Select::make('product_id')
-                            ->label('Pilih Produk di Website Sanubari')
-                            ->options(Product::orderBy('name')->pluck('name', 'id'))
-                            ->searchable()
-                            ->reactive()
-                            ->required()
-                            ->afterStateUpdated(fn ($set) => $set('product_variant_id', null)),
-
-                        Select::make('product_variant_id')
-                            ->label('Pilih Varian Kemasan Website')
-                            ->options(function ($get) {
-                                $productId = $get('product_id');
-                                if (! $productId) {
-                                    return [];
-                                }
-                                return ProductVariant::where('product_id', $productId)
-                                    ->pluck('label', 'id')
-                                    ->toArray();
-                            })
-                            ->searchable()
-                            ->placeholder('Pilih Varian (200g Biji, 1kg Bubuk, dll.)'),
-
-                        TextInput::make('seller_sku')
-                            ->label('SKU Penjual (Opsional)')
-                            ->helperText('Kode unik SKU penjual untuk otomatisasi pesanan masuk.'),
-                    ])
+                    ->form(fn (): array => static::getMappingFormSchema())
                     ->action(function (MarketplaceProductMapping $record, array $data): void {
                         $record->update([
                             'product_id' => $data['product_id'],
@@ -222,7 +203,7 @@ class MarketplaceProductMappingsTable
                             ->send();
                     }),
 
-                // Status & grup aksi untuk produk yang sudah terhubung
+                // Group aksi untuk produk yang sudah terhubung
                 ActionGroup::make([
                     Action::make('editMapping')
                         ->label('Ubah Hubungan')
@@ -233,33 +214,7 @@ class MarketplaceProductMappingsTable
                             $variantInfo = $record->marketplace_sku_name ? " (Varian: {$record->marketplace_sku_name})" : '';
                             return "Produk TikTok: {$record->marketplace_product_name}{$variantInfo}";
                         })
-                        ->form([
-                            Select::make('product_id')
-                                ->label('Pilih Produk di Website Sanubari')
-                                ->options(Product::orderBy('name')->pluck('name', 'id'))
-                                ->searchable()
-                                ->reactive()
-                                ->required()
-                                ->afterStateUpdated(fn ($set) => $set('product_variant_id', null)),
-
-                            Select::make('product_variant_id')
-                                ->label('Pilih Varian Kemasan Website')
-                                ->options(function ($get) {
-                                    $productId = $get('product_id');
-                                    if (! $productId) {
-                                        return [];
-                                    }
-                                    return ProductVariant::where('product_id', $productId)
-                                        ->pluck('label', 'id')
-                                        ->toArray();
-                                })
-                                ->searchable()
-                                ->placeholder('Pilih Varian (200g Biji, 1kg Bubuk, dll.)'),
-
-                            TextInput::make('seller_sku')
-                                ->label('SKU Penjual (Opsional)')
-                                ->helperText('Kode unik SKU penjual untuk otomatisasi pesanan masuk.'),
-                        ])
+                        ->form(fn (): array => static::getMappingFormSchema())
                         ->fillForm(fn (MarketplaceProductMapping $record) => [
                             'product_id' => $record->product_id,
                             'product_variant_id' => $record->product_variant_id,
@@ -354,15 +309,87 @@ class MarketplaceProductMappingsTable
                     DeleteAction::make()
                         ->label('Hapus Baris'),
                 ])
-                ->label(fn (MarketplaceProductMapping $record) => $record->is_stock_conflict ? 'Samakan Stok' : 'Terhubung')
-                ->icon(null)
-                ->link()
+                ->label('Atur')
+                ->icon(Heroicon::EllipsisVertical)
+                ->button()
                 ->size('xs')
-                ->color(fn (MarketplaceProductMapping $record) => $record->is_stock_conflict ? 'warning' : 'success')
-                ->extraAttributes(fn (MarketplaceProductMapping $record): array => [
-                    'class' => $record->is_stock_conflict ? '!font-semibold !text-amber-600' : '!font-semibold !text-emerald-600',
-                ])
+                ->color('gray')
                 ->visible(fn (MarketplaceProductMapping $record) => $record->is_connected),
             ]);
+    }
+
+    /**
+     * Shared form schema for pairing / editing a marketplace-to-website product mapping.
+     *
+     * @return array<int, \Filament\Schemas\Components\Component>
+     */
+    protected static function getMappingFormSchema(): array
+    {
+        return [
+            Select::make('product_id')
+                ->label('Pilih Produk di Website Sanubari')
+                ->options(static::getWebsiteProductSelectOptions())
+                ->allowHtml()
+                ->searchable()
+                ->reactive()
+                ->required()
+                ->afterStateUpdated(fn ($set) => $set('product_variant_id', null)),
+
+            Select::make('product_variant_id')
+                ->label('Pilih Varian Kemasan Website')
+                ->options(function ($get) {
+                    $productId = $get('product_id');
+                    if (! $productId) {
+                        return [];
+                    }
+
+                    return ProductVariant::where('product_id', $productId)
+                        ->pluck('label', 'id')
+                        ->toArray();
+                })
+                ->searchable()
+                ->placeholder('Pilih Varian (200g Biji, 1kg Bubuk, dll.)'),
+
+            TextInput::make('seller_sku')
+                ->label('SKU Penjual (Opsional)')
+                ->helperText('Kode unik SKU penjual untuk otomatisasi pesanan masuk.'),
+        ];
+    }
+
+    /**
+     * Build HTML select options (thumbnail + product name) for website products.
+     *
+     * @return array<int, string>
+     */
+    protected static function getWebsiteProductSelectOptions(): array
+    {
+        return Product::query()
+            ->with(['primaryImage', 'images', 'variants'])
+            ->orderBy('name')
+            ->get()
+            ->mapWithKeys(function (Product $product): array {
+                $raw = $product->primaryImage?->path
+                    ?? $product->images?->first(fn ($img) => ! empty($img->path))?->path
+                    ?? $product->variants?->first(fn ($v) => ! empty($v->image))?->image;
+
+                if ($raw) {
+                    $imgUrl = (str_starts_with($raw, 'http://') || str_starts_with($raw, 'https://'))
+                        ? $raw
+                        : asset('storage/' . ltrim(preg_replace('#^/?(?:(?:storage|public)/)+#', '', trim($raw)), '/'));
+                } else {
+                    $imgUrl = asset('brand/logo-circle.png');
+                }
+
+                $safeName = e($product->name);
+                $safeImg = e($imgUrl);
+
+                $html = "<div style=\"display:flex;align-items:center;gap:10px;\">"
+                    . "<img src=\"{$safeImg}\" alt=\"\" style=\"width:32px;height:32px;border-radius:6px;object-fit:cover;flex-shrink:0;border:1px solid rgba(0,0,0,0.08);\" />"
+                    . "<span style=\"font-weight:500;\">{$safeName}</span>"
+                    . "</div>";
+
+                return [$product->id => $html];
+            })
+            ->all();
     }
 }
