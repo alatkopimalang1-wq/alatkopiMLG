@@ -246,28 +246,10 @@
                     </div>
                 </div>
 
-                {{-- Filter Sumber & Ringkasan Masuk/Keluar --}}
-                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pt-2 border-t border-gray-100 dark:border-gray-800">
-                    <div class="flex flex-wrap items-center gap-1.5 text-xs">
-                        @foreach([
-                            'all' => 'Semua',
-                            'purchase' => 'Pembelian (PO)',
-                            'sales' => 'Semua Penjualan',
-                            'web_order' => 'Penjualan Web',
-                            'pos_order' => 'Penjualan POS',
-                            'marketplace_order' => 'Penjualan Marketplace',
-                            'manual_in' => 'Pemasukan Manual',
-                            'manual_out' => 'Pengurangan Manual',
-                            'refund' => 'Refund / Retur',
-                            'marketplace_return' => 'Paket MP Kembali',
-                            'opname' => 'Opname',
-                        ] as $mKey => $mLabel)
-                            <button type="button"
-                                    wire:click="$set('movementSource', '{{ $mKey }}')"
-                                    class="px-2.5 py-1.5 rounded-lg font-medium transition cursor-pointer {{ $movementSource === $mKey ? 'bg-sky-600 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' }}">
-                                {{ $mLabel }}
-                            </button>
-                        @endforeach
+                {{-- Ringkasan Masuk/Keluar Seluruh Pergerakan --}}
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-gray-100 dark:border-gray-800">
+                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                        Menampilkan seluruh riwayat pergerakan stok transaksi (Penjualan Website, POS, Marketplace, Pembelian, Pemasukan/Pengeluaran Manual, Refund, dan Retur Paket).
                     </div>
 
                     <div class="flex flex-wrap items-center gap-3 text-xs font-semibold">
