@@ -89,6 +89,11 @@ class InventoriStok extends Page
         $this->endDate = '';
     }
 
+    public function canAdjustStock(): bool
+    {
+        return (bool) auth()->user()?->isOwner();
+    }
+
     public function getMaxContentWidth(): ?string
     {
         return 'full';
@@ -315,6 +320,7 @@ class InventoriStok extends Page
     public function adjustStockAction(): Action
     {
         return Action::make('adjustStock')
+            ->authorize(fn (): bool => auth()->user()?->isOwner() ?? false)
             ->modalHeading(function (array $arguments): string {
                 return match ($arguments['mode'] ?? 'in') {
                     'out' => 'Pengurangan Stok Manual',
@@ -383,6 +389,16 @@ class InventoriStok extends Page
                 ];
             })
             ->action(function (array $data, array $arguments) {
+                if (! auth()->user()?->isOwner()) {
+                    Notification::make()
+                        ->title('Akses Ditolak')
+                        ->body('Hanya akun Owner yang berwenang melakukan penyesuaian stok manual.')
+                        ->danger()
+                        ->send();
+
+                    return;
+                }
+
                 $variantId = (int) ($arguments['variantId'] ?? 0);
                 $mode = (string) ($arguments['mode'] ?? 'in');
                 $inputQty = (int) ($data['qty'] ?? 0);

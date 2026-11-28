@@ -12,8 +12,8 @@ class ProductVariantStockController extends Controller
     public function update(Request $request, ProductVariant $variant): JsonResponse
     {
         $user = auth()->user();
-        if (! $user || ! ($user->id === 1 || in_array($user->role, ['owner', 'admin', 'editor'], true) || in_array($user->pos_role, ['owner', 'admin'], true))) {
-            abort(403, 'Akses ditolak.');
+        if (! $user || ! $user->isOwner()) {
+            abort(403, 'Akses ditolak. Hanya akun Owner yang dapat melakukan penyesuaian stok manual.');
         }
 
         $validated = $request->validate([

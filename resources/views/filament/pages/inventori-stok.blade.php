@@ -155,6 +155,11 @@
                                     <td class="py-3 px-4 text-center">
                                         @if($isPre)
                                             <span class="text-xs text-gray-400">Ubah via Edit Produk</span>
+                                        @elseif(! $this->canAdjustStock())
+                                            <span class="inline-flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-zinc-800/80 px-2 py-1 rounded border border-gray-200 dark:border-zinc-700">
+                                                <x-heroicon-o-lock-closed class="w-3.5 h-3.5 text-gray-400" />
+                                                Khusus Owner
+                                            </span>
                                         @else
                                             <div class="inline-flex flex-wrap items-center justify-center gap-1.5">
                                                 <button type="button"
