@@ -49,6 +49,23 @@ class InventoriStok extends Page
 
     public string $endDate = '';
 
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('stokMasuk')
+                ->label('+ Stok Masuk (Banyak Produk / Konsinyasi)')
+                ->icon(Heroicon::ArrowDownTray)
+                ->color('success')
+                ->url(\App\Filament\Resources\StockDocuments\StokMasukResource::getUrl('create')),
+
+            Action::make('stokKeluar')
+                ->label('- Stok Keluar (Banyak Produk)')
+                ->icon(Heroicon::ArrowUpTray)
+                ->color('danger')
+                ->url(\App\Filament\Resources\StockDocuments\StokKeluarResource::getUrl('create')),
+        ];
+    }
+
     public function mount(): void
     {
         $this->monthFilter = now()->format('Y-m');

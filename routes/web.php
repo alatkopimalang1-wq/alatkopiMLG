@@ -254,6 +254,13 @@ Route::middleware(['auth'])->group(function () {
         return view('admin.product-purchases.print', ['po' => $productPurchase]);
     })->name('admin.product-purchases.print');
 
+    // Printable Stock Document (Stok Masuk / Stok Keluar / Konsinyasi) view
+    Route::get('/admin/stock-documents/{stockDocument}/print', function (\App\Models\StockDocument $stockDocument) {
+        $stockDocument->load(['items.product', 'items.variant', 'user']);
+
+        return view('admin.stock-documents.print', ['doc' => $stockDocument]);
+    })->name('admin.stock-documents.print');
+
     // Printable Consignment Settlement Note view
     Route::get('/admin/consignment-settlements/{settlement}/print', function (\App\Models\ConsignmentSettlement $settlement) {
         $settlement->load(['consignor', 'items', 'user']);
