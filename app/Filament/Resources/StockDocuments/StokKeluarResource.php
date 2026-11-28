@@ -18,6 +18,8 @@ class StokKeluarResource extends Resource
 {
     protected static ?string $model = StockDocument::class;
 
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::ArrowUpTray;
 
     protected static string|\UnitEnum|null $navigationGroup = 'Katalog & Toko';
