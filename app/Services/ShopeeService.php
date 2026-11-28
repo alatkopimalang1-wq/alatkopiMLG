@@ -251,6 +251,7 @@ class ShopeeService
      */
     public function syncProducts(): array
     {
+        @set_time_limit(300);
         $this->ensureValidToken();
 
         $path = '/api/v2/product/get_item_list';
@@ -296,7 +297,7 @@ class ShopeeService
 
             $hasNextPage = (bool) ($data['response']['has_next_page'] ?? false);
             $offset = (int) ($data['response']['next_offset'] ?? ($offset + $pageSize));
-        } while ($hasNextPage && count($allItemIds) < 500);
+        } while ($hasNextPage);
 
         // Preload all local products with variants for matching
         $allLocalProducts = Product::with('variants')->get();

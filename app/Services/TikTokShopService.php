@@ -1053,6 +1053,7 @@ class TikTokShopService
      */
     public function syncProductsFromTikTok(int $pageSize = 100): array
     {
+        @set_time_limit(300);
         $this->ensureValidToken();
 
         if (! $this->account->shop_cipher) {
@@ -1098,7 +1099,7 @@ class TikTokShopService
             $allProducts = array_merge($allProducts, $pageProducts);
 
             $pageToken = $data['data']['next_page_token'] ?? null;
-        } while (! empty($pageToken) && count($allProducts) < 500);
+        } while (! empty($pageToken));
 
         $mappedCount = 0;
         $activeSkuIds = [];
