@@ -140,37 +140,6 @@ class EquipmentProductsTable
                         return new HtmlString("<div class=\"space-y-1\">{$lines}</div>");
                     }),
 
-                TextColumn::make('variants_weight')
-                    ->label('Berat')
-                    ->visibleFrom('md')
-                    ->html()
-                    ->tooltip('Klik untuk edit berat')
-                    ->extraCellAttributes(['class' => 'cursor-pointer'])
-                    ->action(static::makeVariantPriceEditAction(
-                        name: 'editWeight',
-                        heading: 'Edit Berat Produk',
-                        field: 'weight_grams',
-                        syncProductMinMax: false,
-                        unit: 'gr',
-                        isSuffix: true,
-                        successMessage: 'Berat produk berhasil diperbarui',
-                    ))
-                    ->state(function (Product $record): HtmlString {
-                        $variants = $record->variants;
-                        if ($variants->isEmpty()) {
-                            return new HtmlString('<div class="h-7 leading-7 text-sm text-gray-400">—</div>');
-                        }
-
-                        $lines = $variants->map(function ($v) {
-                            $w = (int) ($v->weight_grams ?? 0);
-                            $formatted = $w > 0 ? number_format($w, 0, ',', '.') . ' gr' : '—';
-
-                            return "<div class=\"h-7 leading-7 text-sm text-gray-600 dark:text-gray-300 hover:text-primary-600 whitespace-nowrap\"><span class=\"border-b border-dashed border-gray-400/60 pb-0.5\">{$formatted}</span></div>";
-                        })->implode('');
-
-                        return new HtmlString("<div class=\"space-y-1\">{$lines}</div>");
-                    }),
-
                 TextColumn::make('stock')
                     ->label('Qty Stok')
                     ->html()
@@ -270,6 +239,37 @@ class EquipmentProductsTable
                             $price = number_format((float) ($v->price ?? 0), 2, ',', '.');
 
                             return "<div class=\"h-7 leading-7 text-sm font-semibold text-gray-800 dark:text-gray-200 hover:text-primary-600 whitespace-nowrap\"><span class=\"border-b border-dashed border-gray-400/60 pb-0.5\">{$price}</span></div>";
+                        })->implode('');
+
+                        return new HtmlString("<div class=\"space-y-1\">{$lines}</div>");
+                    }),
+
+                TextColumn::make('variants_weight')
+                    ->label('Berat')
+                    ->visibleFrom('md')
+                    ->html()
+                    ->tooltip('Klik untuk edit berat')
+                    ->extraCellAttributes(['class' => 'cursor-pointer'])
+                    ->action(static::makeVariantPriceEditAction(
+                        name: 'editWeight',
+                        heading: 'Edit Berat Produk',
+                        field: 'weight_grams',
+                        syncProductMinMax: false,
+                        unit: 'gr',
+                        isSuffix: true,
+                        successMessage: 'Berat produk berhasil diperbarui',
+                    ))
+                    ->state(function (Product $record): HtmlString {
+                        $variants = $record->variants;
+                        if ($variants->isEmpty()) {
+                            return new HtmlString('<div class="h-7 leading-7 text-sm text-gray-400">—</div>');
+                        }
+
+                        $lines = $variants->map(function ($v) {
+                            $w = (int) ($v->weight_grams ?? 0);
+                            $formatted = $w > 0 ? number_format($w, 0, ',', '.') . ' gr' : '—';
+
+                            return "<div class=\"h-7 leading-7 text-sm text-gray-600 dark:text-gray-300 hover:text-primary-600 whitespace-nowrap\"><span class=\"border-b border-dashed border-gray-400/60 pb-0.5\">{$formatted}</span></div>";
                         })->implode('');
 
                         return new HtmlString("<div class=\"space-y-1\">{$lines}</div>");
