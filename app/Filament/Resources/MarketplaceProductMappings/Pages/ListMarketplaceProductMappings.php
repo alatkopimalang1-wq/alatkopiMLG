@@ -249,6 +249,30 @@ class ListMarketplaceProductMappings extends ListRecords
                     }
                 }),
 
+            Action::make('resetAllConnected')
+                ->label('Reset Hubungan Produk')
+                ->icon(Heroicon::ArrowPath)
+                ->color('danger')
+                ->requiresConfirmation()
+                ->modalHeading('Reset Semua Produk Terhubung?')
+                ->modalDescription('Semua produk marketplace yang saat ini terhubung akan diputus dari katalog website dan statusnya berubah menjadi "Belum Terhubung", sehingga Anda dapat memetakan atau menghubungkannya kembali secara manual.')
+                ->modalSubmitActionLabel('Ya, Putus Semua Hubungan')
+                ->action(function () {
+                    $count = MarketplaceProductMapping::whereNotNull('product_id')->count();
+                    MarketplaceProductMapping::whereNotNull('product_id')->update([
+                        'product_id' => null,
+                        'product_variant_id' => null,
+                        'sync_status' => 'pending',
+                        'sync_message' => 'Hubungan produk telah direset ke Belum Terhubung.',
+                    ]);
+
+                    Notification::make()
+                        ->title('Semua Hubungan Produk Berhasil Direset')
+                        ->body("Sebanyak {$count} produk marketplace kini berstatus Belum Terhubung dan siap dipasangkan kembali secara manual.")
+                        ->success()
+                        ->send();
+                }),
+
             ActionGroup::make([
                 Action::make('shopeeSettings')
                     ->label('Pengaturan Shopee')
