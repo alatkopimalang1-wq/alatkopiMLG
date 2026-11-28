@@ -53,13 +53,13 @@ class InventoriStok extends Page
     {
         return [
             Action::make('stokMasuk')
-                ->label('+ Stok Masuk (Banyak Produk / Konsinyasi)')
+                ->label('+ Stok Masuk')
                 ->icon(Heroicon::ArrowDownTray)
                 ->color('success')
                 ->url(\App\Filament\Resources\StockDocuments\StokMasukResource::getUrl('create')),
 
             Action::make('stokKeluar')
-                ->label('- Stok Keluar (Banyak Produk)')
+                ->label('- Stok Keluar')
                 ->icon(Heroicon::ArrowUpTray)
                 ->color('danger')
                 ->url(\App\Filament\Resources\StockDocuments\StokKeluarResource::getUrl('create')),
