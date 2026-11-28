@@ -99,3 +99,11 @@ test('draft stok keluar deducts stock only when posted and reverses on cancel', 
     expect($doc->fresh()->status)->toBe('cancelled');
     expect($this->variant->fresh()->stock)->toBe(10);
 });
+
+test('inventori page renders without errors on all tabs', function () {
+    foreach (['masuk', 'keluar', 'stok', 'pergerakan'] as $tab) {
+        \Livewire\Livewire::test(\App\Filament\Pages\InventoriStok::class)
+            ->set('activeTab', $tab)
+            ->assertStatus(200);
+    }
+});

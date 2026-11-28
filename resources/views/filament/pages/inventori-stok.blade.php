@@ -3,6 +3,7 @@
         $stats = $this->stats;
         $variants = $this->activeTab === 'stok' ? $this->variants : collect();
         $movements = $this->activeTab === 'pergerakan' ? $this->movements : collect();
+        $adjustments = $this->activeTab === 'riwayat' ? $this->adjustments : collect();
         $documents = in_array($this->activeTab, ['masuk', 'keluar'], true) ? $this->stockDocuments : collect();
         $documentsTotal = in_array($this->activeTab, ['masuk', 'keluar'], true) ? $this->stockDocumentsCount : 0;
         $fmt = fn ($val) => 'Rp ' . number_format((float) $val, 0, ',', '.');
@@ -462,7 +463,7 @@
                     </table>
                 </div>
             </div>
-        @else
+        @elseif($activeTab === 'riwayat')
             {{-- Riwayat Penyesuaian Stok --}}
             <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-xs overflow-hidden">
                 <div class="overflow-x-auto">
