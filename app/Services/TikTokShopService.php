@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use Illuminate\Http\Client\Pool;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -1049,11 +1050,73 @@ class TikTokShopService
     }
 
     /**
+     * Batch fetch product details using concurrent HTTP pool for fast performance.
+     *
+     * @param array<string> $productIds
+     * @param int $concurrency
+     * @return array<string, array> Keyed by product ID
+     */
+    public function getProductsBatch(array $productIds, int $concurrency = 25): array
+    {
+        if (empty($productIds)) {
+            return [];
+        }
+
+        $this->ensureValidToken();
+
+        $results = [];
+        $uniqueIds = array_values(array_unique($productIds));
+        $chunks = array_chunk($uniqueIds, $concurrency);
+
+        foreach ($chunks as $chunk) {
+            $responses = Http::pool(function (Pool $pool) use ($chunk) {
+                $requests = [];
+                $ts = time();
+                foreach ($chunk as $idx => $id) {
+                    $path = "/product/202309/products/{$id}";
+                    $queryParams = [
+                        'app_key' => $this->account->app_key,
+                        'timestamp' => $ts,
+                        'shop_cipher' => $this->account->shop_cipher,
+                    ];
+                    $sign = $this->generateSignature($path, $queryParams, '');
+                    $queryParams['sign'] = $sign;
+
+                    $requests[$idx] = $pool->withHeaders([
+                        'x-tts-access-token' => $this->account->access_token,
+                    ])->timeout(12)->get("{$this->apiBaseUrl}{$path}?" . http_build_query($queryParams));
+                }
+                return $requests;
+            });
+
+            foreach ($responses as $idx => $response) {
+                $id = $chunk[$idx] ?? null;
+                if (! $id) {
+                    continue;
+                }
+
+                if ($response instanceof \Illuminate\Http\Client\Response && $response->successful()) {
+                    $json = $response->json();
+                    if (($json['code'] ?? -1) === 0 && ! empty($json['data'])) {
+                        $results[$id] = $json['data'];
+                    }
+                }
+            }
+
+            if (count($chunks) > 1) {
+                usleep(80000); // 80ms delay between batches
+            }
+        }
+
+        return $results;
+    }
+
+    /**
      * Fetch products from TikTok Shop and register/update product mappings.
      */
-    public function syncProductsFromTikTok(int $pageSize = 100): array
+    public function syncProductsFromTikTok(int $pageSize = 100, bool $forceRefreshDetails = false): array
     {
-        @set_time_limit(300);
+        @set_time_limit(600);
         $this->ensureValidToken();
 
         if (! $this->account->shop_cipher) {
@@ -1109,6 +1172,8 @@ class TikTokShopService
             ->get()
             ->keyBy(fn ($m) => "{$m->marketplace_product_id}_{$m->marketplace_sku_id}");
 
+        // Identify which products need detailed information (images and SKU sales attributes)
+        $productIdsNeedingDetail = [];
         foreach ($allProducts as $ttsProd) {
             $prodStatus = strtoupper($ttsProd['status'] ?? 'ACTIVATE');
             if ($prodStatus !== 'ACTIVATE') {
@@ -1120,18 +1185,61 @@ class TikTokShopService
                 continue;
             }
 
-            $title = $ttsProd['title'] ?? '';
-            $imageUrl = $ttsProd['main_images'][0]['urls'][0] ?? ($ttsProd['images'][0]['url'] ?? null);
+            if ($forceRefreshDetails) {
+                $productIdsNeedingDetail[] = $ttsProdId;
+                continue;
+            }
 
-            // Use SKUs from search response directly. Only fetch detail if SKUs array is empty.
             $skus = $ttsProd['skus'] ?? [];
-            if (empty($skus)) {
-                $detail = $this->getProduct($ttsProdId);
-                $skus = ! empty($detail['skus']) ? $detail['skus'] : [];
-                if (! $imageUrl && ! empty($detail)) {
-                    $imageUrl = $detail['main_images'][0]['urls'][0] ?? ($detail['images'][0]['url'] ?? null);
+            $needsDetail = empty($skus);
+
+            foreach ($skus as $sku) {
+                $skuId = (string) ($sku['id'] ?? '');
+                $existing = $existingMappings->get("{$ttsProdId}_{$skuId}");
+
+                // Needs detail if no existing mapping, or missing image, or has multiple variants but missing variant name
+                if (! $existing || empty($existing->marketplace_image_url) || (count($skus) > 1 && empty($existing->marketplace_sku_name))) {
+                    $needsDetail = true;
+                    break;
                 }
             }
+
+            if ($needsDetail) {
+                $productIdsNeedingDetail[] = $ttsProdId;
+            }
+        }
+
+        // Fast concurrent batch fetch for all products needing details
+        $productDetails = [];
+        if (! empty($productIdsNeedingDetail)) {
+            $productDetails = $this->getProductsBatch($productIdsNeedingDetail);
+        }
+
+        foreach ($allProducts as $ttsProd) {
+            $prodStatus = strtoupper($ttsProd['status'] ?? 'ACTIVATE');
+            if ($prodStatus !== 'ACTIVATE') {
+                continue;
+            }
+
+            $ttsProdId = (string) ($ttsProd['id'] ?? '');
+            if (! $ttsProdId) {
+                continue;
+            }
+
+            $detail = $productDetails[$ttsProdId] ?? null;
+            $title = $ttsProd['title'] ?? ($detail['title'] ?? '');
+
+            // Fallback image from detail or search
+            $imageUrl = $detail['main_images'][0]['urls'][0]
+                ?? ($detail['main_images'][0]['thumb_urls'][0]
+                ?? ($ttsProd['main_images'][0]['urls'][0]
+                ?? ($ttsProd['images'][0]['url'] ?? null)));
+
+            // Index detail SKUs by ID for instant variant lookup
+            $detailSkusById = collect($detail['skus'] ?? [])->keyBy(fn ($s) => (string) ($s['id'] ?? ''));
+
+            // Use SKUs from detail if available (contains sales_attributes), fallback to search SKUs
+            $skus = ! empty($detail['skus']) ? $detail['skus'] : ($ttsProd['skus'] ?? []);
 
             foreach ($skus as $sku) {
                 $skuId = (string) ($sku['id'] ?? '');
@@ -1139,26 +1247,31 @@ class TikTokShopService
                     continue;
                 }
 
-                $sellerSku = $sku['seller_sku'] ?? null;
-                $stock = (int) ($sku['inventory'][0]['quantity'] ?? ($sku['stock_infos'][0]['available_stock'] ?? 0));
-                $price = (float) ($sku['price']['sale_price'] ?? ($sku['price']['tax_exclusive_price'] ?? ($sku['price']['amount'] ?? 0)));
+                $detailSku = $detailSkusById->get($skuId);
+                $sellerSku = $sku['seller_sku'] ?? ($detailSku['seller_sku'] ?? null);
+                $stock = (int) ($sku['inventory'][0]['quantity'] ?? ($sku['stock_infos'][0]['available_stock'] ?? ($detailSku['inventory'][0]['quantity'] ?? 0)));
+                $price = (float) ($sku['price']['sale_price'] ?? ($sku['price']['tax_exclusive_price'] ?? ($sku['price']['amount'] ?? ($detailSku['price']['sale_price'] ?? ($detailSku['price']['tax_exclusive_price'] ?? 0)))));
 
                 // Check SKU status
-                $skuStatus = strtoupper($sku['status_info']['status'] ?? ($sku['status'] ?? 'NORMAL'));
+                $skuStatus = strtoupper($sku['status_info']['status'] ?? ($sku['status'] ?? ($detailSku['status_info']['status'] ?? 'NORMAL')));
                 if (in_array($skuStatus, ['DELETED', 'INACTIVE', 'FROZEN'])) {
                     continue;
                 }
 
                 $activeSkuIds[] = $skuId;
+                $existing = $existingMappings->get("{$ttsProdId}_{$skuId}");
 
-                // Extract SKU-specific image if available
-                $skuImg = $sku['sales_attributes'][0]['sku_img']['urls'][0]
-                    ?? ($sku['sales_attributes'][0]['sku_img']['thumb_urls'][0] ?? null);
-                $finalImageUrl = $skuImg ?: $imageUrl;
+                // Extract SKU-specific image if available (from detail SKU or search SKU or existing)
+                $skuImg = $detailSku['sales_attributes'][0]['sku_img']['urls'][0]
+                    ?? ($detailSku['sales_attributes'][0]['sku_img']['thumb_urls'][0]
+                    ?? ($sku['sales_attributes'][0]['sku_img']['urls'][0]
+                    ?? ($sku['sales_attributes'][0]['sku_img']['thumb_urls'][0] ?? null)));
+
+                $finalImageUrl = $skuImg ?: ($imageUrl ?: $existing?->marketplace_image_url);
 
                 // Extract variant label from sales_attributes
                 $variantParts = [];
-                $attrs = $sku['sales_attributes'] ?? ($sku['sales_attribute'] ?? []);
+                $attrs = $detailSku['sales_attributes'] ?? ($sku['sales_attributes'] ?? ($sku['sales_attribute'] ?? []));
                 if (! empty($attrs) && is_array($attrs)) {
                     foreach ($attrs as $attr) {
                         $val = $attr['value_name']
@@ -1175,7 +1288,7 @@ class TikTokShopService
                 }
 
                 if (empty($variantParts)) {
-                    $candidate = $sku['sku_name'] ?? ($sku['name'] ?? null);
+                    $candidate = $detailSku['sku_name'] ?? ($sku['sku_name'] ?? ($sku['name'] ?? null));
                     if ($candidate && ! (is_numeric($candidate) && strlen((string) $candidate) > 10)) {
                         $variantParts[] = $candidate;
                     }
@@ -1183,9 +1296,7 @@ class TikTokShopService
 
                 $skuVariantLabel = ! empty($variantParts)
                     ? implode(' / ', $variantParts)
-                    : null;
-
-                $existing = $existingMappings->get("{$ttsProdId}_{$skuId}");
+                    : ($existing?->marketplace_sku_name ?: null);
 
                 // Retain manual connection if already mapped by user, otherwise keep unconnected
                 $finalProductId = $existing?->product_id;
