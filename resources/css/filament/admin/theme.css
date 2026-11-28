@@ -659,11 +659,16 @@ html:not(.dark) ::-webkit-scrollbar-thumb {
     overflow: visible !important;
 }
 
+.fi-ta-filters-above-content-ctn {
+    position: relative !important;
+    z-index: 15 !important;
+}
+
 .fi-ta-header-ctn:has(.fi-ta-filters-above-content-ctn) .fi-ta-header-toolbar {
     justify-content: flex-start !important;
     position: sticky !important;
     top: 4rem !important;
-    z-index: 20 !important;
+    z-index: 10 !important;
     background-color: #ffffff !important;
     border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
 }
