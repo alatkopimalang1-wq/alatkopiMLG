@@ -407,7 +407,10 @@
                                             {{ $tp['product_name'] }}
                                         </p>
                                         <p class="text-[11px] text-gray-500 mt-0.5">
-                                            {{ $tp['variant_label'] }} · Terjual {{ $tp['quantity'] }} pcs · HPP: Rp {{ number_format($tp['cost'], 0, ',', '.') }}
+                                            @if (!\App\Support\VariantHelper::isStandard($tp['variant_label'] ?? null))
+                                                {{ $tp['variant_label'] }} ·
+                                            @endif
+                                            Terjual {{ $tp['quantity'] }} pcs · HPP: Rp {{ number_format($tp['cost'], 0, ',', '.') }}
                                             @if (!$tp['has_hpp'])
                                                 <span class="text-amber-500 font-bold ml-1">(HPP Belum Diset)</span>
                                             @endif

@@ -49,14 +49,17 @@ class EcommerceOrdersTable
                             return 'Kopi Sanubari';
                         }
 
-                        return $items->map(fn ($it) => "{$it->quantity}x {$it->product_name}".($it->variant_label ? " ({$it->variant_label})" : ''))->implode(', ');
+                        return $items->map(function ($it) {
+                            $v = \App\Support\VariantHelper::formatLabel($it->variant_label);
+                            return "{$it->quantity}x {$it->product_name}".($v ? " ({$v})" : '');
+                        })->implode(', ');
                     })
                     ->limit(28)
                     ->tooltip(function (Order $record): string {
                         return $record->items->map(function ($it) {
                             $price = number_format((float) $it->subtotal, 0, ',', '.');
-
-                            return "{$it->quantity}x {$it->product_name}".($it->variant_label ? " ({$it->variant_label})" : '')." - Rp {$price}";
+                            $v = \App\Support\VariantHelper::formatLabel($it->variant_label);
+                            return "{$it->quantity}x {$it->product_name}".($v ? " ({$v})" : '')." - Rp {$price}";
                         })->implode("\n");
                     })
                     ->visibleFrom('md'),

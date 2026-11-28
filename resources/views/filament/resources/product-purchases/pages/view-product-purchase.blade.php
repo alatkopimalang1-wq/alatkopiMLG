@@ -289,7 +289,12 @@
                                                 {{ $item->product?->name ?? 'Produk #' . $item->product_id }}
                                             </div>
                                             <div class="text-xs text-gray-500 dark:text-gray-400">
-                                                Varian: {{ $item->variant?->label ?? 'Default' }}
+                                                @php
+                                                    $vLabel = \App\Support\VariantHelper::formatLabel($item->variant?->label);
+                                                @endphp
+                                                @if($vLabel !== '')
+                                                    Varian: {{ $vLabel }}
+                                                @endif
                                                 @if($item->variant?->sku)
                                                     ({{ $item->variant->sku }})
                                                 @endif

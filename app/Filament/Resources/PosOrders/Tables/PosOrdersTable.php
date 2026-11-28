@@ -64,7 +64,8 @@ class PosOrdersTable
 
                         $parts = $items->map(function ($it) {
                             $cleanVar = trim((string) preg_replace('/\s*\(1\s*kg\s*custom[^)]*\)/i', '', (string) $it->variant_label));
-                            $variant = $cleanVar ? " ({$cleanVar})" : '';
+                            $v = \App\Support\VariantHelper::formatLabel($cleanVar);
+                            $variant = $v ? " ({$v})" : '';
                             return "{$it->quantity}x {$it->product_name}{$variant}";
                         });
 
@@ -74,7 +75,8 @@ class PosOrdersTable
                     ->tooltip(function (Order $record): string {
                         return $record->items->map(function ($it) {
                             $cleanVar = trim((string) preg_replace('/\s*\(1\s*kg\s*custom[^)]*\)/i', '', (string) $it->variant_label));
-                            $variant = $cleanVar ? " ({$cleanVar})" : '';
+                            $v = \App\Support\VariantHelper::formatLabel($cleanVar);
+                            $variant = $v ? " ({$v})" : '';
                             $price = number_format((float) $it->subtotal, 0, ',', '.');
                             return "{$it->quantity}x {$it->product_name}{$variant} - Rp {$price}";
                         })->implode("\n");

@@ -13,6 +13,7 @@ import {
 import { PublicLayout } from '@/layouts/public-layout';
 import { useCart } from '@/context/cart-context';
 import { formatRupiah } from '@/lib/trans';
+import { isDefaultStandardVariant } from '@/lib/variant-utils';
 import { ProductCard } from '@/components/product-card';
 import { ImageZoom } from '@animate-ui/react/primitives/effects/image-zoom';
 import { SlidingNumber } from '@animate-ui/react/primitives/texts/sliding-number';
@@ -375,14 +376,12 @@ export default function FixedBundleShow({
                                                         </span>
                                                     )}
                                                 </div>
-                                                {item.variant_label &&
-                                                    item.variant_label !==
-                                                        'Standard' && (
-                                                        <div className="text-[11px] text-brand-600">
-                                                            Varian:{' '}
-                                                            {item.variant_label}
-                                                        </div>
-                                                    )}
+                                                {!isDefaultStandardVariant(item.variant_label) && (
+                                                    <div className="text-[11px] text-brand-600">
+                                                        Varian:{' '}
+                                                        {item.variant_label}
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
 

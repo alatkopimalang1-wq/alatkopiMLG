@@ -110,9 +110,11 @@
                                                 <div class="font-semibold text-gray-900 dark:text-white">
                                                     {{ $prod?->name ?? 'Produk #' . $v->product_id }}
                                                 </div>
-                                                <div class="text-xs text-gray-500 dark:text-gray-400">
-                                                    Varian: {{ $v->label }}
-                                                </div>
+                                                @if (!\App\Support\VariantHelper::isStandard($v->label))
+                                                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                                                        Varian: {{ $v->label }}
+                                                    </div>
+                                                @endif
                                             </div>
                                         </div>
                                     </td>
@@ -309,7 +311,9 @@
                                     </td>
                                     <td class="py-3 px-4">
                                         <div class="font-semibold text-gray-900 dark:text-white">{{ $mov['product_name'] }}</div>
-                                        <div class="text-xs text-gray-500">{{ $mov['variant_label'] }}</div>
+                                        @if (!\App\Support\VariantHelper::isStandard($mov['variant_label']))
+                                            <div class="text-xs text-gray-500">{{ $mov['variant_label'] }}</div>
+                                        @endif
                                     </td>
                                     <td class="py-3 px-4 font-mono text-xs text-gray-600 dark:text-gray-300">{{ $mov['sku'] }}</td>
                                     <td class="py-3 px-4 text-center font-bold {{ $mov['qty_change'] >= 0 ? 'text-emerald-600' : 'text-rose-600' }}">

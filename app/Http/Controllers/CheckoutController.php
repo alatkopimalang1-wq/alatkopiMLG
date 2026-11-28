@@ -403,7 +403,10 @@ class CheckoutController extends Controller
         $waMessage .= "☕ *Rincian Kopi Dipesan:*\n";
         foreach ($orderLines as $idx => $line) {
             $num = $idx + 1;
-            $waMessage .= "{$num}. {$line['product_name']} ({$line['variant_label']} · {$line['grind_option']}) x{$line['quantity']}\n";
+            $vLabel = \App\Support\VariantHelper::formatLabel($line['variant_label'] ?? null);
+            $variantParts = array_filter([$vLabel, $line['grind_option'] ?? null]);
+            $variantStr = ! empty($variantParts) ? ' (' . implode(' · ', $variantParts) . ')' : '';
+            $waMessage .= "{$num}. {$line['product_name']}{$variantStr} x{$line['quantity']}\n";
             if (! empty($line['custom_notes'])) {
                 $waMessage .= "   ↳ *{$line['custom_notes']}*\n";
             }

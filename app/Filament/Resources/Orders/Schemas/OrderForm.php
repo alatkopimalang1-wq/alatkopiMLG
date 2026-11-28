@@ -131,7 +131,10 @@ class OrderForm
                     ->schema([
                         Repeater::make('items')
                             ->relationship()
-                            ->itemLabel(fn (array $state): ?string => ($state['product_name'] ?? 'Kopi').(! empty($state['custom_notes']) ? " — [{$state['custom_notes']}]" : (! empty($state['variant_label']) ? " ({$state['variant_label']})" : '')))
+                            ->itemLabel(function (array $state): ?string {
+                                $v = \App\Support\VariantHelper::formatLabel($state['variant_label'] ?? null);
+                                return ($state['product_name'] ?? 'Kopi').(! empty($state['custom_notes']) ? " — [{$state['custom_notes']}]" : ($v ? " ({$v})" : ''));
+                            })
                             ->schema([
                                 Grid::make(4)->schema([
                                     TextInput::make('product_name')

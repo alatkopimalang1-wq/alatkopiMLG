@@ -362,10 +362,10 @@ export default function ProductShow({
 
     const waDirectUrl = isCurrentVariantOutOfStock
         ? `https://wa.me/6282132095241?text=${encodeURIComponent(
-              `Halo Alat Kopi Malang! Saya ingin menanyakan ketersediaan restock produk:\n*${product.name}*\nUkuran: ${selectedVariant.label}\n\nMohon info estimasi ready stock kembali. Terima kasih!`,
+              `Halo Alat Kopi Malang! Saya ingin menanyakan ketersediaan restock produk:\n*${product.name}*${formatVariantLabel(selectedVariant.label) ? `\nUkuran: ${selectedVariant.label}` : ''}\n\nMohon info estimasi ready stock kembali. Terima kasih!`,
           )}`
         : `https://wa.me/6282132095241?text=${encodeURIComponent(
-              `Halo Alat Kopi Malang! Saya ingin memesan langsung:\n*${product.name}*\nVarian: ${selectedVariant.label}${!isEquipment && grindOption ? `\nGilingan: ${grindOption}` : ''}${isPreorder ? `\nStatus: Pre-Order (${selectedDpPercent === 100 ? '100% Lunas' : `DP ${selectedDpPercent}%`})` : ''}\nJumlah: ${quantity}x (${formatRupiah(selectedVariant.price * quantity)})\n\nMohon info ketersediaan stok & ongkir ke alamat saya. Terima kasih!`,
+              `Halo Alat Kopi Malang! Saya ingin memesan langsung:\n*${product.name}*${formatVariantLabel(selectedVariant.label) ? `\nVarian: ${selectedVariant.label}` : ''}${!isEquipment && grindOption ? `\nGilingan: ${grindOption}` : ''}${isPreorder ? `\nStatus: Pre-Order (${selectedDpPercent === 100 ? '100% Lunas' : `DP ${selectedDpPercent}%`})` : ''}\nJumlah: ${quantity}x (${formatRupiah(selectedVariant.price * quantity)})\n\nMohon info ketersediaan stok & ongkir ke alamat saya. Terima kasih!`,
           )}`;
 
     const tokopediaUrl =

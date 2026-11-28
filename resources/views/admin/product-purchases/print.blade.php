@@ -87,7 +87,14 @@
                     <td class="text-center">{{ $idx + 1 }}</td>
                     <td>
                         <strong>{{ $item->product?->name ?? 'Produk #' . $item->product_id }}</strong><br>
-                        <small style="color: #6b7280;">Varian: {{ $item->variant?->label ?? 'Default' }} @if($item->variant?->sku) ({{ $item->variant->sku }}) @endif</small>
+                        @php
+                            $vLabel = \App\Support\VariantHelper::formatLabel($item->variant?->label);
+                        @endphp
+                        @if($vLabel !== '')
+                            <small style="color: #6b7280;">Varian: {{ $vLabel }} @if($item->variant?->sku) ({{ $item->variant->sku }}) @endif</small>
+                        @elseif($item->variant?->sku)
+                            <small style="color: #6b7280;">({{ $item->variant->sku }})</small>
+                        @endif
                     </td>
                     <td class="text-center">{{ (int) $item->quantity }}</td>
                     <td class="text-right">IDR {{ number_format((float) $item->unit_cost, 0, ',', '.') }}</td>

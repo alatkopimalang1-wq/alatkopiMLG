@@ -17,6 +17,7 @@ import {
     Wallet,
 } from 'lucide-react';
 import { PosActiveTab } from '@/types/pos';
+import { isDefaultStandardVariant } from '@/lib/variant-utils';
 
 interface ProfitLossTabProps {
     isActive: boolean;
@@ -857,16 +858,13 @@ export const ProfitLossTab: React.FC<ProfitLossTabProps> = ({
                                                                                                         it.product_name
                                                                                                     }
                                                                                                 </span>
+                                                                                                {!isDefaultStandardVariant(it.variant_label) && (
+                                                                                                    <span className="ml-1 text-stone-500">
+                                                                                                        ({it.variant_label})
+                                                                                                    </span>
+                                                                                                )}
                                                                                                 <span className="ml-1 text-stone-500">
-                                                                                                    (
-                                                                                                    {
-                                                                                                        it.variant_label
-                                                                                                    }
-                                                                                                    )
-                                                                                                    x
-                                                                                                    {
-                                                                                                        it.quantity
-                                                                                                    }
+                                                                                                    x{it.quantity}
                                                                                                 </span>
                                                                                                 {!it.has_hpp && (
                                                                                                     <span className="py-0.2 ml-1 rounded bg-amber-50 px-1 text-[9px] font-bold text-amber-600 dark:bg-amber-950">

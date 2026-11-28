@@ -8,6 +8,7 @@ import { useCart } from '@/context/cart-context';
 import { BundleCartItemDetails } from '@/components/bundle-cart-item-details';
 import { formatRupiah } from '@/lib/trans';
 import { getEffectiveVariantStock } from '@/lib/stock';
+import { formatVariantLabel } from '@/lib/variant-utils';
 
 export const CartDrawer: React.FC = () => {
     const { reservedStockByVariant = {} } = usePage<{
@@ -406,19 +407,17 @@ export const CartDrawer: React.FC = () => {
                                                             />
                                                         ) : (
                                                             <>
-                                                                <p className="text-xs font-medium text-accent-copper">
-                                                                    {
-                                                                        item
-                                                                            .variant
-                                                                            .label
-                                                                    }
-                                                                    {item.grindOption &&
-                                                                    item.product
-                                                                        .series !==
-                                                                        'alat-kopi'
-                                                                        ? ` • ${item.grindOption}`
-                                                                        : ''}
-                                                                </p>
+                                                                {(() => {
+                                                                    const vLabel = formatVariantLabel(item.variant?.label);
+                                                                    const hasGrind = item.grindOption && item.product.series !== 'alat-kopi';
+                                                                    if (!vLabel && !hasGrind) return null;
+                                                                    return (
+                                                                        <p className="text-xs font-medium text-accent-copper">
+                                                                            {vLabel}
+                                                                            {hasGrind ? (vLabel ? ` • ${item.grindOption}` : item.grindOption) : ''}
+                                                                        </p>
+                                                                    );
+                                                                })()}
                                                                 {item.customNotes && (
                                                                     <p className="bg-sand-100/80 mt-1 rounded px-2 py-0.5 text-[11px] font-medium text-balance text-brand-600">
                                                                         {

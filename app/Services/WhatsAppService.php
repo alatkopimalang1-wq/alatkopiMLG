@@ -64,7 +64,8 @@ class WhatsAppService
         $msg .= "\n🛒 *DETAIL PRODUK:*\n";
         foreach ($order->items as $idx => $item) {
             $n = $idx + 1;
-            $variantInfo = array_filter([$item->variant_label, $item->grind_option]);
+            $vLabel = \App\Support\VariantHelper::formatLabel($item->variant_label);
+            $variantInfo = array_filter([$vLabel, $item->grind_option]);
             $variantStr = ! empty($variantInfo) ? ' (' . implode(' · ', $variantInfo) . ')' : '';
             $itemSubtotal = number_format($item->subtotal, 0, ',', '.');
             $msg .= "{$n}. *{$item->product_name}*{$variantStr}\n";

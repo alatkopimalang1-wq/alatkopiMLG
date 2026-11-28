@@ -7,6 +7,8 @@
  * - WhatsApp e-Receipt Generator
  */
 
+import { isDefaultStandardVariant } from '@/lib/variant-utils';
+
 export interface ReceiptItem {
     product_name: string;
     variant_label: string;
@@ -188,7 +190,8 @@ function escapeHtml(str: string | null | undefined): string {
 
 export function cleanVariantLabelForReceipt(str: string | null | undefined): string {
     if (!str) return '';
-    return str.replace(/\s*\(1\s*kg\s*custom[^)]*\)/gi, '').trim();
+    const cleaned = str.replace(/\s*\(1\s*kg\s*custom[^)]*\)/gi, '').trim();
+    return isDefaultStandardVariant(cleaned) ? '' : cleaned;
 }
 
 /**
@@ -354,7 +357,7 @@ export function generateHtmlReceiptBody(
                 const subRows = entry.items
                     .map((bi, bIdx) => {
                         const cleanVar = cleanVariantLabelForReceipt(bi.variant_label);
-                        const showVar = cleanVar && cleanVar !== 'Standard' && cleanVar !== 'Standar';
+                        const showVar = Boolean(cleanVar);
                         return `
                             <tr>
                                 <td colspan="2" style="padding-left: 6px; padding-top: 2px; font-size: 9.5px; color: #555; font-weight: 700;">
@@ -390,7 +393,8 @@ export function generateHtmlReceiptBody(
                 `;
             }
             const item = entry.item;
-            const variantText = item.variant_label ? ` (${escapeHtml(cleanVariantLabelForReceipt(item.variant_label))})` : '';
+            const cleanVar = cleanVariantLabelForReceipt(item.variant_label);
+            const variantText = cleanVar ? ` (${escapeHtml(cleanVar)})` : '';
             return `
             <tr>
                 <td colspan="2" style="font-weight: 700; padding-top: 4px; font-size: ${baseFontSize}; color: #000; line-height: 1.3;">
@@ -685,7 +689,8 @@ export function generatePlainTextReceipt(
         }
         const item = entry.item;
         // Line 1: Product name + variant formatted to maxItemLen
-        const fullTitle = `${item.product_name} (${cleanVariantLabelForReceipt(item.variant_label)})`;
+        const cleanVar = cleanVariantLabelForReceipt(item.variant_label);
+        const fullTitle = cleanVar ? `${item.product_name} (${cleanVar})` : item.product_name;
         const maxLen = Math.min(maxItemLen, cols);
 
         if (fullTitle.length <= maxLen) {
@@ -2203,12 +2208,7 @@ export function generateWhatsAppReceiptUrl(
             }
             const i = entry.item;
             const cleanVar = cleanVariantLabelForReceipt(i.variant_label);
-            const variant =
-                cleanVar &&
-                cleanVar !== 'Default' &&
-                cleanVar !== 'Standar'
-                    ? ` (${cleanVar})`
-                    : '';
+            const variant = cleanVar ? ` (${cleanVar})` : '';
             return `${idx + 1}. *${i.product_name}*${variant}\n   ${i.quantity}x @ Rp ${formatRp(i.price)} = Rp ${formatRp(i.subtotal)}${i.custom_notes && !/^Bundling:/i.test(i.custom_notes) ? `\n   _${i.custom_notes}_` : ''}`;
         })
         .join('\n\n');
@@ -2626,12 +2626,7 @@ export function generatePreBillWhatsAppText(preBill: PreBillData): string {
     const itemsText = preBill.items
         .map((i, idx) => {
             const cleanVar = cleanVariantLabelForReceipt(i.variant_label);
-            const variant =
-                cleanVar &&
-                cleanVar !== 'Default' &&
-                cleanVar !== 'Standar'
-                    ? ` (${cleanVar})`
-                    : '';
+            const variant = cleanVar ? ` (${cleanVar})` : '';
             return `${idx + 1}. *${i.product_name}*${variant}\n   ${i.quantity}x @ Rp ${formatRp(i.price)} = Rp ${formatRp(i.subtotal)}${i.custom_notes && !/^Bundling:/i.test(i.custom_notes) ? `\n   _${i.custom_notes}_` : ''}`;
         })
         .join('\n\n');
@@ -2760,7 +2755,10 @@ export function generatePlainTextPreBill(
                 ? item.product_name.substring(0, cols)
                 : item.product_name;
         lines.push(title);
-        const detail = `  ${item.quantity}x @${formatRp(item.price)} (${cleanVariantLabelForReceipt(item.variant_label)})`;
+        const cleanVar = cleanVariantLabelForReceipt(item.variant_label);
+        const detail = cleanVar
+            ? `  ${item.quantity}x @${formatRp(item.price)} (${cleanVar})`
+            : `  ${item.quantity}x @${formatRp(item.price)}`;
         const itemSubtotal = `Rp ${formatRp(item.subtotal)}`;
         lines.push(padLine(detail, itemSubtotal, cols));
     }
@@ -3228,17 +3226,21 @@ export function buildA4InvoicePdfBytes(preBill: PreBillData): Uint8Array {
                 [0.067, 0.094, 0.153],
             ),
         );
-        ops.push(
-            textOp(
-                colDescX,
-                rowY + 26,
-                `Varian: ${truncateStr(cleanVariantLabelForReceipt(item.variant_label) || 'Standar', 48)}`,
-                'F1',
-                8.5,
-                [0.42, 0.447, 0.502],
-            ),
-        );
-        let itemNoteY = rowY + 37;
+        const cleanVar = cleanVariantLabelForReceipt(item.variant_label);
+        let itemNoteY = rowY + 26;
+        if (cleanVar) {
+            ops.push(
+                textOp(
+                    colDescX,
+                    rowY + 26,
+                    `Varian: ${truncateStr(cleanVar, 48)}`,
+                    'F1',
+                    8.5,
+                    [0.42, 0.447, 0.502],
+                ),
+            );
+            itemNoteY = rowY + 37;
+        }
         if (item.custom_notes && !/^Bundling:/i.test(item.custom_notes)) {
             const noteLines = wrapText(item.custom_notes, 54);
             for (const nl of noteLines) {

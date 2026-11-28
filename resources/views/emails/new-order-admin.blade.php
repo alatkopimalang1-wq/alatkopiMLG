@@ -273,7 +273,8 @@
                             <td>
                                 <div class="item-title">{{ $item->product_name }}</div>
                                 @php
-                                    $variants = array_filter([$item->variant_label, $item->grind_option]);
+                                    $vLabel = \App\Support\VariantHelper::formatLabel($item->variant_label);
+                                    $variants = array_filter([$vLabel, $item->grind_option]);
                                 @endphp
                                 @if(!empty($variants))
                                     <div class="item-variant">{{ implode(' · ', $variants) }}</div>

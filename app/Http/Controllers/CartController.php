@@ -155,7 +155,9 @@ class CartController extends Controller
         foreach ($orderLines as $i => $line) {
             $idx = $i + 1;
             $formattedPrice = 'Rp '.number_format($line['total'], 0, ',', '.');
-            $linesText .= "{$idx}. *{$line['product_name']}* ({$line['variant_label']})\n";
+            $vLabel = \App\Support\VariantHelper::formatLabel($line['variant_label'] ?? null);
+            $variantStr = $vLabel !== '' ? " ({$vLabel})" : '';
+            $linesText .= "{$idx}. *{$line['product_name']}*{$variantStr}\n";
             if (! empty($line['custom_notes'])) {
                 $linesText .= "   Racikan: {$line['custom_notes']}\n";
             }

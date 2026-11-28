@@ -323,7 +323,9 @@
                                             <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/40">
                                                 <td class="py-3 px-4 font-semibold text-gray-900 dark:text-white">
                                                     {{ $prod['product_name'] }}
-                                                    <span class="block text-[11px] text-gray-500 font-normal">{{ $prod['variant_label'] }}</span>
+                                                    @if (!\App\Support\VariantHelper::isStandard($prod['variant_label'] ?? null))
+                                                        <span class="block text-[11px] text-gray-500 font-normal">{{ $prod['variant_label'] }}</span>
+                                                    @endif
                                                 </td>
                                                 <td class="py-3 px-4 text-center font-bold text-gray-700 dark:text-gray-300">
                                                     {{ $prod['quantity'] }} pcs
@@ -415,7 +417,9 @@
                                                         <div class="text-[11px] text-gray-800 dark:text-gray-200">
                                                             <span class="font-bold text-gray-900 dark:text-white">{{ $item['quantity'] }}x</span>
                                                             {{ $item['product_name'] }}
-                                                            <span class="text-gray-500">({{ $item['variant_label'] }})</span>
+                                                            @if (!\App\Support\VariantHelper::isStandard($item['variant_label'] ?? null))
+                                                                <span class="text-gray-500">({{ $item['variant_label'] }})</span>
+                                                            @endif
                                                             @if ($item['unit_cost'] > 0)
                                                                 <span class="text-amber-600 dark:text-amber-400 font-mono text-[10px] ml-1">
                                                                     [HPP: Rp {{ number_format($item['unit_cost'], 0, ',', '.') }}]

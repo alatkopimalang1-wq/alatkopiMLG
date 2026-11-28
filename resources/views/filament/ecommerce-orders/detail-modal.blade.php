@@ -87,7 +87,7 @@
                         <div class="font-medium text-stone-900 dark:text-stone-100">
                             {{ $item->product_name }}
                         </div>
-                        @if ($item->variant_label)
+                        @if (!\App\Support\VariantHelper::isStandard($item->variant_label))
                             <div class="text-[10px] text-stone-500 dark:text-stone-400">
                                 Varian: {{ $item->variant_label }}
                             </div>

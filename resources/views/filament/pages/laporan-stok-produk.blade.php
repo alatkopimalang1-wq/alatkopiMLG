@@ -162,9 +162,16 @@
                                     @endif
                                 </td>
                                 <td class="px-4 py-3">
-                                    <span class="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-800 dark:text-gray-200">
-                                        {{ $row['variant_label'] }}
-                                    </span>
+                                    @php
+                                        $vLabel = \App\Support\VariantHelper::formatLabel($row['variant_label']);
+                                    @endphp
+                                    @if ($vLabel !== '')
+                                        <span class="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-800 dark:bg-gray-800 dark:text-gray-200">
+                                            {{ $vLabel }}
+                                        </span>
+                                    @elseif ($row['sku'] === '-')
+                                        <span class="text-xs text-gray-400">—</span>
+                                    @endif
                                     @if ($row['sku'] !== '-')
                                         <div class="mt-0.5 font-mono text-[11px] text-gray-400">SKU: {{ $row['sku'] }}</div>
                                     @endif

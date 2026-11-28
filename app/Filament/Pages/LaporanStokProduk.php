@@ -219,7 +219,7 @@ class LaporanStokProduk extends Page
                     $row['brand'],
                     $row['is_consignment'] ? 'Konsinyasi (Titip Jual)' : 'Milik Toko',
                     $row['consignor_name'] ?: '-',
-                    $row['variant_label'],
+                    \App\Support\VariantHelper::formatLabel($row['variant_label']) ?: '-',
                     $row['sku'],
                     $row['stock'],
                     (int) round($row['buy_price']),

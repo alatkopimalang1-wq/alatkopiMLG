@@ -151,15 +151,18 @@ class PosInvoicePdfGenerator
             }
             $num = (string) ($idx + 1);
             $prodName = trim((string) ($item['product_name'] ?? 'Produk Kopi'));
-            $rawVarLabel = trim((string) ($item['variant_label'] ?? 'Standar'));
-            $varLabel = trim((string) preg_replace('/\s*\(1\s*kg\s*custom[^)]*\)/i', '', $rawVarLabel)) ?: '1000 gr';
+            $rawVarLabel = trim((string) ($item['variant_label'] ?? ''));
+            $varLabel = trim((string) preg_replace('/\s*\(1\s*kg\s*custom[^)]*\)/i', '', $rawVarLabel));
+            $varLabel = \App\Support\VariantHelper::formatLabel($varLabel);
             $price = (float) ($item['price'] ?? 0);
             $qty = (int) ($item['quantity'] ?? 1);
             $itemSub = (float) ($item['subtotal'] ?? ($price * $qty));
 
             $ops[] = self::textCentered($marginX, 28, $rowY + 16, $num, 'F4', 9.0, [0.420, 0.447, 0.502]);
             $ops[] = self::text($colDescX, $rowY + 14, self::truncate($prodName, 44), 'F2', 10.0, [0.067, 0.094, 0.153]);
-            $ops[] = self::text($colDescX, $rowY + 26, 'Varian: '.self::truncate($varLabel, 48), 'F1', 8.5, [0.420, 0.447, 0.502]);
+            if ($varLabel !== '') {
+                $ops[] = self::text($colDescX, $rowY + 26, 'Varian: '.self::truncate($varLabel, 48), 'F1', 8.5, [0.420, 0.447, 0.502]);
+            }
 
             $ops[] = self::textRight($colPriceRight, $rowY + 19, 'Rp '.self::formatRp($price), 'F1', 9.5, [0.216, 0.255, 0.318]);
             $ops[] = self::textCentered($colQtyCenter - 20, 40, $rowY + 19, (string) $qty, 'F2', 9.5, [0.067, 0.094, 0.153]);

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { getEffectiveVariantStock } from '@/lib/stock';
+import { formatVariantLabel } from '@/lib/variant-utils';
 import {
     ArrowLeft,
     Building2,
@@ -571,10 +572,12 @@ export default function CartPage({
                     outOfStockItem.variant,
                     reservedStockByVariant,
                 ) ?? 0;
+            const outOfStockVarLabel = formatVariantLabel(outOfStockItem.variant?.label);
+            const varSuffix = outOfStockVarLabel ? ` (${outOfStockVarLabel})` : '';
             setErrorMessage(
                 vStock <= 0
-                    ? `Produk '${outOfStockItem.product.name}' (${outOfStockItem.variant.label}) stoknya sudah habis.`
-                    : `Stok '${outOfStockItem.product.name}' (${outOfStockItem.variant.label}) hanya tersisa ${vStock} pcs.`,
+                    ? `Produk '${outOfStockItem.product.name}'${varSuffix} stoknya sudah habis.`
+                    : `Stok '${outOfStockItem.product.name}'${varSuffix} hanya tersisa ${vStock} pcs.`,
             );
             return;
         }
@@ -1034,20 +1037,17 @@ export default function CartPage({
                                                                 />
                                                             ) : (
                                                                 <>
-                                                                    <p className="text-[11px] font-medium text-accent-copper">
-                                                                        {
-                                                                            item
-                                                                                .variant
-                                                                                .label
-                                                                        }
-                                                                        {item.grindOption &&
-                                                                        item
-                                                                            .product
-                                                                            .series !==
-                                                                            'alat-kopi'
-                                                                            ? ` · ${item.grindOption}`
-                                                                            : ''}
-                                                                    </p>
+                                                                    {(() => {
+                                                                        const vLabel = formatVariantLabel(item.variant?.label);
+                                                                        const hasGrind = item.grindOption && item.product.series !== 'alat-kopi';
+                                                                        if (!vLabel && !hasGrind) return null;
+                                                                        return (
+                                                                            <p className="text-[11px] font-medium text-accent-copper">
+                                                                                {vLabel}
+                                                                                {hasGrind ? (vLabel ? ` · ${item.grindOption}` : item.grindOption) : ''}
+                                                                            </p>
+                                                                        );
+                                                                    })()}
                                                                     {item.customNotes && (
                                                                         <div className="mt-1.5 rounded-lg border border-amber-200/70 bg-amber-50/80 p-2 text-[11px] leading-snug text-brand-900">
                                                                             <div className="flex items-center gap-1 text-[10px] font-bold tracking-wider text-accent-copper uppercase">

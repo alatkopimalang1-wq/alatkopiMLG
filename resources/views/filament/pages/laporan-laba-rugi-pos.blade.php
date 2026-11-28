@@ -526,7 +526,7 @@
                                                     <div class="text-xs">
                                                         <span class="font-bold text-blue-600 dark:text-blue-400">{{ $it['quantity'] }}x</span>
                                                         <span class="font-medium text-gray-900 dark:text-white">{{ $it['product_name'] }}</span>
-                                                        @if (!empty($it['variant_label']) && $it['variant_label'] !== 'Standar')
+                                                        @if (!\App\Support\VariantHelper::isStandard($it['variant_label'] ?? null))
                                                             <span class="text-[11px] text-gray-500">({{ $it['variant_label'] }})</span>
                                                         @endif
                                                         <span class="text-[10px] text-gray-400 ml-1">@ Rp {{ number_format($it['price'], 0, ',', '.') }}</span>

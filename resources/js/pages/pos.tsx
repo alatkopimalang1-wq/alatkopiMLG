@@ -2561,8 +2561,10 @@ function PosContent({
 
         const cartItemId = `${product.id}-${variant.id}`;
         const existingItem = cart.find((item) => item.id === cartItemId);
+        const vLabel = formatVariantLabel(variant.label);
+        const vSuffix = vLabel ? ` (${vLabel})` : '';
         if (!isPre && vStock !== null && existingItem && existingItem.quantity >= vStock) {
-            showToast(`Stok maksimal ${product.name} (${variant.label}) hanya ${vStock} pcs`);
+            showToast(`Stok maksimal ${product.name}${vSuffix} hanya ${vStock} pcs`);
             return;
         }
 
@@ -2597,7 +2599,7 @@ function PosContent({
             ];
         });
 
-        showToast(`${product.name} (${variant.label}) ditambahkan`);
+        showToast(`${product.name}${vSuffix} ditambahkan`);
     };
 
     // Recalculate discount amount when item quantity changes
@@ -5650,10 +5652,7 @@ function PosContent({
                                                                 (bi.discount_amount || 0) / pkgQty,
                                                             );
                                                             const lineDiscounted = Math.max(0, lineNormal - perPkgDisc);
-                                                            const showVariant =
-                                                                bi.variant_label &&
-                                                                bi.variant_label !== 'Standard' &&
-                                                                bi.variant_label !== 'Standar';
+                                                            const showVariant = Boolean(formatVariantLabel(bi.variant_label));
 
                                                             return (
                                                                 <div

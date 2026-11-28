@@ -381,7 +381,13 @@
                     <div class="item-row">
                         <div>
                             <span class="item-name">• {{ $item['name'] }}</span>
-                            <span class="item-spec">({{ $item['variant'] }} · {{ $item['grind'] }})</span>
+                            @php
+                                $vLabel = \App\Support\VariantHelper::formatLabel($item['variant'] ?? null);
+                                $specs = array_filter([$vLabel, $item['grind'] ?? null]);
+                            @endphp
+                            @if(!empty($specs))
+                                <span class="item-spec">({{ implode(' · ', $specs) }})</span>
+                            @endif
                             @if(!empty($item['custom_notes']))
                                 <div style="font-size: 8px; color: #92400e;">Racikan: {{ $item['custom_notes'] }}</div>
                             @endif

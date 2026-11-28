@@ -4,7 +4,7 @@
 export function isDefaultStandardVariant(label?: string | null): boolean {
     if (!label) return true;
     const norm = label.trim().toLowerCase();
-    return norm === '' || norm === 'standard' || norm === 'standar';
+    return norm === '' || norm === 'standard' || norm === 'standar' || norm === 'default';
 }
 
 /**

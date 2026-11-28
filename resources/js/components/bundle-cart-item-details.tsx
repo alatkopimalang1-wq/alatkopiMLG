@@ -1,6 +1,7 @@
 import React from 'react';
 import { formatRupiah } from '@/lib/trans';
 import type { BundleCartSubItem } from '@/types/sanubari';
+import { isDefaultStandardVariant } from '@/lib/variant-utils';
 
 interface BundleCartItemDetailsProps {
     bundleItems: BundleCartSubItem[];
@@ -52,8 +53,7 @@ export const BundleCartItemDetails: React.FC<BundleCartItemDetailsProps> = ({
         <div className="mt-2">
             <div className="space-y-1.5 text-[11px] sm:text-xs">
                 {bundleItems.map((sub, i) => {
-                    const showVariant =
-                        sub.variant_label && sub.variant_label !== 'Standard';
+                    const showVariant = !isDefaultStandardVariant(sub.variant_label);
                     const qtyTotal = sub.quantity * packageQty;
                     const lineDiscountedTotal = sub.bundle_price * qtyTotal;
                     const minDp = sub.preorder_dp_percent ?? 100;

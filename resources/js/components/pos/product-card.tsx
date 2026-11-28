@@ -1,6 +1,7 @@
 import React from 'react';
 import { Plus } from 'lucide-react';
 import { Product } from '@/types/pos';
+import { isDefaultStandardVariant } from '@/lib/variant-utils';
 
 interface ProductCardProps {
     product: Product;
@@ -138,7 +139,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
                                 )}
                             </span>
                         )}
-                        {!hasMultipleVariants && singleVariant && (
+                        {!hasMultipleVariants && singleVariant && !isDefaultStandardVariant(singleVariant.label) && (
                             <span className="block text-[9px] font-medium text-stone-500 dark:text-stone-400">
                                 {singleVariant.label}
                             </span>
