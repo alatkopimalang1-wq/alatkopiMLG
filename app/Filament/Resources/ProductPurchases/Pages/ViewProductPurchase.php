@@ -37,10 +37,21 @@ class ViewProductPurchase extends ViewRecord
 
         /** @var ProductPurchase $po */
         $po = $this->getRecord();
-        $po->load(['items.product', 'items.variant', 'user']);
+        $this->loadRecordRelations($po);
         $this->selectedStatus = (string) $po->status;
         $this->selectedPaymentMethod = (string) ($po->payment_method ?: ProductPurchase::PAYMENT_REKENING);
         $this->purchaseDateInput = $po->purchase_date?->format('Y-m-d') ?? now()->format('Y-m-d');
+    }
+
+    protected function loadRecordRelations(ProductPurchase $po): void
+    {
+        $po->load([
+            'items.product.primaryImage',
+            'items.product.images',
+            'items.product.variants',
+            'items.variant',
+            'user',
+        ]);
     }
 
     public function getHeading(): string
@@ -163,7 +174,7 @@ class ViewProductPurchase extends ViewRecord
         $po->status = $value;
         $po->save();
         $po->syncStockWithStatus();
-        $po->load(['items.product', 'items.variant', 'user']);
+        $this->loadRecordRelations($po);
 
         $hasStockNow = $po->hasStockApplied();
 
@@ -340,7 +351,7 @@ class ViewProductPurchase extends ViewRecord
                     $this->selectedStatus = (string) $po->status;
                 }
 
-                $po->load(['items.product', 'items.variant', 'user']);
+                $this->loadRecordRelations($po);
 
                 $body = 'Info penerimaan berhasil disimpan.';
                 if ($postStock && ! $hadStock && $po->hasStockApplied()) {
@@ -456,7 +467,7 @@ class ViewProductPurchase extends ViewRecord
                 $po->discount_amount = max(0, (float) ($data['discount_amount'] ?? 0));
                 $po->save();
                 $po->recalculateTotals();
-                $po->load(['items.product', 'items.variant', 'user']);
+                $this->loadRecordRelations($po);
 
                 Notification::make()
                     ->title('Diskon PO Diperbarui')
@@ -634,7 +645,7 @@ class ViewProductPurchase extends ViewRecord
                     $po->recalculateTotals();
                 });
 
-                $po->load(['items.product', 'items.variant', 'user']);
+                $this->loadRecordRelations($po);
 
                 Notification::make()
                     ->title('Produk Ditambahkan ke PO')
@@ -728,7 +739,7 @@ class ViewProductPurchase extends ViewRecord
                     $po->recalculateTotals();
                 });
 
-                $po->load(['items.product', 'items.variant', 'user']);
+                $this->loadRecordRelations($po);
 
                 Notification::make()
                     ->title('Item PO Diperbarui')
@@ -789,7 +800,7 @@ class ViewProductPurchase extends ViewRecord
                     $po->recalculateTotals();
                 });
 
-                $po->load(['items.product', 'items.variant', 'user']);
+                $this->loadRecordRelations($po);
 
                 Notification::make()
                     ->title('Item Dihapus')

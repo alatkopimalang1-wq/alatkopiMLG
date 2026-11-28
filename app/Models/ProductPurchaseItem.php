@@ -38,4 +38,24 @@ class ProductPurchaseItem extends Model
     {
         return $this->belongsTo(ProductVariant::class, 'product_variant_id');
     }
+
+    public function getImageUrlAttribute(): ?string
+    {
+        $raw = $this->variant?->image
+            ?: ($this->product?->primaryImage?->path
+                ?? $this->product?->images?->first(fn ($img) => ! empty($img->path))?->path
+                ?? $this->product?->variants?->first(fn ($v) => ! empty($v->image))?->image);
+
+        if (empty($raw)) {
+            return null;
+        }
+
+        if (str_starts_with($raw, 'http://') || str_starts_with($raw, 'https://')) {
+            return $raw;
+        }
+
+        $cleanPath = ltrim(preg_replace('#^/?(?:(?:storage|public)/)+#', '', trim($raw)), '/');
+
+        return asset('storage/' . $cleanPath);
+    }
 }

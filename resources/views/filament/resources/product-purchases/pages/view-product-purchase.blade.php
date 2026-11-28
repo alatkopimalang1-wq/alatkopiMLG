@@ -274,8 +274,7 @@
                                 <td class="py-3 px-4">
                                     <div class="flex items-center gap-3">
                                         @php
-                                            $img = $item->product?->image ?? null;
-                                            $imgUrl = $img ? (str_starts_with($img, 'http') ? $img : asset('storage/' . ltrim($img, '/'))) : null;
+                                            $imgUrl = $item->image_url;
                                         @endphp
                                         @if($imgUrl)
                                             <img src="{{ $imgUrl }}" alt="{{ $item->product?->name }}" class="w-10 h-10 rounded-lg object-cover border border-gray-200 dark:border-gray-700 shrink-0">
