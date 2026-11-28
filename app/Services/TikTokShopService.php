@@ -1212,9 +1212,9 @@ class TikTokShopService
                     ->where('marketplace_sku_id', (string) $skuId)
                     ->first();
 
-                // If already manually connected by user, keep their pairing
-                $finalProductId = $existing?->product_id ?: $localProduct?->id;
-                $finalVariantId = $existing?->product_variant_id ?: $localVariant?->id;
+                // Retain manual connection if already mapped by user, otherwise keep unconnected
+                $finalProductId = $existing?->product_id;
+                $finalVariantId = $existing?->product_variant_id;
                 $syncStatus = $finalProductId ? 'synced' : 'pending';
 
                 MarketplaceProductMapping::updateOrCreate(

@@ -367,8 +367,9 @@ class ShopeeService
                                 ->where('marketplace_sku_id', $modelId)
                                 ->first();
 
-                            $finalProductId = $existing?->product_id ?: $localProduct?->id;
-                            $finalVariantId = $existing?->product_variant_id ?: $localVariant?->id;
+                            // Retain manual connection if already mapped by user, otherwise keep unconnected
+                            $finalProductId = $existing?->product_id;
+                            $finalVariantId = $existing?->product_variant_id;
                             $syncStatus = $finalProductId ? 'synced' : 'pending';
 
                             MarketplaceProductMapping::updateOrCreate(
@@ -408,8 +409,9 @@ class ShopeeService
                     ->where('marketplace_sku_id', $itemId)
                     ->first();
 
-                $finalProductId = $existing?->product_id ?: $localProduct?->id;
-                $finalVariantId = $existing?->product_variant_id ?: $localVariant?->id;
+                // Retain manual connection if already mapped by user, otherwise keep unconnected
+                $finalProductId = $existing?->product_id;
+                $finalVariantId = $existing?->product_variant_id;
                 $syncStatus = $finalProductId ? 'synced' : 'pending';
 
                 MarketplaceProductMapping::updateOrCreate(

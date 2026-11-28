@@ -23,12 +23,12 @@ class MarketplaceStockSyncService
 
     public static function isWebsiteToMpEnabled(): bool
     {
-        return (bool) Setting::get('auto_sync_website_to_mp', true);
+        return static::isAutoSyncEnabled() && (bool) Setting::get('auto_sync_website_to_mp', false);
     }
 
     public static function isMpToWebsiteEnabled(): bool
     {
-        return static::isAutoSyncEnabled() && (bool) Setting::get('auto_sync_mp_to_website', true);
+        return static::isAutoSyncEnabled() && (bool) Setting::get('auto_sync_mp_to_website', false);
     }
 
     /**

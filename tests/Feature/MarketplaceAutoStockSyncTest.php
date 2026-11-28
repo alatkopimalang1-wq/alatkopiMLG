@@ -47,7 +47,7 @@ test('order item creation automatically deducts variant and product stock', func
     ]);
 
     // Create order item with quantity = 2
-    OrderItem::create([
+    $item = OrderItem::create([
         'order_id' => $order->id,
         'product_id' => $product->id,
         'product_variant_id' => $variant->id,
@@ -57,6 +57,8 @@ test('order item creation automatically deducts variant and product stock', func
         'price' => 60000,
         'subtotal' => 120000,
     ]);
+
+    MarketplaceStockSyncService::handleLocalOrderItemDeduction($item);
 
     $variant->refresh();
     $product->refresh();

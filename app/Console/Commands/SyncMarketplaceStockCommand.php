@@ -12,6 +12,11 @@ class SyncMarketplaceStockCommand extends Command
 
     public function handle(): int
     {
+        if (! MarketplaceStockSyncService::isAutoSyncEnabled()) {
+            $this->info("Sinkronisasi otomatis marketplace sedang nonaktif.");
+            return 0;
+        }
+
         $platform = $this->argument('platform');
         $this->info("Starting bi-directional marketplace stock synchronization" . ($platform ? " for {$platform}" : "") . "...");
 
