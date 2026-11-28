@@ -51,7 +51,9 @@ test('product consignment split calculates percentage and fixed price correctly'
 
     $splitPercent = $prodPercentage->calculateConsignmentSplit(100000);
     expect($splitPercent['store_commission'])->toBe(20000.0)
-        ->and($splitPercent['vendor_payout'])->toBe(80000.0);
+        ->and($splitPercent['vendor_payout'])->toBe(80000.0)
+        ->and($prodPercentage->consignor)->toBeInstanceOf(Consignor::class)
+        ->and($prodPercentage->consignor->name)->toBe('Roastery Partner');
 
     // Product with fixed vendor payout (Rp 75.000 net to vendor)
     $prodFixed = Product::create([
