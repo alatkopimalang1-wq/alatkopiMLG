@@ -39,7 +39,7 @@ class InventoriStok extends Page
 
     public string $stockFilter = 'all'; // all, in_stock, low_stock, out_of_stock, preorder
 
-    public string $movementSource = 'all'; // all, purchase, sales, web_order, pos_order, opname, manual_in, manual_out
+    public string $movementSource = 'all'; // all, purchase, sales, web_order, pos_order, marketplace_order, manual_in, manual_out, refund, marketplace_return, opname
 
     public string $movementSearch = '';
 
@@ -204,22 +204,20 @@ class InventoriStok extends Page
             }
         }
 
-        if (in_array($this->movementSource, ['all', 'sales', 'web_order', 'pos_order'], true)) {
+        if (in_array($this->movementSource, ['all', 'sales', 'web_order', 'pos_order', 'marketplace_order', 'refund', 'refund_web_pos', 'marketplace_return'], true)) {
             $orderItems = OrderItem::query()
                 ->with(['order', 'product', 'variant'])
-                ->where(fn ($q) => $q->where('is_preorder', false)->orWhereNull('is_preorder'))
-                ->whereHas('product', fn ($q) => $q->where('series', 'alat-kopi'))
+                ->whereHas('product', fn ($q) => $q->where('series', 'alat-kopi')->where(fn ($pq) => $pq->where('is_preorder', false)->orWhereNull('is_preorder')))
                 ->whereHas('order', function ($q) use ($startDt, $endDt) {
-                    $q->where('payment_status', 'paid')->where('status', '!=', 'cancelled');
                     if ($startDt) {
-                        $q->where(fn ($dq) => $dq->where('paid_at', '>=', $startDt)->orWhere(fn ($sq) => $sq->whereNull('paid_at')->where('created_at', '>=', $startDt)));
+                        $q->where(fn ($dq) => $dq->where('paid_at', '>=', $startDt)->orWhere('created_at', '>=', $startDt));
                     }
                     if ($endDt) {
-                        $q->where(fn ($dq) => $dq->where('paid_at', '<=', $endDt)->orWhere(fn ($sq) => $sq->whereNull('paid_at')->where('created_at', '<=', $endDt)));
+                        $q->where(fn ($dq) => $dq->where('paid_at', '<=', $endDt)->orWhere('created_at', '<=', $endDt));
                     }
                 })
                 ->orderByDesc('id')
-                ->limit(300)
+                ->limit(500)
                 ->get();
 
             foreach ($orderItems as $oi) {
@@ -227,14 +225,78 @@ class InventoriStok extends Page
                 if (! $order) {
                     continue;
                 }
+
                 $details = is_array($order->payment_details) ? $order->payment_details : [];
-                if (empty($details['stock_deducted_at']) && ! $order->is_pos) {
-                    continue;
+                $orderNumber = (string) $order->order_number;
+
+                // Cek Marketplace vs POS vs Website
+                $isMarketplace = (bool) ($order->is_ecommerce
+                    || str_starts_with($orderNumber, 'TTS-')
+                    || str_starts_with($orderNumber, 'ECOM-')
+                    || str_starts_with($orderNumber, 'SP-')
+                    || str_starts_with($orderNumber, 'SHOP-')
+                    || in_array(($details['source'] ?? null), ['tiktok', 'shopee', 'tokopedia', 'ecommerce'], true));
+
+                $mpName = 'Marketplace';
+                if (str_starts_with($orderNumber, 'TTS-') || ($details['source'] ?? '') === 'tiktok') {
+                    $mpName = 'TikTok Shop';
+                } elseif (str_starts_with($orderNumber, 'SP-') || str_starts_with($orderNumber, 'ECOM-') || ($details['source'] ?? '') === 'shopee') {
+                    $mpName = 'Shopee';
                 }
 
-                $isPos = $order->is_pos;
-                $src = $isPos ? 'pos_order' : 'web_order';
-                if (! in_array($this->movementSource, ['all', 'sales', $src], true)) {
+                $isPos = ! $isMarketplace && ($order->is_pos || str_starts_with($orderNumber, 'POS-') || ($details['source'] ?? null) === 'pos');
+                $isWeb = ! $isMarketplace && ! $isPos;
+
+                // Cek status Refund / Pembatalan / Retur paket
+                $isCancelledOrRefunded = in_array($order->payment_status, ['refunded', 'cancelled'], true)
+                    || in_array($order->status, ['refunded', 'cancelled'], true);
+
+                if ($isMarketplace && $isCancelledOrRefunded) {
+                    // Paket Marketplace yang dikembalikan (RTS / Cancelled / Refund)
+                    $src = 'marketplace_return';
+                    $srcLabel = "Paket MP Kembali ({$mpName})";
+                    $qtyChange = abs((int) $oi->quantity); // Masuk kembali ke stok
+                    $actor = "Kurir / {$mpName}";
+                    $notes = "Paket Dikembalikan / Retur {$mpName} (" . ($order->status_label ?: 'Batal') . ")";
+                    $allowedSources = ['all', 'refund', 'marketplace_return'];
+                } elseif (! $isMarketplace && $isCancelledOrRefunded) {
+                    // Refund / Pembatalan Web atau POS
+                    $src = 'refund_web_pos';
+                    $srcLabel = 'Refund / Retur';
+                    $qtyChange = abs((int) $oi->quantity); // Masuk kembali ke stok
+                    $actor = $isPos ? ($details['cashier_name'] ?? 'Kasir') : ($order->customer_name ?? 'Pelanggan');
+                    $notes = "Refund / Retur Pesanan (" . ($order->status_label ?: 'Batal') . ")";
+                    $allowedSources = ['all', 'refund', 'refund_web_pos'];
+                } elseif ($isMarketplace) {
+                    // Penjualan Marketplace Aktif
+                    $src = 'marketplace_order';
+                    $srcLabel = "Penjualan {$mpName}";
+                    $qtyChange = -abs((int) $oi->quantity);
+                    $actor = $order->customer_name ?: "Pelanggan {$mpName}";
+                    $notes = "Pesanan {$mpName} (" . ($order->status_label ?: 'Diproses') . ")";
+                    $allowedSources = ['all', 'sales', 'marketplace_order'];
+                } elseif ($isPos) {
+                    // Penjualan Kasir POS
+                    $src = 'pos_order';
+                    $srcLabel = 'Penjualan POS';
+                    $qtyChange = -abs((int) $oi->quantity);
+                    $actor = $details['cashier_name'] ?? 'Kasir';
+                    $notes = 'Transaksi Kasir POS';
+                    $allowedSources = ['all', 'sales', 'pos_order'];
+                } else {
+                    // Penjualan Website
+                    if (! in_array($order->payment_status, ['paid', 'completed'], true) && ! in_array($order->status, ['processing', 'shipped', 'completed'], true)) {
+                        continue;
+                    }
+                    $src = 'web_order';
+                    $srcLabel = 'Penjualan Web';
+                    $qtyChange = -abs((int) $oi->quantity);
+                    $actor = $order->customer_name ?: 'Pelanggan Website';
+                    $notes = 'Order Website Lunas';
+                    $allowedSources = ['all', 'sales', 'web_order'];
+                }
+
+                if (! in_array($this->movementSource, $allowedSources, true)) {
                     continue;
                 }
 
@@ -244,13 +306,13 @@ class InventoriStok extends Page
                     'date' => $dt?->format('d M Y, H:i') ?? '—',
                     'ref' => $order->order_number,
                     'source' => $src,
-                    'source_label' => $isPos ? 'Penjualan POS' : 'Penjualan Website',
+                    'source_label' => $srcLabel,
                     'product_name' => $oi->product_name ?: ($oi->product?->name ?? 'Produk'),
                     'variant_label' => $oi->variant_label ?: ($oi->variant?->label ?? 'Default'),
                     'sku' => $oi->variant?->sku ?? '—',
-                    'qty_change' => -abs((int) $oi->quantity),
-                    'actor' => $isPos ? ($details['cashier_name'] ?? 'Kasir') : ($order->customer_name ?? 'Pelanggan'),
-                    'notes' => $isPos ? 'Transaksi Kasir POS' : 'Order Website Lunas',
+                    'qty_change' => $qtyChange,
+                    'actor' => $actor,
+                    'notes' => $notes,
                 ]);
             }
         }

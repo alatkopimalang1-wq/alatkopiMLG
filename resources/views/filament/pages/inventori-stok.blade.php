@@ -255,9 +255,12 @@
                             'sales' => 'Semua Penjualan',
                             'web_order' => 'Penjualan Web',
                             'pos_order' => 'Penjualan POS',
-                            'opname' => 'Opname',
-                            'manual_in' => 'Penambahan Manual',
+                            'marketplace_order' => 'Penjualan Marketplace',
+                            'manual_in' => 'Pemasukan Manual',
                             'manual_out' => 'Pengurangan Manual',
+                            'refund' => 'Refund / Retur',
+                            'marketplace_return' => 'Paket MP Kembali',
+                            'opname' => 'Opname',
                         ] as $mKey => $mLabel)
                             <button type="button"
                                     wire:click="$set('movementSource', '{{ $mKey }}')"
@@ -306,6 +309,12 @@
                                             <span class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 text-xs font-semibold">{{ $mov['source_label'] }}</span>
                                         @elseif($mov['source'] === 'pos_order')
                                             <span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 text-xs font-semibold">{{ $mov['source_label'] }}</span>
+                                        @elseif($mov['source'] === 'marketplace_order')
+                                            <span class="px-2 py-0.5 rounded bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 text-xs font-semibold">{{ $mov['source_label'] }}</span>
+                                        @elseif($mov['source'] === 'refund_web_pos')
+                                            <span class="px-2 py-0.5 rounded bg-teal-100 text-teal-700 dark:bg-teal-950/60 dark:text-teal-300 text-xs font-semibold">{{ $mov['source_label'] }}</span>
+                                        @elseif($mov['source'] === 'marketplace_return')
+                                            <span class="px-2 py-0.5 rounded bg-cyan-100 text-cyan-700 dark:bg-cyan-950/60 dark:text-cyan-300 text-xs font-semibold">{{ $mov['source_label'] }}</span>
                                         @elseif($mov['source'] === 'manual_in')
                                             <span class="px-2 py-0.5 rounded bg-teal-100 text-teal-700 dark:bg-teal-950/60 dark:text-teal-300 text-xs font-semibold">{{ $mov['source_label'] }}</span>
                                         @elseif($mov['source'] === 'manual_out')
