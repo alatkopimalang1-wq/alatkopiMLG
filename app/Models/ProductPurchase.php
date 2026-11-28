@@ -167,11 +167,16 @@ class ProductPurchase extends Model
 
             if ($shouldHaveStock && ! $alreadyApplied) {
                 foreach ($purchase->items as $item) {
+                    $qty = max(1, (int) $item->quantity);
+                    $cost = max(0, (float) $item->unit_cost);
+                    $disc = max(0, (float) ($item->discount_amount ?? 0));
+                    $effectiveUnitCost = $disc > 0 ? max(0, ($qty * $cost - $disc) / $qty) : $cost;
+
                     $purchase->adjustVariantStock(
                         (int) $item->product_id,
                         (int) $item->product_variant_id,
-                        (int) $item->quantity,
-                        (float) $item->unit_cost
+                        $qty,
+                        $effectiveUnitCost
                     );
                 }
                 if (! $purchase->received_date) {
@@ -198,15 +203,28 @@ class ProductPurchase extends Model
 
     /**
      * Adjust a single variant's stock by delta and sync parent product stock.
+     * Uses Moving Weighted Average Cost (Biaya Rata-Rata Tertimbang) when new stock is added.
      */
     public function adjustVariantStock(int $productId, int $variantId, int $delta, float $unitCost = 0): void
     {
         $variant = ProductVariant::lockForUpdate()->find($variantId);
         if ($variant) {
-            $variant->stock = max(0, (int) ($variant->stock ?? 0) + $delta);
+            $oldStock = max(0, (int) ($variant->stock ?? 0));
+            $newStock = max(0, $oldStock + $delta);
+
             if ($delta > 0 && $unitCost > 0) {
-                $variant->cost_price = $unitCost;
+                $oldCost = (float) ($variant->cost_price ?? 0);
+                if ($oldStock > 0 && $oldCost > 0) {
+                    // Akumulasi: (stok lama * harga lama + stok baru * harga baru) / total stok baru
+                    $totalValue = ($oldStock * $oldCost) + ($delta * $unitCost);
+                    $totalQuantity = $oldStock + $delta;
+                    $variant->cost_price = round($totalValue / $totalQuantity, 2);
+                } else {
+                    $variant->cost_price = round($unitCost, 2);
+                }
             }
+
+            $variant->stock = $newStock;
             $variant->stock_status = $variant->stock > 0 ? 'in_stock' : 'out_of_stock';
             $variant->save();
         }

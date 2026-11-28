@@ -634,11 +634,12 @@ class ViewProductPurchase extends ViewRecord
                     ]);
 
                     if ($po->hasStockApplied()) {
+                        $effectiveUnitCost = $disc > 0 ? max(0, ($qty * $cost - $disc) / $qty) : $cost;
                         $po->adjustVariantStock(
                             (int) $data['product_id'],
                             (int) $data['product_variant_id'],
                             $qty,
-                            $cost
+                            $effectiveUnitCost
                         );
                     }
 
@@ -727,11 +728,12 @@ class ViewProductPurchase extends ViewRecord
                     if ($po->hasStockApplied()) {
                         $delta = $newQty - $oldQty;
                         if ($delta !== 0 || $cost > 0) {
+                            $effectiveUnitCost = $disc > 0 ? max(0, ($newQty * $cost - $disc) / $newQty) : $cost;
                             $po->adjustVariantStock(
                                 (int) $item->product_id,
                                 (int) $item->product_variant_id,
                                 $delta,
-                                $cost
+                                $effectiveUnitCost
                             );
                         }
                     }
