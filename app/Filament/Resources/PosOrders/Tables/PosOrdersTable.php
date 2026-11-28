@@ -178,7 +178,7 @@ class PosOrdersTable
                 DeleteAction::make()
                     ->label('Hapus')
                     ->modalHeading('Hapus Transaksi POS')
-                    ->modalDescription('Apakah Anda yakin ingin menghapus data transaksi POS ini? Data yang dihapus tidak dapat dikembalikan.')
+                    ->modalDescription('Apakah Anda yakin ingin menghapus data transaksi POS ini? Stok barang akan otomatis dikembalikan ke inventori toko.')
                     ->visible(fn () => auth()->user()?->isOwner() ?? false),
             ])
             ->bulkActions([
@@ -186,7 +186,7 @@ class PosOrdersTable
                     DeleteBulkAction::make()
                         ->label('Hapus Transaksi Terpilih')
                         ->modalHeading('Hapus Transaksi POS Terpilih')
-                        ->modalDescription('Apakah Anda yakin ingin menghapus transaksi POS yang dipilih? Data yang dihapus tidak dapat dikembalikan.')
+                        ->modalDescription('Apakah Anda yakin ingin menghapus transaksi POS yang dipilih? Stok barang akan otomatis dikembalikan ke inventori toko.')
                         ->visible(fn () => auth()->user()?->isOwner() ?? false),
                 ]),
             ]);
