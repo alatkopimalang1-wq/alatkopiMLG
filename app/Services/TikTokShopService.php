@@ -1104,40 +1104,43 @@ class TikTokShopService
         $mappedCount = 0;
         $activeSkuIds = [];
 
+        // Preload existing mappings for fast in-memory lookup
+        $existingMappings = MarketplaceProductMapping::where('platform', 'tiktok')
+            ->get()
+            ->keyBy(fn ($m) => "{$m->marketplace_product_id}_{$m->marketplace_sku_id}");
+
         foreach ($allProducts as $ttsProd) {
             $prodStatus = strtoupper($ttsProd['status'] ?? 'ACTIVATE');
             if ($prodStatus !== 'ACTIVATE') {
                 continue;
             }
 
-            $ttsProdId = $ttsProd['id'] ?? null;
+            $ttsProdId = (string) ($ttsProd['id'] ?? '');
+            if (! $ttsProdId) {
+                continue;
+            }
+
             $title = $ttsProd['title'] ?? '';
             $imageUrl = $ttsProd['main_images'][0]['urls'][0] ?? ($ttsProd['images'][0]['url'] ?? null);
 
-            // Fetch product detail to get sales_attributes (variant packaging names) and SKU images
-            $detail = $ttsProdId ? $this->getProduct((string) $ttsProdId) : null;
-            $skus = ! empty($detail['skus']) ? $detail['skus'] : ($ttsProd['skus'] ?? []);
-            if (! $imageUrl && ! empty($detail)) {
-                $imageUrl = $detail['main_images'][0]['urls'][0] ?? ($detail['images'][0]['url'] ?? null);
-            }
-
-            // Find best matching local product
-            $localProduct = Product::where('name', 'like', "%{$title}%")->first();
-            if (! $localProduct) {
-                foreach (['kawi', 'ijen', 'toraja', 'gayo', 'flores', 'kerinci', 'mandheling', 'bali', 'robusta', 'espresso'] as $kw) {
-                    if (stripos($title, $kw) !== false) {
-                        $localProduct = Product::where('name', 'like', "%{$kw}%")->first();
-                        if ($localProduct) {
-                            break;
-                        }
-                    }
+            // Use SKUs from search response directly. Only fetch detail if SKUs array is empty.
+            $skus = $ttsProd['skus'] ?? [];
+            if (empty($skus)) {
+                $detail = $this->getProduct($ttsProdId);
+                $skus = ! empty($detail['skus']) ? $detail['skus'] : [];
+                if (! $imageUrl && ! empty($detail)) {
+                    $imageUrl = $detail['main_images'][0]['urls'][0] ?? ($detail['images'][0]['url'] ?? null);
                 }
             }
 
             foreach ($skus as $sku) {
-                $skuId = $sku['id'] ?? null;
+                $skuId = (string) ($sku['id'] ?? '');
+                if (! $skuId) {
+                    continue;
+                }
+
                 $sellerSku = $sku['seller_sku'] ?? null;
-                $stock = (int) ($sku['inventory'][0]['quantity'] ?? 0);
+                $stock = (int) ($sku['inventory'][0]['quantity'] ?? ($sku['stock_infos'][0]['available_stock'] ?? 0));
                 $price = (float) ($sku['price']['sale_price'] ?? ($sku['price']['tax_exclusive_price'] ?? ($sku['price']['amount'] ?? 0)));
 
                 // Check SKU status
@@ -1146,7 +1149,7 @@ class TikTokShopService
                     continue;
                 }
 
-                $activeSkuIds[] = (string) $skuId;
+                $activeSkuIds[] = $skuId;
 
                 // Extract SKU-specific image if available
                 $skuImg = $sku['sales_attributes'][0]['sku_img']['urls'][0]
@@ -1182,36 +1185,7 @@ class TikTokShopService
                     ? implode(' / ', $variantParts)
                     : null;
 
-                // Match variant by SKU or matching variant label
-                $localVariant = null;
-                if ($localProduct) {
-                    if ($sellerSku) {
-                        $localVariant = ProductVariant::where('product_id', $localProduct->id)
-                            ->where('sku', $sellerSku)
-                            ->first();
-                    }
-
-                    if (! $localVariant && $skuVariantLabel) {
-                        $cleanTerm = trim(str_ireplace(['(tester)', 'gr', 'gram'], '', $skuVariantLabel));
-                        $localVariant = ProductVariant::where('product_id', $localProduct->id)
-                            ->where(function ($q) use ($skuVariantLabel, $cleanTerm) {
-                                $q->where('label', 'like', "%{$skuVariantLabel}%");
-                                if (! empty($cleanTerm)) {
-                                    $q->orWhere('label', 'like', "%{$cleanTerm}%");
-                                }
-                            })
-                            ->first();
-                    }
-
-                    if (! $localVariant) {
-                        $localVariant = ProductVariant::where('product_id', $localProduct->id)->first();
-                    }
-                }
-
-                $existing = MarketplaceProductMapping::where('platform', 'tiktok')
-                    ->where('marketplace_product_id', (string) $ttsProdId)
-                    ->where('marketplace_sku_id', (string) $skuId)
-                    ->first();
+                $existing = $existingMappings->get("{$ttsProdId}_{$skuId}");
 
                 // Retain manual connection if already mapped by user, otherwise keep unconnected
                 $finalProductId = $existing?->product_id;
@@ -1221,8 +1195,8 @@ class TikTokShopService
                 MarketplaceProductMapping::updateOrCreate(
                     [
                         'platform' => 'tiktok',
-                        'marketplace_product_id' => (string) $ttsProdId,
-                        'marketplace_sku_id' => (string) $skuId,
+                        'marketplace_product_id' => $ttsProdId,
+                        'marketplace_sku_id' => $skuId,
                     ],
                     [
                         'marketplace_product_name' => $title,

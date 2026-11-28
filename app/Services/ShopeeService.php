@@ -299,8 +299,10 @@ class ShopeeService
             $offset = (int) ($data['response']['next_offset'] ?? ($offset + $pageSize));
         } while ($hasNextPage);
 
-        // Preload all local products with variants for matching
-        $allLocalProducts = Product::with('variants')->get();
+        // Preload existing mappings for fast in-memory lookup
+        $existingMappings = MarketplaceProductMapping::where('platform', 'shopee')
+            ->get()
+            ->keyBy(fn ($m) => "{$m->marketplace_product_id}_{$m->marketplace_sku_id}");
 
         // 2. Fetch details for each item (in batches of 50) and variants
         foreach (array_chunk($allItemIds, 50) as $chunkIds) {
@@ -326,9 +328,6 @@ class ShopeeService
                 $itemPrice = $itemInfo['price_info'][0]['current_price'] 
                     ?? $itemInfo['price_info'][0]['original_price'] 
                     ?? 0;
-
-                // Match local product by shared keywords
-                $localProduct = self::findBestMatchingProduct($itemName, $allLocalProducts);
 
                 if ($hasModel) {
                     // Fetch models/variants from /api/v2/product/get_model_list
@@ -360,13 +359,7 @@ class ShopeeService
 
                             $activeSkuIds[] = $modelId;
 
-                            // Match local variant (30gr Shopee -> 15gr Website, others match number)
-                            $localVariant = $localProduct ? self::findBestMatchingVariant($localProduct, $modelName) : null;
-
-                            $existing = MarketplaceProductMapping::where('platform', 'shopee')
-                                ->where('marketplace_product_id', $itemId)
-                                ->where('marketplace_sku_id', $modelId)
-                                ->first();
+                            $existing = $existingMappings->get("{$itemId}_{$modelId}");
 
                             // Retain manual connection if already mapped by user, otherwise keep unconnected
                             $finalProductId = $existing?->product_id;
@@ -404,11 +397,7 @@ class ShopeeService
                 // If no models or hasModel is false:
                 $activeSkuIds[] = $itemId;
 
-                $localVariant = $localProduct ? self::findBestMatchingVariant($localProduct, 'Default') : null;
-                $existing = MarketplaceProductMapping::where('platform', 'shopee')
-                    ->where('marketplace_product_id', $itemId)
-                    ->where('marketplace_sku_id', $itemId)
-                    ->first();
+                $existing = $existingMappings->get("{$itemId}_{$itemId}");
 
                 // Retain manual connection if already mapped by user, otherwise keep unconnected
                 $finalProductId = $existing?->product_id;
