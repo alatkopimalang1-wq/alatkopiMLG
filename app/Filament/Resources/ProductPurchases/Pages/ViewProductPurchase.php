@@ -481,10 +481,49 @@ class ViewProductPurchase extends ViewRecord
                     ->options(fn (): array => Product::query()
                         ->where('series', 'alat-kopi')
                         ->where(fn ($q) => $q->where('is_preorder', false)->orWhereNull('is_preorder'))
+                        ->with(['variants' => fn ($q) => $q->select('id', 'product_id', 'label', 'sku')])
                         ->orderBy('name')
-                        ->pluck('name', 'id')
+                        ->get()
+                        ->mapWithKeys(function (Product $p): array {
+                            $skus = $p->variants->pluck('sku')->filter()->unique()->values();
+                            $skuText = $skus->isNotEmpty() ? ' (SKU: ' . $skus->implode(', ') . ')' : '';
+
+                            return [$p->id => "{$p->name}{$skuText}"];
+                        })
                         ->all())
                     ->searchable()
+                    ->getSearchResultsUsing(function (string $search): array {
+                        return Product::query()
+                            ->where('series', 'alat-kopi')
+                            ->where(fn ($q) => $q->where('is_preorder', false)->orWhereNull('is_preorder'))
+                            ->where(function ($query) use ($search) {
+                                $query->where('name', 'like', "%{$search}%")
+                                    ->orWhereHas('variants', function ($vq) use ($search) {
+                                        $vq->where('sku', 'like', "%{$search}%")
+                                            ->orWhere('label', 'like', "%{$search}%");
+                                    });
+                            })
+                            ->with(['variants' => fn ($q) => $q->select('id', 'product_id', 'label', 'sku')])
+                            ->limit(50)
+                            ->get()
+                            ->mapWithKeys(function (Product $p): array {
+                                $skus = $p->variants->pluck('sku')->filter()->unique()->values();
+                                $skuText = $skus->isNotEmpty() ? ' (SKU: ' . $skus->implode(', ') . ')' : '';
+
+                                return [$p->id => "{$p->name}{$skuText}"];
+                            })
+                            ->all();
+                    })
+                    ->getOptionLabelUsing(function ($value): ?string {
+                        $p = Product::with(['variants' => fn ($q) => $q->select('id', 'product_id', 'label', 'sku')])->find($value);
+                        if (! $p) {
+                            return null;
+                        }
+                        $skus = $p->variants->pluck('sku')->filter()->unique()->values();
+                        $skuText = $skus->isNotEmpty() ? ' (SKU: ' . $skus->implode(', ') . ')' : '';
+
+                        return "{$p->name}{$skuText}";
+                    })
                     ->preload()
                     ->live()
                     ->afterStateUpdated(function ($state, callable $set) {
@@ -516,11 +555,14 @@ class ViewProductPurchase extends ViewRecord
 
                         return ProductVariant::where('product_id', $productId)
                             ->get()
-                            ->mapWithKeys(fn (ProductVariant $v) => [
-                                $v->id => "{$v->label} (Stok: ".((int) ($v->stock ?? 0)).' pcs)',
-                            ])
+                            ->mapWithKeys(function (ProductVariant $v): array {
+                                $skuText = $v->sku ? " [SKU: {$v->sku}]" : '';
+
+                                return [$v->id => "{$v->label}{$skuText} (Stok: " . ((int) ($v->stock ?? 0)) . ' pcs)'];
+                            })
                             ->all();
                     })
+                    ->searchable()
                     ->live()
                     ->afterStateUpdated(function ($state, callable $set) {
                         if (! $state) {
