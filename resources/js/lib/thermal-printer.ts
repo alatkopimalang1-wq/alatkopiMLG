@@ -3154,33 +3154,41 @@ export function buildA4InvoicePdfBytes(preBill: PreBillData): Uint8Array {
         if (rowY > PAGE_H - 190) break;
         const entry = groupedA4Entries[idx];
         if (entry.type === 'bundle') {
-            ops.push(
-                textCenterOp(marginX, 28, rowY + 16, String(idx + 1), 'F4', 9.0, [0.42, 0.447, 0.502]),
-            );
-            ops.push(
-                textOp(
-                    colDescX,
-                    rowY + 14,
-                    truncateStr(entry.bundleName, 44),
-                    'F2',
-                    10.0,
-                    [0.067, 0.094, 0.153],
-                ),
-            );
-            let subY = rowY + 27;
+            const bundleLines = wrapText(entry.bundleName, 44);
+            let bDescY = rowY + 14;
+            for (const bl of bundleLines) {
+                ops.push(
+                    textOp(
+                        colDescX,
+                        bDescY,
+                        bl,
+                        'F2',
+                        10.0,
+                        [0.067, 0.094, 0.153],
+                    ),
+                );
+                bDescY += 12;
+            }
+            let subY = bDescY + 1;
             entry.items.forEach((bi, bIdx) => {
                 const cleanVar = cleanVariantLabelForReceipt(bi.variant_label);
-                const showVar = cleanVar && cleanVar !== 'Standard' && cleanVar !== 'Standar';
+                const showVar = Boolean(cleanVar);
                 const label = `ITEM ${bIdx + 1}: ${bi.product_name}${showVar ? ` (${cleanVar})` : ''} (${bi.unit_qty}x @ Rp ${formatRp(bi.discounted_line_price)})`;
-                ops.push(
-                    textOp(colDescX, subY, truncateStr(label, 58), 'F1', 8.0, [0.35, 0.38, 0.44]),
-                );
-                subY += 11;
+                const subLines = wrapText(label, 58);
+                for (const sl of subLines) {
+                    ops.push(
+                        textOp(colDescX, subY, sl, 'F1', 8.0, [0.35, 0.38, 0.44]),
+                    );
+                    subY += 10;
+                }
             });
+            ops.push(
+                textCenterOp(marginX, 28, rowY + 14, String(idx + 1), 'F4', 9.0, [0.42, 0.447, 0.502]),
+            );
             ops.push(
                 textRightOp(
                     colPriceRight,
-                    rowY + 18,
+                    rowY + 14,
                     `Rp ${formatRp(Math.round(entry.totalDiscounted / entry.bundleQty))}`,
                     'F1',
                     9.5,
@@ -3191,7 +3199,7 @@ export function buildA4InvoicePdfBytes(preBill: PreBillData): Uint8Array {
                 textCenterOp(
                     colQtyCenter - 20,
                     40,
-                    rowY + 18,
+                    rowY + 14,
                     `${entry.bundleQty}x`,
                     'F2',
                     9.5,
@@ -3201,46 +3209,53 @@ export function buildA4InvoicePdfBytes(preBill: PreBillData): Uint8Array {
             ops.push(
                 textRightOp(
                     colSubRight,
-                    rowY + 18,
+                    rowY + 14,
                     `Rp ${formatRp(entry.totalDiscounted)}`,
                     'F2',
                     9.5,
                     [0.067, 0.094, 0.153],
                 ),
             );
-            rowY = Math.max(rowY + 34, subY + 6);
+            rowY = Math.max(rowY + 30, subY + 4);
             ops.push(lineOp(marginX, rowY, rightX, rowY, [0.898, 0.906, 0.922], 0.7));
             continue;
         }
         const item = entry.item;
-        ops.push(
-            textCenterOp(marginX, 28, rowY + 16, String(idx + 1), 'F4', 9.0, [0.42, 0.447, 0.502]),
-        );
-        ops.push(
-            textOp(
-                colDescX,
-                rowY + 14,
-                truncateStr(item.product_name, 44),
-                'F2',
-                10.0,
-                [0.067, 0.094, 0.153],
-            ),
-        );
-        const cleanVar = cleanVariantLabelForReceipt(item.variant_label);
-        let itemNoteY = rowY + 26;
-        if (cleanVar) {
+        const prodLines = wrapText(item.product_name, 44);
+        let curDescY = rowY + 14;
+        for (const pl of prodLines) {
             ops.push(
                 textOp(
                     colDescX,
-                    rowY + 26,
-                    `Varian: ${truncateStr(cleanVar, 48)}`,
-                    'F1',
-                    8.5,
-                    [0.42, 0.447, 0.502],
+                    curDescY,
+                    pl,
+                    'F2',
+                    10.0,
+                    [0.067, 0.094, 0.153],
                 ),
             );
-            itemNoteY = rowY + 37;
+            curDescY += 12;
         }
+
+        const cleanVar = cleanVariantLabelForReceipt(item.variant_label);
+        if (cleanVar) {
+            const varLines = wrapText(`Varian: ${cleanVar}`, 48);
+            for (const vl of varLines) {
+                ops.push(
+                    textOp(
+                        colDescX,
+                        curDescY,
+                        vl,
+                        'F1',
+                        8.5,
+                        [0.42, 0.447, 0.502],
+                    ),
+                );
+                curDescY += 11;
+            }
+        }
+
+        let itemNoteY = curDescY;
         if (item.custom_notes && !/^Bundling:/i.test(item.custom_notes)) {
             const noteLines = wrapText(item.custom_notes, 54);
             for (const nl of noteLines) {
@@ -3250,10 +3265,14 @@ export function buildA4InvoicePdfBytes(preBill: PreBillData): Uint8Array {
                 itemNoteY += 10;
             }
         }
+
+        ops.push(
+            textCenterOp(marginX, 28, rowY + 14, String(idx + 1), 'F4', 9.0, [0.42, 0.447, 0.502]),
+        );
         ops.push(
             textRightOp(
                 colPriceRight,
-                rowY + 19,
+                rowY + 14,
                 `Rp ${formatRp(item.price)}`,
                 'F1',
                 9.5,
@@ -3264,7 +3283,7 @@ export function buildA4InvoicePdfBytes(preBill: PreBillData): Uint8Array {
             textCenterOp(
                 colQtyCenter - 20,
                 40,
-                rowY + 19,
+                rowY + 14,
                 String(item.quantity),
                 'F2',
                 9.5,
@@ -3274,14 +3293,14 @@ export function buildA4InvoicePdfBytes(preBill: PreBillData): Uint8Array {
         ops.push(
             textRightOp(
                 colSubRight,
-                rowY + 19,
+                rowY + 14,
                 `Rp ${formatRp(item.subtotal)}`,
                 'F2',
                 9.5,
                 [0.067, 0.094, 0.153],
             ),
         );
-        rowY = Math.max(rowY + 34, itemNoteY + 4);
+        rowY = Math.max(rowY + 30, itemNoteY + 4);
         ops.push(lineOp(marginX, rowY, rightX, rowY, [0.898, 0.906, 0.922], 0.7));
     }
 

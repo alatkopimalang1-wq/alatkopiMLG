@@ -158,17 +158,33 @@ class PosInvoicePdfGenerator
             $qty = (int) ($item['quantity'] ?? 1);
             $itemSub = (float) ($item['subtotal'] ?? ($price * $qty));
 
-            $ops[] = self::textCentered($marginX, 28, $rowY + 16, $num, 'F4', 9.0, [0.420, 0.447, 0.502]);
-            $ops[] = self::text($colDescX, $rowY + 14, self::truncate($prodName, 44), 'F2', 10.0, [0.067, 0.094, 0.153]);
+            $prodLines = self::wrapText($prodName, 44);
+            $descY = $rowY + 14;
+            foreach ($prodLines as $pLine) {
+                $ops[] = self::text($colDescX, $descY, $pLine, 'F2', 10.0, [0.067, 0.094, 0.153]);
+                $descY += 12;
+            }
             if ($varLabel !== '') {
-                $ops[] = self::text($colDescX, $rowY + 26, 'Varian: '.self::truncate($varLabel, 48), 'F1', 8.5, [0.420, 0.447, 0.502]);
+                $varLines = self::wrapText('Varian: '.$varLabel, 48);
+                foreach ($varLines as $vLine) {
+                    $ops[] = self::text($colDescX, $descY, $vLine, 'F1', 8.5, [0.420, 0.447, 0.502]);
+                    $descY += 11;
+                }
+            }
+            if (! empty($item['custom_notes']) && ! preg_match('/^Bundling:/i', (string) $item['custom_notes'])) {
+                foreach (self::wrapText((string) $item['custom_notes'], 54) as $nl) {
+                    $ops[] = self::text($colDescX, $descY, $nl, 'F1', 7.8, [0.012, 0.412, 0.631]);
+                    $descY += 10;
+                }
             }
 
-            $ops[] = self::textRight($colPriceRight, $rowY + 19, 'Rp '.self::formatRp($price), 'F1', 9.5, [0.216, 0.255, 0.318]);
-            $ops[] = self::textCentered($colQtyCenter - 20, 40, $rowY + 19, (string) $qty, 'F2', 9.5, [0.067, 0.094, 0.153]);
-            $ops[] = self::textRight($colSubRight, $rowY + 19, 'Rp '.self::formatRp($itemSub), 'F2', 9.5, [0.067, 0.094, 0.153]);
+            $ops[] = self::textCentered($marginX, 28, $rowY + 14, $num, 'F4', 9.0, [0.420, 0.447, 0.502]);
+            $ops[] = self::textRight($colPriceRight, $rowY + 14, 'Rp '.self::formatRp($price), 'F1', 9.5, [0.216, 0.255, 0.318]);
+            $ops[] = self::textCentered($colQtyCenter - 20, 40, $rowY + 14, (string) $qty, 'F2', 9.5, [0.067, 0.094, 0.153]);
+            $ops[] = self::textRight($colSubRight, $rowY + 14, 'Rp '.self::formatRp($itemSub), 'F2', 9.5, [0.067, 0.094, 0.153]);
 
-            $rowY += 34;
+            $rowH = max(30, ($descY - $rowY) + 4);
+            $rowY += $rowH;
             $ops[] = self::line($marginX, $rowY, $rightX, $rowY, [0.898, 0.906, 0.922], 0.7);
         }
 
