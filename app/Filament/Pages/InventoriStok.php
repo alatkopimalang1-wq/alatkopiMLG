@@ -7,6 +7,8 @@ use App\Models\Product;
 use App\Models\ProductPurchaseItem;
 use App\Models\ProductVariant;
 use App\Models\StockAdjustment;
+use App\Models\StockDocument;
+use App\Models\StockDocumentItem;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
@@ -70,6 +72,44 @@ class InventoriStok extends Page
         $this->monthFilter = '';
         $this->startDate = '';
         $this->endDate = '';
+    }
+
+    public function createStockDocumentForVariant(int $variantId, string $mode): void
+    {
+        $type = $mode === 'out' ? 'out' : 'in';
+        $variant = ProductVariant::with('product')->find($variantId);
+
+        if (! $variant || ! $variant->product) {
+            return;
+        }
+
+        if ($variant->product->is_preorder) {
+            Notification::make()
+                ->title('Produk Pre-Order')
+                ->body('Produk Pre-Order menggunakan status Tersedia/Kosong, bukan qty stok.')
+                ->warning()
+                ->send();
+
+            return;
+        }
+
+        $doc = StockDocument::create([
+            'document_number' => StockDocument::generateNumber($type),
+            'type' => $type,
+            'status' => 'draft',
+            'document_date' => now()->toDateString(),
+            'user_id' => auth()->id(),
+        ]);
+
+        StockDocumentItem::create([
+            'stock_document_id' => $doc->id,
+            'product_id' => $variant->product_id,
+            'product_variant_id' => $variant->id,
+            'qty' => 1,
+            'unit_cost' => $type === 'in' ? (float) ($variant->cost_price ?? 0) : 0,
+        ]);
+
+        $this->redirect(ManageStockDocument::getUrl(['record' => $doc->id]));
     }
 
     public function getMaxContentWidth(): ?string

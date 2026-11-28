@@ -47,6 +47,17 @@
                     Riwayat Penyesuaian Manual
                 </button>
             </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+                <a href="{{ \App\Filament\Pages\StokMasukPage::getUrl() }}"
+                   class="inline-flex items-center gap-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white transition">
+                    + Stok Masuk
+                </a>
+                <a href="{{ \App\Filament\Pages\StokKeluarPage::getUrl() }}"
+                   class="inline-flex items-center gap-1 rounded-lg bg-rose-600 hover:bg-rose-700 px-3 py-1.5 text-xs font-semibold text-white transition">
+                    - Stok Keluar
+                </a>
+            </div>
         </div>
 
         @if($activeTab === 'stok')
@@ -158,15 +169,15 @@
                                         @else
                                             <div class="inline-flex flex-wrap items-center justify-center gap-1.5">
                                                 <button type="button"
-                                                        wire:click="mountAction('adjustStock', { variantId: {{ $v->id }}, mode: 'in' })"
+                                                        wire:click="createStockDocumentForVariant({{ $v->id }}, 'in')"
                                                         class="inline-flex items-center gap-1 rounded-md bg-emerald-600 hover:bg-emerald-700 px-2.5 py-1 text-xs font-semibold text-white cursor-pointer transition">
-                                                    + Tambah
+                                                    + Stok Masuk
                                                 </button>
                                                 <button type="button"
                                                         @if($qty <= 0) disabled @endif
-                                                        wire:click="mountAction('adjustStock', { variantId: {{ $v->id }}, mode: 'out' })"
+                                                        wire:click="createStockDocumentForVariant({{ $v->id }}, 'out')"
                                                         class="inline-flex items-center gap-1 rounded-md bg-rose-600 hover:bg-rose-700 disabled:opacity-40 disabled:cursor-not-allowed px-2.5 py-1 text-xs font-semibold text-white cursor-pointer transition">
-                                                    - Kurangi
+                                                    - Stok Keluar
                                                 </button>
                                                 <button type="button"
                                                         wire:click="mountAction('adjustStock', { variantId: {{ $v->id }}, mode: 'opname' })"
