@@ -37,7 +37,7 @@ class EquipmentProductResource extends Resource
     {
         return parent::getEloquentQuery()
             ->where('series', 'alat-kopi')
-            ->with(['primaryImage', 'images', 'variants', 'categories']);
+            ->with(['primaryImage', 'images', 'variants', 'categories', 'consignor']);
     }
 
     public static function form(Schema $schema): Schema

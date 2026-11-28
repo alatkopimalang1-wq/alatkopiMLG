@@ -87,8 +87,15 @@ class EquipmentProductsTable
                             $catName = $catName[app()->getLocale()] ?? $catName['id'] ?? $catName['en'] ?? reset($catName) ?? '';
                         }
                         $label = $catName ?: ($record->process ?: ($record->origin ?: 'ALAT KOPI'));
+                        $labelStr = strtoupper((string) $label);
 
-                        return strtoupper((string) $label);
+                        if ($record->is_consignment) {
+                            $vendorName = $record->consignor?->name ?: 'Mitra';
+
+                            return "[TITIP JUAL: {$vendorName}] • {$labelStr}";
+                        }
+
+                        return $labelStr;
                     }),
 
                 TextColumn::make('variants_label')
@@ -332,6 +339,24 @@ class EquipmentProductsTable
 
                         if (in_array($value, ['active', 'archived'], true)) {
                             return $query->where('status', $value);
+                        }
+
+                        return $query;
+                    }),
+
+                SelectFilter::make('consignment')
+                    ->label('Kepemilikan')
+                    ->options([
+                        'owned' => 'Milik Toko (Stok Sendiri)',
+                        'consignment' => 'Konsinyasi (Titip Jual)',
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        $value = $data['value'] ?? null;
+                        if ($value === 'consignment') {
+                            return $query->where('is_consignment', true);
+                        }
+                        if ($value === 'owned') {
+                            return $query->where(fn (Builder $q) => $q->where('is_consignment', false)->orWhereNull('is_consignment'));
                         }
 
                         return $query;

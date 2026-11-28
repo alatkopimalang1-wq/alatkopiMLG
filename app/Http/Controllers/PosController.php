@@ -368,6 +368,17 @@ class PosController extends Controller
                     $notes = $notes ? "{$notes} ({$discountNote})" : $discountNote;
                 }
 
+                $isConsignment = (bool) ($product?->is_consignment ?? false);
+                $consignorId = $isConsignment ? $product?->consignor_id : null;
+                $vendorPayout = null;
+                $storeCommission = null;
+
+                if ($isConsignment && $product) {
+                    $split = $product->calculateConsignmentSplit($price, $variant);
+                    $vendorPayout = $split['vendor_payout'];
+                    $storeCommission = $split['store_commission'];
+                }
+
                 $orderLines[] = [
                     'product_id' => $product?->id,
                     'product_variant_id' => $variant?->id,
@@ -378,6 +389,10 @@ class PosController extends Controller
                     'price' => $price,
                     'quantity' => $quantity,
                     'subtotal' => $lineSubtotal,
+                    'is_consignment' => $isConsignment,
+                    'consignor_id' => $consignorId,
+                    'consignment_vendor_payout' => $vendorPayout,
+                    'consignment_store_commission' => $storeCommission,
                     'custom_notes' => $notes,
                 ];
             }
@@ -1969,6 +1984,17 @@ class PosController extends Controller
                         $notes = $notes ? "{$notes} ({$discountNote})" : $discountNote;
                     }
 
+                    $isConsignment = (bool) ($product?->is_consignment ?? false);
+                    $consignorId = $isConsignment ? $product?->consignor_id : null;
+                    $vendorPayout = null;
+                    $storeCommission = null;
+
+                    if ($isConsignment && $product) {
+                        $split = $product->calculateConsignmentSplit($price, $variant);
+                        $vendorPayout = $split['vendor_payout'];
+                        $storeCommission = $split['store_commission'];
+                    }
+
                     $orderLines[] = [
                         'product_id' => $product?->id,
                         'product_variant_id' => $variant?->id,
@@ -1979,6 +2005,10 @@ class PosController extends Controller
                         'price' => $price,
                         'quantity' => $quantity,
                         'subtotal' => $lineSubtotal,
+                        'is_consignment' => $isConsignment,
+                        'consignor_id' => $consignorId,
+                        'consignment_vendor_payout' => $vendorPayout,
+                        'consignment_store_commission' => $storeCommission,
                         'custom_notes' => $notes,
                     ];
                 }

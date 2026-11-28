@@ -17,6 +17,10 @@ class OrderItem extends Model
         'price' => 'decimal:2',
         'subtotal' => 'decimal:2',
         'quantity' => 'integer',
+        'is_consignment' => 'boolean',
+        'consignment_vendor_payout' => 'decimal:2',
+        'consignment_store_commission' => 'decimal:2',
+        'consignment_settled_at' => 'datetime',
     ];
 
     protected static function booted(): void
@@ -39,5 +43,15 @@ class OrderItem extends Model
     public function variant(): BelongsTo
     {
         return $this->belongsTo(ProductVariant::class, 'product_variant_id');
+    }
+
+    public function consignor(): BelongsTo
+    {
+        return $this->belongsTo(Consignor::class);
+    }
+
+    public function settlement(): BelongsTo
+    {
+        return $this->belongsTo(ConsignmentSettlement::class, 'consignment_settlement_id');
     }
 }

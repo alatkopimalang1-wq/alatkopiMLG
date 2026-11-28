@@ -49,6 +49,11 @@ class Product extends Model
         'preorder_dp_percent',
         'status',
         'channel',
+        'is_consignment',
+        'consignor_id',
+        'consignment_commission_type',
+        'consignment_commission_rate',
+        'consignment_payout_price',
         'stock',
         'stock_status',
         'released_at',
@@ -71,6 +76,9 @@ class Product extends Model
         'released_at' => 'datetime',
         'is_flash_sale' => 'boolean',
         'show_marketplace_links' => 'boolean',
+        'is_consignment' => 'boolean',
+        'consignment_commission_rate' => 'float',
+        'consignment_payout_price' => 'float',
     ];
 
     protected $appends = [
@@ -260,6 +268,52 @@ class Product extends Model
     public function primaryImage(): HasOne
     {
         return $this->hasOne(ProductImage::class)->where('is_primary', true);
+    }
+
+    public function consignor(): BelongsTo
+    {
+        return $this->belongsTo(Consignor::class);
+    }
+
+    /**
+     * Calculate vendor payout & store commission for a given selling price.
+     *
+     * @return array{vendor_payout: float, store_commission: float}
+     */
+    public function calculateConsignmentSplit(float $sellingPrice, ?ProductVariant $variant = null): array
+    {
+        if (! $this->is_consignment) {
+            return [
+                'vendor_payout' => 0.0,
+                'store_commission' => $sellingPrice,
+            ];
+        }
+
+        $type = $this->consignment_commission_type ?: 'percentage';
+
+        if ($type === 'fixed_cost') {
+            $payout = (float) ($variant?->consignment_payout_price ?? $this->consignment_payout_price ?? 0);
+            if ($payout <= 0 && $variant && (float) $variant->cost_price > 0) {
+                $payout = (float) $variant->cost_price;
+            }
+            $payout = min($sellingPrice, max(0.0, $payout));
+            $commission = max(0.0, $sellingPrice - $payout);
+
+            return [
+                'vendor_payout' => $payout,
+                'store_commission' => $commission,
+            ];
+        }
+
+        // Percentage-based commission
+        $rate = (float) ($this->consignment_commission_rate ?? 20.00);
+        $commission = round($sellingPrice * ($rate / 100), 2);
+        $payout = max(0.0, $sellingPrice - $commission);
+
+        return [
+            'vendor_payout' => $payout,
+            'store_commission' => $commission,
+        ];
     }
 
     public function syncPricesFromVariants(): void

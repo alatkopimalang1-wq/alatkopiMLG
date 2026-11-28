@@ -182,6 +182,18 @@ class CheckoutController extends Controller
                 }
             }
 
+            $product = $variant->product;
+            $isConsignment = (bool) ($product?->is_consignment ?? false);
+            $consignorId = $isConsignment ? $product?->consignor_id : null;
+            $vendorPayout = null;
+            $storeCommission = null;
+
+            if ($isConsignment && $product) {
+                $split = $product->calculateConsignmentSplit($unitPrice, $variant);
+                $vendorPayout = $split['vendor_payout'];
+                $storeCommission = $split['store_commission'];
+            }
+
             $orderLines[] = [
                 'product_id' => $variant->product_id,
                 'product_variant_id' => $variant->id,
@@ -195,6 +207,10 @@ class CheckoutController extends Controller
                 'price' => $unitPrice,
                 'quantity' => $qty,
                 'subtotal' => $lineTotal,
+                'is_consignment' => $isConsignment,
+                'consignor_id' => $consignorId,
+                'consignment_vendor_payout' => $vendorPayout,
+                'consignment_store_commission' => $storeCommission,
             ];
         }
 

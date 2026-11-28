@@ -253,6 +253,13 @@ Route::middleware(['auth'])->group(function () {
 
         return view('admin.product-purchases.print', ['po' => $productPurchase]);
     })->name('admin.product-purchases.print');
+
+    // Printable Consignment Settlement Note view
+    Route::get('/admin/consignment-settlements/{settlement}/print', function (\App\Models\ConsignmentSettlement $settlement) {
+        $settlement->load(['consignor', 'items', 'user']);
+
+        return view('filament.consignment.settlement-print', compact('settlement'));
+    })->name('admin.consignment-settlements.print');
 });
 
 // TikTok Shop & Tokopedia Marketplace Omnichannel Routes

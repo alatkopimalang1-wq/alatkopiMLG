@@ -111,15 +111,74 @@ class EquipmentProductForm
                                 ->default('Tidak ada')
                                 ->native(false),
                         ]),
-                        Grid::make(3)->schema([
+                        Grid::make(4)->schema([
                             Toggle::make('is_featured')
-                                ->label('Produk Unggulan (Best Seller)'),
+                                ->label('Produk Unggulan'),
                             Toggle::make('is_new')
-                                ->label('Tandai Sebagai Baru (New Arrival)'),
+                                ->label('Tandai Baru'),
                             Toggle::make('is_preorder')
-                                ->label('Produk Pre-Order')
+                                ->label('Pre-Order')
+                                ->live(),
+                            Toggle::make('is_consignment')
+                                ->label('Titip Jual (Konsinyasi)')
                                 ->live(),
                         ]),
+                        Section::make('Pengaturan Bagi Hasil Konsinyasi')
+                            ->description('Atur mitra penitip barang dan skema bagi hasil/komisi penjualan.')
+                            ->visible(fn (callable $get): bool => (bool) $get('is_consignment'))
+                            ->schema([
+                                Grid::make(3)->schema([
+                                    Select::make('consignor_id')
+                                        ->label('Mitra Penitip (Konsinyor)')
+                                        ->relationship('consignor', 'name')
+                                        ->searchable()
+                                        ->preload()
+                                        ->required(fn (callable $get): bool => (bool) $get('is_consignment'))
+                                        ->live()
+                                        ->afterStateUpdated(function (?int $state, callable $set) {
+                                            if ($state) {
+                                                $consignor = \App\Models\Consignor::find($state);
+                                                if ($consignor) {
+                                                    $set('consignment_commission_type', $consignor->default_commission_type ?: 'percentage');
+                                                    $set('consignment_commission_rate', $consignor->default_commission_rate ?: 20.00);
+                                                }
+                                            }
+                                        })
+                                        ->createOptionForm([
+                                            TextInput::make('name')->label('Nama Mitra / Brand')->required(),
+                                            TextInput::make('phone')->label('No. WhatsApp / HP'),
+                                            TextInput::make('bank_name')->label('Nama Bank (e.g. BCA)'),
+                                            TextInput::make('bank_account_number')->label('Nomor Rekening'),
+                                            TextInput::make('bank_account_holder')->label('Atas Nama Rekening'),
+                                            TextInput::make('default_commission_rate')->label('Komisi Toko Bawaan (%)')->numeric()->default(20),
+                                        ]),
+
+                                    Select::make('consignment_commission_type')
+                                        ->label('Metode Perhitungan')
+                                        ->options([
+                                            'percentage' => 'Persentase Komisi Toko (%)',
+                                            'fixed_cost' => 'Harga Setor Bersih Vendor (Net Price)',
+                                        ])
+                                        ->default('percentage')
+                                        ->native(false)
+                                        ->live(),
+
+                                    TextInput::make('consignment_commission_rate')
+                                        ->label('Komisi Toko (%)')
+                                        ->numeric()
+                                        ->default(20.00)
+                                        ->suffix('%')
+                                        ->visible(fn (callable $get): bool => ($get('consignment_commission_type') ?? 'percentage') === 'percentage')
+                                        ->helperText('Contoh: 20% komisi toko, 80% hak vendor.'),
+
+                                    TextInput::make('consignment_payout_price')
+                                        ->label('Hak Bersih Vendor (Rp)')
+                                        ->numeric()
+                                        ->prefix('Rp')
+                                        ->visible(fn (callable $get): bool => $get('consignment_commission_type') === 'fixed_cost')
+                                        ->helperText('Nominal yang wajib dibayarkan ke vendor per unit.'),
+                                ]),
+                            ]),
                         Select::make('preorder_dp_percent')
                             ->label('Minimum Down Payment (DP) Pre-Order')
                             ->options([

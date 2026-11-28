@@ -17,6 +17,7 @@ class ProductVariant extends Model
         'weight_grams',
         'price',
         'cost_price',
+        'consignment_payout_price',
         'original_price',
         'stock',
         'stock_status',
@@ -28,6 +29,7 @@ class ProductVariant extends Model
         'weight_grams' => 'integer',
         'price' => 'float',
         'cost_price' => 'float',
+        'consignment_payout_price' => 'float',
         'original_price' => 'float',
         'stock' => 'integer',
     ];
